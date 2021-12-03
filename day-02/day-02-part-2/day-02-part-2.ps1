@@ -21,8 +21,7 @@ $aim = [int]0;
 foreach ($move in $moves) {
     if ($move.command -eq "forward") {
         $horizontal += $move.delta;
-        $depth_delta = $aim * $move.delta;
-        $depth += $aim * $move.delta;
+        $depth += $move.delta * $aim;
     } elseif ($move.command -eq "down") {
         $aim += $move.delta;
     } elseif ($move.command -eq "up") {
