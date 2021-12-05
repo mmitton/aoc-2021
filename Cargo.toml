@@ -1,7 +1,0 @@
-[workspace]
-members = [
-    "day-01/day-01-part-1", "day-01/day-01-part-2",
-    "day-02/day-02-part-1", "day-02/day-02-part-2",
-    "day-03/day-03-part-1", "day-03/day-03-part-2",
-    "day-04/day-04-part-1", "day-04/day-04-part-2",
-] 
