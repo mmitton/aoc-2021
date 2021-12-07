@@ -6,7 +6,6 @@ const INPUT_FILE: &str = "../input.txt";
 #[derive(Debug)]
 enum Error {
     IO(std::io::Error),
-    InvalidInput(String),
     NAN(std::num::ParseIntError),
 }
 
@@ -66,7 +65,7 @@ fn load_school(filename: &str) -> Result<School, Error> {
 }
 
 fn main() -> Result<(), Error> {
-    let mut school = load_school(INPUT_FILE)?;
+    let school = load_school(INPUT_FILE)?;
 
     if cfg!(debug_assertions) {
         println!("Initial state: {:?}", school.fish);
