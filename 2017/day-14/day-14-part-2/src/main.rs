@@ -8,6 +8,87 @@ enum Error {
     IO(std::io::Error),
 }
 
+struct Map {
+    blocks: Vec<Vec<bool>>,
+    used_blocks: usize,
+}
+
+impl Map {
+    fn new() -> Self {
+        Self {
+            blocks: Vec::new(),
+            used_blocks: 0,
+        }
+    }
+
+    fn add(&mut self, hash: &Vec<u8>) {
+        let mut row = Vec::with_capacity(128);
+
+        for d in hash {
+            self.used_blocks += d.count_ones() as usize;
+            row.extend_from_slice(&[
+                d & 0b1000_0000 != 0,
+                d & 0b0100_0000 != 0,
+                d & 0b0010_0000 != 0,
+                d & 0b0001_0000 != 0,
+                d & 0b0000_1000 != 0,
+                d & 0b0000_0100 != 0,
+                d & 0b0000_0010 != 0,
+                d & 0b0000_0001 != 0,
+            ]);
+        }
+
+        self.blocks.push(row);
+    }
+
+    fn print(&self) {
+        for row in &self.blocks {
+            for used in row {
+                if *used {
+                    print!("#");
+                } else {
+                    print!(".");
+                }
+            }
+            println!();
+        }
+    }
+
+    fn regions(&self) -> usize {
+        fn mark_region_used(blocks: &mut Vec<Vec<bool>>, x: usize, y: usize) {
+            if !blocks[y][x] {
+                return;
+            }
+            blocks[y][x] = false;
+            if x > 0 {
+                mark_region_used(blocks, x - 1, y);
+            }
+            if x < 128 - 1 {
+                mark_region_used(blocks, x + 1, y);
+            }
+            if y > 0 {
+                mark_region_used(blocks, x, y - 1);
+            }
+            if y < blocks.len() - 1 {
+                mark_region_used(blocks, x, y + 1);
+            }
+        }
+
+        let mut regions = 0;
+        let mut blocks = self.blocks.clone();
+        for y in 0..blocks.len() {
+            for x in 0..128 {
+                if blocks[y][x] {
+                    regions += 1;
+                    mark_region_used(&mut blocks, x, y);
+                }
+            }
+        }
+
+        regions
+    }
+}
+
 struct List {
     numbers: Vec<u8>,
     pos: usize,
@@ -92,26 +173,22 @@ fn get_hash(key: &Vec<u8>) -> Vec<u8> {
 fn main() -> Result<(), Error> {
     let input = load_input(INPUT_FILE)?;
 
-    let mut used = 0;
+    let mut map = Map::new();
+
     for i in 0..128 {
         let key = new_key(&input, i);
         let hash = get_hash(&key);
 
-        if cfg!(debug_assertions) {
-            print!("{:08b}  ", hash[0]);
-        }
-        for d in &hash {
-            used += d.count_ones();
-            if cfg!(debug_assertions) {
-                print!("{:02x}", d);
-            }
-        }
-        if cfg!(debug_assertions) {
-            println!();
-        }
+        map.add(&hash);
     }
 
-    println!("Used Blocks: {}", used);
+    if cfg!(debug_assertions) {
+        map.print();
+    }
+
+    println!("{}", map.blocks[0].len());
+    println!("Used Blocks: {}", map.used_blocks);
+    println!("Used Regions: {}", map.regions());
 
     Ok(())
 }
