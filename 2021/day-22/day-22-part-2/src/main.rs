@@ -49,17 +49,6 @@ impl Cuboid {
         }
     }
 
-    /*
-    fn fully_overlaps(&self, rhs: &Self) -> bool {
-        rhs.start.x >= self.start.x
-            && rhs.start.y >= self.start.y
-            && rhs.start.z >= self.start.z
-            && rhs.end.x <= self.end.x
-            && rhs.end.y <= self.end.y
-            && rhs.end.z <= self.end.z
-    }
-    */
-
     // Returns `None` if no overlap, else returns `Some`(`Vec`<`Cuboid`>) of sections which do not
     // overlap (these will get added in to the reactor, while this `Cuboid` will be removed)
     fn overlaps(&self, rhs: &Self) -> Option<Vec<Cuboid>> {
@@ -117,14 +106,6 @@ impl Cuboid {
             rhs.end.z
         };
 
-        /*
-        println!("self: {:?}", self);
-        println!("rhs: {:?}", rhs);
-        println!("rhs_start_x:{}  rhs_end_x:{}", rhs_start_x, rhs_end_x);
-        println!("rhs_start_y:{}  rhs_end_y:{}", rhs_start_y, rhs_end_y);
-        println!("rhs_start_z:{}  rhs_end_z:{}", rhs_start_z, rhs_end_z);
-        */
-
         let mut non_overlaps = Vec::new();
 
         // Non Overlapping section behind rhs in the Z axis
@@ -143,55 +124,37 @@ impl Cuboid {
         }
 
         // Non Overlapping sections in the same z plane as rhs
+
+        // Top
         if rhs_start_y != self.start.y {
-            if rhs_start_x != self.start.x {
-                non_overlaps.push(Cuboid::new(
-                    Point::new(self.start.x, self.start.y, rhs_start_z),
-                    Point::new(rhs_start_x - 1, rhs_start_y - 1, rhs_end_z),
-                ));
-            }
             non_overlaps.push(Cuboid::new(
                 Point::new(rhs_start_x, self.start.y, rhs_start_z),
                 Point::new(rhs_end_x, rhs_start_y - 1, rhs_end_z),
             ));
-            if rhs_end_x != self.end.x {
-                non_overlaps.push(Cuboid::new(
-                    Point::new(rhs_end_x + 1, self.start.y, rhs_start_z),
-                    Point::new(self.end.x, rhs_start_y - 1, rhs_end_z),
-                ));
-            }
         }
 
+        // Left
         if rhs_start_x != self.start.x {
             non_overlaps.push(Cuboid::new(
-                Point::new(self.start.x, rhs_start_y, rhs_start_z),
-                Point::new(rhs_start_x - 1, rhs_end_y, rhs_end_z),
-            ));
-        }
-        if rhs_end_x != self.end.x {
-            non_overlaps.push(Cuboid::new(
-                Point::new(rhs_end_x + 1, rhs_start_y, rhs_start_z),
-                Point::new(self.end.x, rhs_end_y, rhs_end_z),
+                Point::new(self.start.x, self.start.y, rhs_start_z),
+                Point::new(rhs_start_x - 1, self.end.y, rhs_end_z),
             ));
         }
 
+        // Right
+        if rhs_end_x != self.end.x {
+            non_overlaps.push(Cuboid::new(
+                Point::new(rhs_end_x + 1, self.start.y, rhs_start_z),
+                Point::new(self.end.x, self.end.y, rhs_end_z),
+            ));
+        }
+
+        // Bottom
         if rhs_end_y != self.end.y {
-            if rhs_start_x != self.start.x {
-                non_overlaps.push(Cuboid::new(
-                    Point::new(self.start.x, rhs_end_y + 1, rhs_start_z),
-                    Point::new(rhs_start_x - 1, self.end.y, rhs_end_z),
-                ));
-            }
             non_overlaps.push(Cuboid::new(
                 Point::new(rhs_start_x, rhs_end_y + 1, rhs_start_z),
                 Point::new(rhs_end_x, self.end.y, rhs_end_z),
             ));
-            if rhs_end_x != self.end.x {
-                non_overlaps.push(Cuboid::new(
-                    Point::new(rhs_end_x + 1, rhs_end_y + 1, rhs_start_z),
-                    Point::new(self.end.x, self.end.y, rhs_end_z),
-                ));
-            }
         }
         return Some(non_overlaps);
     }
@@ -328,7 +291,7 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    // println!("Reactor: {:?}", reactor);
+    println!("Reactor: {} cuboids", reactor.cuboids.len());
     println!("Cubes on in {}: {}", area, reactor.count(&area));
     println!("Full Count: {}", reactor.full_count());
 
