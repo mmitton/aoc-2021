@@ -15,84 +15,21 @@ impl From<std::num::ParseIntError> for Error {
     }
 }
 
-struct Triple {
-    x: isize,
-    y: isize,
-    z: isize,
-}
+struct Component(usize, usize);
 
-impl std::fmt::Debug for Triple {
+impl std::fmt::Debug for Component {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(fmt, "{},{},{}", self.x, self.y, self.z)
+        write!(fmt, "{}/{}", self.0, self.1)
     }
 }
 
-impl Triple {
-    fn distance_to(&self, rhs: &Self) -> usize {
-        let x: usize = (self.x - rhs.x).abs() as usize;
-        let y: usize = (self.y - rhs.y).abs() as usize;
-        let z: usize = (self.z - rhs.z).abs() as usize;
-        x + y + z
-    }
-}
-
-#[derive(Debug)]
-struct Particle {
-    p: Triple,
-    v: Triple,
-    a: Triple,
-}
-
-impl Particle {
-    fn pos_at(&self, t: isize) -> Triple {
-        Triple {
-            x: (self.a.x * t * t / 2) + (self.v.x * t) + self.p.x,
-            y: (self.a.y * t * t / 2) + (self.v.y * t) + self.p.y,
-            z: (self.a.z * t * t / 2) + (self.v.z * t) + self.p.z,
-        }
-    }
-}
-
-impl TryFrom<&str> for Particle {
-    type Error = Error;
-
-    fn try_from(s: &str) -> Result<Self, Self::Error> {
-        let s = s
-            .replace("<", "")
-            .replace(">", "")
-            .replace("p=", "")
-            .replace(", v=", " ")
-            .replace(", a=", " ")
-            .replace(",", " ");
-
-        let parts: Vec<&str> = s.split(" ").collect();
-        Ok(Particle {
-            p: Triple {
-                x: parts[0].parse()?,
-                y: parts[1].parse()?,
-                z: parts[2].parse()?,
-            },
-            v: Triple {
-                x: parts[3].parse()?,
-                y: parts[4].parse()?,
-                z: parts[5].parse()?,
-            },
-            a: Triple {
-                x: parts[6].parse()?,
-                y: parts[7].parse()?,
-                z: parts[8].parse()?,
-            },
-        })
-    }
-}
-
-fn load_input(filename: &str) -> Result<Vec<Particle>, Error> {
+fn load_input(filename: &str) -> Result<Vec<Component>, Error> {
     use std::fs::File;
     use std::io::{BufRead, BufReader};
     let f = File::open(filename).map_err(|e| Error::IO(e))?;
     let lines = BufReader::new(f).lines();
 
-    let mut particles: Vec<Particle> = Vec::new();
+    let mut components: Vec<Component> = Vec::new();
 
     for line in lines {
         let line = line.map_err(|e| Error::IO(e))?;
@@ -101,31 +38,75 @@ fn load_input(filename: &str) -> Result<Vec<Particle>, Error> {
             continue;
         }
 
-        particles.push(line.try_into()?);
-    }
-
-    Ok(particles)
-}
-
-fn main() -> Result<(), Error> {
-    let particles = load_input(INPUT_FILE)?;
-    let origin = Triple { x: 0, y: 0, z: 0 };
-
-    let mut closest_num = usize::MAX;
-    let mut closest = usize::MAX;
-
-    const T: isize = 1000000;
-    for (i, particle) in particles.iter().enumerate() {
-        let dist = particle.pos_at(T).distance_to(&origin);
-        println!("{}: {}", i, dist);
-
-        if dist < closest {
-            closest = dist;
-            closest_num = i;
+        let parts: Vec<&str> = line.split("/").collect();
+        let n1 = parts[0].parse()?;
+        let n2 = parts[1].parse()?;
+        if n1 < n2 {
+            components.push(Component(n1, n2));
+        } else {
+            components.push(Component(n2, n1));
         }
     }
 
-    println!("Closest is {}", closest_num);
+    Ok(components)
+}
+
+fn main() -> Result<(), Error> {
+    let components = load_input(INPUT_FILE)?;
+
+    let mut bridges: Vec<(Vec<usize>, usize)> = Vec::new();
+
+    let mut best = 0;
+    for i in 0..components.len() {
+        if components[i].0 == 0 {
+            bridges.push((vec![i], components[i].1));
+        } else if components[i].1 == 0 {
+            bridges.push((vec![i], components[i].0));
+        }
+    }
+
+    let mut bi = 0;
+    while bi < bridges.len() {
+        let next_number = bridges[bi].1;
+        for i in 0..components.len() {
+            if bridges[bi].0.contains(&i) {
+                continue;
+            }
+            if components[i].0 == next_number {
+                let mut next_bridge = bridges[bi].0.clone();
+                next_bridge.push(i);
+                bridges.push((next_bridge, components[i].1));
+            } else if components[i].1 == next_number {
+                let mut next_bridge = bridges[bi].0.clone();
+                next_bridge.push(i);
+                bridges.push((next_bridge, components[i].0));
+            }
+        }
+
+        bi += 1;
+    }
+
+    let print_debug = true; // if cfg!(debug_assertions) { true } else { false };
+    for bridge in bridges {
+        let mut points = 0;
+
+        if print_debug {
+            print!("- ");
+        }
+        for idx in &bridge.0 {
+            points += components[*idx].0 + components[*idx].1;
+            if print_debug {
+                print!("{:?}  ", components[*idx]);
+            }
+        }
+        if print_debug {
+            println!("points:{}", points);
+        }
+        if points > best {
+            best = points;
+        }
+    }
+    println!("Best: {}", best);
 
     Ok(())
 }
