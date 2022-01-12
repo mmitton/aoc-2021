@@ -162,7 +162,7 @@ fn main() -> Result<(), Error> {
 
         if coord == target {
             if tool != Tool::Torch {
-                queue.insert((time + 7, tool, coord));
+                queue.insert((time + 7, Tool::Torch, coord));
                 continue;
             }
             println!("Can get to the target in {} minutes", time);
