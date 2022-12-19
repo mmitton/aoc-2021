@@ -4,7 +4,6 @@ const INPUT_FILE: &str = if cfg!(debug_assertions) {
     "../input.txt"
 };
 
-use rayon::prelude::*;
 use std::collections::BTreeSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -37,29 +36,36 @@ fn run_blueprint(
     let mut best: [usize; 4] = materials;
     let mut best_geode = 0;
 
-    let mut work = Vec::new();
-    let mut seen = BTreeSet::new();
-    let job = (materials, 1, robots);
-    work.push(job);
-    seen.insert(job);
+    let mut work = BTreeSet::new();
+    let job = (1, materials, robots, minutes);
+    work.insert(job);
 
-    let mut idx = 0;
-    while idx < work.len() {
-        let (materials, minute, robots) = work[idx];
-        idx += 1;
+    while let Some((minute, materials, robots, _best_case)) = work.pop_first() {
         // println!("next work: minute:{minute} materials:{materials:?} robots:{robots:?}");
-        'robot_builder: for robot in 0..4 {
-            let mut materials = materials;
-            for minute in minute..=minutes {
+        let mut materials = materials;
+        let mut built = [false, false, false, false];
+        for minute in minute..=minutes {
+            'robot_builder: for robot in 0..4 {
+                if built[robot] {
+                    continue;
+                }
                 // println!("checking: robot:{robot} minute:{minute} materials:{materials:?}");
                 if minute == minutes {
+                    let mut materials = materials;
                     for (material, robot) in materials.iter_mut().zip(robots.iter()) {
                         *material += robot;
                     }
                     if materials[0] > best_geode {
                         best_geode = materials[0];
                         best = materials;
-                        println!("new_best: {best_geode} {materials:?} {robots:?}");
+                        print!(
+                            "new_best: {best_geode} {materials:?} {robots:?}  {} -> ",
+                            work.len()
+                        );
+                        work.retain(|(_materials, _minute, _robots, best_case)| {
+                            *best_case > best_geode
+                        });
+                        println!("{}", work.len());
                     }
                     break;
                 }
@@ -73,25 +79,35 @@ fn run_blueprint(
                     }
                 }
 
-                for (material, robot) in materials.iter_mut().zip(robots.iter()) {
-                    *material += robot;
-                }
-
                 if can_build {
-                    // println!("building robot {robot} in minute {minute}");
-                    for (material, needed) in materials.iter_mut().zip(blueprint[robot].iter()) {
-                        *material -= *needed;
+                    let mut materials = materials;
+                    for ((material, robot), needed) in materials
+                        .iter_mut()
+                        .zip(robots.iter())
+                        .zip(blueprint[robot].iter())
+                    {
+                        *material += robot;
+                        *material -= needed;
                     }
+
                     let mut robots = robots;
                     robots[robot] += 1;
 
-                    let new_job = (materials, minute + 1, robots);
-                    if !seen.contains(&new_job) {
-                        work.push(new_job);
-                        seen.insert(new_job);
+                    // println!("building robot {robot} in minute {minute}  {materials:?} {robots:?}");
+                    built[robot] = true;
+                    let best_case =
+                        materials[0] + (minutes - minute) * (robots[0] + (minutes - minute));
+                    if best_case > best_geode {
+                        let new_job = (minute + 1, materials, robots, best_case);
+                        if !work.contains(&new_job) {
+                            work.insert(new_job);
+                        }
                     }
                     continue 'robot_builder;
                 }
+            }
+            for (material, robot) in materials.iter_mut().zip(robots.iter()) {
+                *material += robot;
             }
         }
     }

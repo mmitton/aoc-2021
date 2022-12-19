@@ -4,7 +4,7 @@ const INPUT_FILE: &str = if cfg!(debug_assertions) {
     "../input.txt"
 };
 
-use std::collections::{BTreeSet, VecDeque};
+use std::collections::BTreeSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -36,19 +36,22 @@ fn run_blueprint(
     let mut best: [usize; 4] = materials;
     let mut best_geode = 0;
 
-    let mut work = VecDeque::new();
-    let mut seen = BTreeSet::new();
-    let job = (materials, 1, robots, 24);
-    work.push_front(job);
-    seen.insert(job);
+    let mut work = BTreeSet::new();
+    let job = (1, materials, robots, minutes);
+    work.insert(job);
 
-    while let Some((materials, minute, robots, _best_case)) = work.pop_front() {
+    while let Some((minute, materials, robots, _best_case)) = work.pop_first() {
         // println!("next work: minute:{minute} materials:{materials:?} robots:{robots:?}");
-        'robot_builder: for robot in 0..4 {
-            let mut materials = materials;
-            for minute in minute..=minutes {
+        let mut materials = materials;
+        let mut built = [false, false, false, false];
+        for minute in minute..=minutes {
+            'robot_builder: for robot in 0..4 {
+                if built[robot] {
+                    continue;
+                }
                 // println!("checking: robot:{robot} minute:{minute} materials:{materials:?}");
                 if minute == minutes {
+                    let mut materials = materials;
                     for (material, robot) in materials.iter_mut().zip(robots.iter()) {
                         *material += robot;
                     }
@@ -76,29 +79,35 @@ fn run_blueprint(
                     }
                 }
 
-                for (material, robot) in materials.iter_mut().zip(robots.iter()) {
-                    *material += robot;
-                }
-
                 if can_build {
-                    // println!("building robot {robot} in minute {minute}");
-                    for (material, needed) in materials.iter_mut().zip(blueprint[robot].iter()) {
-                        *material -= *needed;
+                    let mut materials = materials;
+                    for ((material, robot), needed) in materials
+                        .iter_mut()
+                        .zip(robots.iter())
+                        .zip(blueprint[robot].iter())
+                    {
+                        *material += robot;
+                        *material -= needed;
                     }
+
                     let mut robots = robots;
                     robots[robot] += 1;
 
+                    // println!("building robot {robot} in minute {minute}  {materials:?} {robots:?}");
+                    built[robot] = true;
                     let best_case =
                         materials[0] + (minutes - minute) * (robots[0] + (minutes - minute));
                     if best_case > best_geode {
-                        let new_job = (materials, minute + 1, robots, best_case);
-                        if !seen.contains(&new_job) {
-                            work.push_back(new_job);
-                            seen.insert(new_job);
+                        let new_job = (minute + 1, materials, robots, best_case);
+                        if !work.contains(&new_job) {
+                            work.insert(new_job);
                         }
                     }
                     continue 'robot_builder;
                 }
+            }
+            for (material, robot) in materials.iter_mut().zip(robots.iter()) {
+                *material += robot;
             }
         }
     }
