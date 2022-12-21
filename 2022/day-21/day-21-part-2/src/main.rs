@@ -99,11 +99,14 @@ fn main() {
         }
     }
 
-    let mut scale = 100000000000;
     let mut h = 0;
     let values = run(&monkeys, h);
     let (a, b) = (*values.get(&root.0).unwrap(), *values.get(&root.1).unwrap());
     let initial = a < b;
+    let mut scale = 1;
+    while scale * 10 < (a - b).abs() {
+        scale *= 10;
+    }
 
     loop {
         let cur_h = h + scale;
