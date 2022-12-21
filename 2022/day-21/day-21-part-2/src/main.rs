@@ -17,44 +17,105 @@ enum Monkey {
     Div(String, String),
 }
 
-fn run(monkeys: &BTreeMap<String, Monkey>, humn: isize) -> BTreeMap<String, isize> {
-    let mut values: BTreeMap<String, isize> = BTreeMap::new();
+#[derive(Debug)]
+struct OldNewBTreeMap<K, V>
+where
+    K: Ord,
+    V: Copy,
+{
+    map: BTreeMap<K, [Option<V>; 2]>,
+    len: usize,
+}
+
+impl<K, V> OldNewBTreeMap<K, V>
+where
+    K: Ord,
+    V: Copy,
+{
+    fn new() -> Self {
+        Self {
+            map: BTreeMap::new(),
+            len: 0,
+        }
+    }
+
+    fn get(&self, k: &K) -> Option<&V> {
+        let values = self.map.get(k)?;
+        values[0].as_ref()
+    }
+
+    fn insert(&mut self, k: K, v: V) {
+        if let Some(values) = self.map.get_mut(&k) {
+            values[1] = Some(v);
+        } else {
+            // New item
+            let values = [None, Some(v)];
+            self.map.insert(k, values);
+        }
+    }
+
+    fn swap(&mut self) {
+        self.len = 0;
+        for values in self.map.values_mut() {
+            if values[1].is_some() {
+                values.swap(0, 1);
+                self.len += 1;
+            } else {
+                values[1] = values[0];
+            }
+        }
+    }
+
+    fn contains_key(&self, k: &K) -> bool {
+        if let Some(values) = self.map.get(k) {
+            values[0].is_some()
+        } else {
+            false
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.len
+    }
+}
+
+fn run(monkeys: &BTreeMap<String, Monkey>, humn: isize) -> OldNewBTreeMap<String, isize> {
+    let mut values: OldNewBTreeMap<String, isize> = OldNewBTreeMap::new();
     values.insert("humn".to_owned(), humn);
 
     while values.len() != monkeys.len() + 1 {
-        let mut new_values = values.clone();
         for (name, op) in monkeys.iter() {
             if values.contains_key(name) {
                 continue;
             }
             match op {
                 Monkey::Num(n) => {
-                    new_values.insert(name.to_owned(), *n);
+                    values.insert(name.to_owned(), *n);
                 }
                 Monkey::Add(a, b) => {
                     if let (Some(a), Some(b)) = (values.get(a), values.get(b)) {
-                        new_values.insert(name.to_owned(), *a + *b);
+                        values.insert(name.to_owned(), *a + *b);
                     }
                 }
                 Monkey::Sub(a, b) => {
                     if let (Some(a), Some(b)) = (values.get(a), values.get(b)) {
-                        new_values.insert(name.to_owned(), *a - *b);
+                        values.insert(name.to_owned(), *a - *b);
                     }
                 }
                 Monkey::Mul(a, b) => {
                     if let (Some(a), Some(b)) = (values.get(a), values.get(b)) {
-                        new_values.insert(name.to_owned(), *a * *b);
+                        values.insert(name.to_owned(), *a * *b);
                     }
                 }
                 Monkey::Div(a, b) => {
                     if let (Some(a), Some(b)) = (values.get(a), values.get(b)) {
-                        new_values.insert(name.to_owned(), *a / *b);
+                        values.insert(name.to_owned(), *a / *b);
                     }
                 }
             }
         }
 
-        values = new_values;
+        values.swap();
     }
 
     values
