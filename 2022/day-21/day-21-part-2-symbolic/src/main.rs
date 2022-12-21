@@ -29,17 +29,6 @@ enum Op {
 }
 
 impl Op {
-    fn eval(&self, human: isize) -> isize {
-        match self {
-            Self::Num(n) => *n,
-            Self::Human => human,
-            Self::Add(a, b) => a.eval(human) + b.eval(human),
-            Self::Sub(a, b) => a.eval(human) - b.eval(human),
-            Self::Mul(a, b) => a.eval(human) * b.eval(human),
-            Self::Div(a, b) => a.eval(human) / b.eval(human),
-        }
-    }
-
     fn simplify(&self) -> Self {
         match self {
             Self::Num(_) | Self::Human => self.clone(),
@@ -391,11 +380,9 @@ fn main() {
     if let Some((a, b)) = root {
         let a = ops.get(&a).unwrap();
         let b = ops.get(&b).unwrap();
-        println!("{a} = {b}");
 
         let a = a.simplify();
         let b = b.simplify();
-        println!("{a} = {b}");
 
         let (a, b) = solve(a, b);
         println!("{a} = {b}");
