@@ -37,17 +37,27 @@ fn print(
     }
 }
 
-/*
 fn do_move(
     pos: (usize, usize),
     dir: i8,
     movement: u32,
     map: &mut Vec<Vec<char>>,
-    sides: &Vec<Vec<Surface>>,
-) -> (usize, usize) {
+    warps: &BTreeMap<(usize, usize), Vec<(usize, usize)>>,
+) -> ((usize, usize), i8) {
+    // print(dir, (pos.0 as usize, pos.1 as usize), map);
     println!("do_move({pos:?}, {dir}, {movement}, ..)");
     let mut pos = pos;
+    let mut dir = dir;
     for _ in 0..movement {
+        let mut next_pos = match dir {
+            0 => (pos.0 + 1, pos.1 + 0),
+            1 => (pos.0 + 0, pos.1 + 1),
+            2 => (pos.0 - 1, pos.1 + 0),
+            3 => (pos.0 + 0, pos.1 - 1),
+            _ => unreachable!(),
+        };
+        let mut next_dir = dir;
+
         map[pos.1][pos.0] = match dir {
             0 => '>',
             1 => 'v',
@@ -55,45 +65,38 @@ fn do_move(
             3 => '^',
             _ => unreachable!(),
         };
-        // print(dir, pos, map);
-        let mut next_pos = match dir {
-            0 => (pos.0 + 1, pos.1),
-            1 => (pos.0, pos.1 + 1),
-            2 => (pos.0 - 1, pos.1),
-            3 => (pos.0, pos.1 - 1),
-            _ => unreachable!(),
-        };
+        // print(dir, (pos.0 as usize, pos.1 as usize), map);
 
-        if map[next_pos.1][next_pos.0] == ' ' {
-            let mut vector = sides[pos.1][pos.0];
-            // rotate the vector
-            match dir {
-                0 => vector.rotate(0, -1, 0),
-                1 => vector.rotate(-1, 0, 0),
-                2 => vector.rotate(0, 1, 0),
-                3 => vector.rotate(1, 0, 0),
-                _ => unreachable!(),
-            }
-
-            println!(
-                "Looking for partner of {pos:?} {vector:?} {:?}",
-                sides[pos.1][pos.0]
-            );
-
-            let mut new_pos: Option<(usize, usize)> = None;
-            // Find the other tile with the same normal vector
-            'search_loop: for (y, sides) in sides.iter().enumerate() {
-                for (x, side) in sides.iter().enumerate() {
-                    if x == pos.0 && y == pos.1 {
-                        continue;
-                    }
-                    if side.pos == vector.pos && side.normal == vector.normal {
-                        new_pos = Some((x, y));
-                        break 'search_loop;
-                    }
+        if let Some(local_warps) = warps.get(&next_pos) {
+            println!("moving into {next_pos:?} is a warp to {local_warps:?}");
+            next_pos = if local_warps.len() == 1 {
+                local_warps[0]
+            } else if local_warps.len() == 2 {
+                if local_warps[0] == pos {
+                    local_warps[1]
+                } else {
+                    local_warps[0]
                 }
+            } else {
+                unreachable!();
+            };
+
+            next_dir = !0;
+            macro_rules! find_dir {
+                ($x:expr, $y:expr, $dir:expr) => {{
+                    if let Some(values) = warps.get(&($x, $y)) {
+                        if values.contains(&pos) {
+                            next_dir = $dir;
+                        }
+                    }
+                }};
             }
-            panic!("{:?}", new_pos);
+
+            find_dir!(next_pos.0, next_pos.1 - 1, 1);
+            find_dir!(next_pos.0, next_pos.1 + 1, 3);
+            find_dir!(next_pos.0 - 1, next_pos.1, 0);
+            find_dir!(next_pos.0 + 1, next_pos.1, 2);
+            assert!(next_dir != !0);
         }
 
         if map[next_pos.1][next_pos.0] == '#' {
@@ -101,6 +104,7 @@ fn do_move(
         }
 
         pos = next_pos;
+        dir = next_dir;
         map[pos.1][pos.0] = match dir {
             0 => '>',
             1 => 'v',
@@ -110,35 +114,52 @@ fn do_move(
         };
     }
 
-    print(dir, pos, map);
-    pos
+    // print(dir, pos, map, warps);
+    (pos, dir)
 }
-*/
+
+#[derive(Copy, Clone, Debug)]
+struct Tail {
+    p: (usize, usize),
+    d: (isize, isize),
+    e: (usize, usize),
+}
 
 fn zip(
     warps: &mut BTreeMap<(usize, usize), Vec<(usize, usize)>>,
+    tails: &mut BTreeMap<(usize, usize), Tail>,
     map: &[Vec<char>],
     mut p1: (usize, usize),
     mut d1: (isize, isize),
+    mut e1: (usize, usize),
     mut p2: (usize, usize),
     mut d2: (isize, isize),
-    e: (usize, usize),
+    mut e2: (usize, usize),
 ) {
     let mut t1 = 0;
     let mut t2 = 0;
-    let mut e1 = e;
-    let mut e2 = e;
 
-    while t1 == 0 || t2 == 0 {
+    'zip_loop: while t1 == 0 || t2 == 0 {
         println!("{p1:?} {d1:?} {e1:?} {t1:?}  {p2:?} {d2:?} {e2:?} {t2:?}");
-        warps
-            .entry(e1)
-            .and_modify(|v| v.push(p2))
-            .or_insert(vec![p2]);
-        warps
-            .entry(e2)
-            .and_modify(|v| v.push(p1))
-            .or_insert(vec![p1]);
+
+        if let Some(values) = warps.get_mut(&e1) {
+            if values.contains(&p2) {
+                break 'zip_loop;
+            }
+            values.push(p2);
+        } else {
+            warps.insert(e1, vec![p2]);
+        }
+        if let Some(values) = warps.get_mut(&e2) {
+            if values.contains(&p1) {
+                break 'zip_loop;
+            }
+            values.push(p1);
+        } else {
+            warps.insert(e2, vec![p1]);
+        }
+
+        // print(0, p1, map, warps);
 
         macro_rules! next {
             ($p:expr, $d:expr) => {
@@ -181,6 +202,81 @@ fn zip(
 
         // Move p2
         walk!(p2, e2, d2, t2);
+    }
+
+    if let std::collections::btree_map::Entry::Vacant(e) = tails.entry(p1) {
+        e.insert(Tail {
+            p: p1,
+            d: d1,
+            e: e1,
+        });
+    } else {
+        tails.remove(&p1);
+    }
+    if let std::collections::btree_map::Entry::Vacant(e) = tails.entry(p2) {
+        e.insert(Tail {
+            p: p2,
+            d: d2,
+            e: e2,
+        });
+    } else {
+        tails.remove(&p2);
+    }
+}
+
+fn zip_tails(
+    warps: &mut BTreeMap<(usize, usize), Vec<(usize, usize)>>,
+    tails: &mut BTreeMap<(usize, usize), Tail>,
+    map: &[Vec<char>],
+) {
+    fn find_neighbor(
+        warps: &BTreeMap<(usize, usize), Vec<(usize, usize)>>,
+        p: (usize, usize),
+    ) -> Option<(usize, usize)> {
+        macro_rules! check {
+            ($x:expr, $y:expr) => {
+                if let Some(w) = warps.get(&($x, $y)) {
+                    assert!(w.len() == 1);
+                    return Some(w[0]);
+                }
+            };
+        }
+
+        check!(p.0 - 1, p.1);
+        check!(p.0 + 1, p.1);
+        check!(p.0, p.1 - 1);
+        check!(p.0, p.1 + 1);
+        None
+    }
+
+    let mut values: Vec<Tail> = Vec::new();
+    for tail in tails.values() {
+        values.push(*tail);
+    }
+    for i in 0..values.len() {
+        let i_neighbor = find_neighbor(warps, values[i].p);
+        if let Some(i_neighbor) = i_neighbor {
+            for j in i + 1..values.len() {
+                // Check to see if values[i] is next to values[j]
+                let j_neighbor = find_neighbor(warps, values[j].p);
+                if let Some(j_neighbor) = j_neighbor {
+                    if i_neighbor == j_neighbor {
+                        println!(
+                            "{:?} => {i_neighbor:?}   {:?} => {j_neighbor:?}",
+                            values[i].p, values[j].p
+                        );
+
+                        let p1 = values[i].p;
+                        let d1 = values[i].d;
+                        let e1 = values[i].e;
+                        let p2 = values[j].p;
+                        let d2 = values[j].d;
+                        let e2 = values[j].e;
+                        zip(warps, tails, map, p1, d1, e1, p2, d2, e2);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -226,29 +322,8 @@ fn main() {
         }
     }
 
-    // Calculate the length of a side
-    let mut side_lens = [0; 4];
-    for i in 0..max_line {
-        if map[1][i] != ' ' {
-            side_lens[0] += 1;
-        }
-        if map[map.len() - 2][i] != ' ' {
-            side_lens[1] += 1;
-        }
-    }
-    for i in 0..map.len() {
-        if map[i][1] != ' ' {
-            side_lens[2] += 1;
-        }
-        if map[i][max_line - 2] != ' ' {
-            side_lens[3] += 1;
-        }
-    }
-    side_lens.sort();
-    let side_len = side_lens[0];
-
-    println!("{side_lens:?}  {side_len}");
     let mut warps: BTreeMap<(usize, usize), Vec<(usize, usize)>> = BTreeMap::new();
+    let mut tails: BTreeMap<(usize, usize), Tail> = BTreeMap::new();
     print(0, pos, &map, &warps);
 
     // Find the inside corners
@@ -262,7 +337,7 @@ fn main() {
                     let d2 = (0, -1);
                     let e = (x, y);
 
-                    zip(&mut warps, &map, p1, d1, p2, d2, e);
+                    zip(&mut warps, &mut tails, &map, p1, d1, e, p2, d2, e);
                 }
                 if map[y + 1][x] != ' ' && map[y][x - 1] != ' ' {
                     let p1 = (x, y + 1);
@@ -271,7 +346,7 @@ fn main() {
                     let d2 = (0, -1);
                     let e = (x, y);
 
-                    zip(&mut warps, &map, p1, d1, p2, d2, e);
+                    zip(&mut warps, &mut tails, &map, p1, d1, e, p2, d2, e);
                 }
                 if map[y - 1][x] != ' ' && map[y][x + 1] != ' ' {
                     let p1 = (x, y - 1);
@@ -280,7 +355,7 @@ fn main() {
                     let d2 = (0, 1);
                     let e = (x, y);
 
-                    zip(&mut warps, &map, p1, d1, p2, d2, e);
+                    zip(&mut warps, &mut tails, &map, p1, d1, e, p2, d2, e);
                 }
                 if map[y - 1][x] != ' ' && map[y][x - 1] != ' ' {
                     let p1 = (x, y - 1);
@@ -289,26 +364,22 @@ fn main() {
                     let d2 = (0, 1);
                     let e = (x, y);
 
-                    zip(&mut warps, &map, p1, d1, p2, d2, e);
+                    zip(&mut warps, &mut tails, &map, p1, d1, e, p2, d2, e);
                 }
             }
         }
     }
 
+    print(0, pos, &map, &warps);
     for (k, v) in warps.iter() {
         println!("{k:?} {v:?}");
     }
-    print(0, pos, &map, &warps);
-    /*
-    return;
-
-    for (y, side) in sides.iter().enumerate() {
-        for (x, side) in side.iter().enumerate() {
-            if x >= 7 && x <= 10 && y >= 5 && y <= 8 {
-                println!("{x},{y}  {side:?}");
-            }
-        }
+    for tail in tails.values() {
+        println!("tail: {tail:?}");
     }
+
+    zip_tails(&mut warps, &mut tails, &map);
+    print(0, pos, &map, &warps);
 
     let inst = &lines[0];
     let mut dir = 0i8;
@@ -318,7 +389,7 @@ fn main() {
         println!("c:{c}");
         match c {
             'L' => {
-                pos = do_move(pos, dir, movement, &mut map, &sides);
+                (pos, dir) = do_move(pos, dir, movement, &mut map, &warps);
                 movement = 0;
                 dir = (dir - 1) & 0b11;
                 println!("turn left: dir:{dir}");
@@ -331,7 +402,7 @@ fn main() {
                 };
             }
             'R' => {
-                pos = do_move(pos, dir, movement, &mut map, &sides);
+                (pos, dir) = do_move(pos, dir, movement, &mut map, &warps);
                 movement = 0;
                 dir = (dir + 1) & 0b11;
                 println!("turn right: dir:{dir}");
@@ -347,10 +418,12 @@ fn main() {
             _ => unreachable!(),
         }
     }
-    pos = do_move(pos, dir, movement, &mut map, &sides);
+    (pos, dir) = do_move(pos, dir, movement, &mut map, &warps);
+    print(dir, pos, &map, &BTreeMap::new());
 
     let ans = (pos.1 * 1000) + (pos.0 * 4) + dir as usize;
     println!("pos:{pos:?}  dir:{dir}");
     println!("ans: {ans}");
-    */
+    // 122007 too low
+    // 129193 too low
 }
