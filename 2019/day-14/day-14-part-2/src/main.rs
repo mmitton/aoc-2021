@@ -25,7 +25,7 @@ fn process(reactions: &BTreeMap<String, Reaction>) {
     let mut work: VecDeque<(String, usize)> = VecDeque::new();
     let mut fuel: usize = 0;
     const MAX_ORE: usize = 1000000000000;
-    let mut fuel_build: usize = 100_00_00_00;
+    let mut fuel_build: usize = MAX_ORE;
     loop {
         let last_ore = ore;
         let last_inventory = inventory.clone();
