@@ -28,6 +28,27 @@ pub trait Runner {
 pub type NewRunner = fn(part: usize) -> Box<dyn Runner>;
 
 #[macro_export]
+macro_rules! output_noln {
+    ($output:expr, $($args:tt)*) => {
+        $output.write_fmt_noln(format_args!($($args)*))
+    };
+
+    ($output:expr) => {
+        $output.write_fmt_noln(format_args!(""))
+    };
+}
+
+#[macro_export]
+macro_rules! output {
+    ($output:expr, $($args:tt)*) => {
+        $output.write_fmt(format_args!($($args)*))
+    };
+
+    ($output:expr) => {
+        $output.write_fmt(format_args!(""))
+    };
+}
+
 macro_rules! run {
     ($runner:expr) => {{
         run!($runner, 1, part1);

@@ -28,11 +28,15 @@ impl Output {
         }
         writeln!(self.output, "Error: {e:?}").expect("Cannot write error to output: {e:?}");
     }
-}
 
-impl Write for Output {
-    fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        self.output.write_str(s)
+    pub fn write_fmt_nonl(&mut self, args: std::fmt::Arguments) -> Result<(), std::fmt::Error> {
+        self.output.write_fmt(args)
+    }
+
+    pub fn write_fmt(&mut self, args: std::fmt::Arguments) -> Result<(), std::fmt::Error> {
+        self.output.write_fmt(args)?;
+        self.output.push('\n');
+        Ok(())
     }
 }
 

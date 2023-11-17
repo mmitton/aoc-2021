@@ -34,7 +34,11 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
         let mut day_path = PathBuf::from(path);
         day_path.push(format!("day_{day:02}.rs"));
         let mut d = std::fs::File::create(day_path)?;
-        writeln!(d, "use crate::{{Error, Lines, LinesOpt, Output, Runner}};")?;
+        writeln!(d, "#[allow(unused_imports)]")?;
+        writeln!(
+            d,
+            "use crate::{{output, output_noln, Error, Lines, LinesOpt, Output, Runner}};"
+        )?;
         writeln!(d)?;
         writeln!(d, "#[derive(Debug)]")?;
         writeln!(d, "pub enum RunnerError {{}}")?;

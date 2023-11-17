@@ -1,4 +1,5 @@
-use crate::{Error, Lines, LinesOpt, Output, Runner};
+#[allow(unused_imports)]
+use crate::{output, output_noln, Error, Lines, LinesOpt, Output, Runner};
 
 #[derive(Debug)]
 pub enum RunnerError {}

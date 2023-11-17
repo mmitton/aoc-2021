@@ -1,9 +1,12 @@
+use std::num::ParseIntError;
+
 #[derive(Debug)]
 pub enum Error {
     IO(std::io::Error),
     Fmt(std::fmt::Error),
     Runner(String),
     MinReq(minreq::Error),
+    ParseIntError(ParseIntError),
     MissingInput,
     Unsolved,
 }
@@ -23,5 +26,11 @@ impl From<std::fmt::Error> for Error {
 impl From<minreq::Error> for Error {
     fn from(e: minreq::Error) -> Self {
         Self::MinReq(e)
+    }
+}
+
+impl From<ParseIntError> for Error {
+    fn from(e: ParseIntError) -> Self {
+        Self::ParseIntError(e)
     }
 }
