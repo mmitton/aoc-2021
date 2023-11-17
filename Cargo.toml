@@ -3,6 +3,16 @@ members = [
     "runner",
     "new_year",
 ]
+exclude = [
+    "2015", 
+    "2016", 
+    "2017", 
+    "2018", 
+    "2019", 
+    "2020", 
+    "2021", 
+    "2022"
+]
 resolver = "2"
 
 [profile.release]

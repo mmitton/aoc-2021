@@ -47,7 +47,6 @@ impl Drop for Output {
         let day = self.day;
         let part = self.part;
         let cursor = Cursor::new(&self.output);
-        println!("{year}-{day:02} Part {part}: Elapsed {elapsed:?}");
         for line in BufReader::new(cursor).lines() {
             print!("{year}-{day:02} Part {part}: ");
             match line {
@@ -55,6 +54,7 @@ impl Drop for Output {
                 Err(e) => println!("{e:?}"),
             }
         }
+        println!("{year}-{day:02} Part {part}: Elapsed {elapsed:?}");
         println!();
     }
 }

@@ -1,13 +1,6 @@
 mod error;
 mod output;
 mod parser;
-// mod year_2015;
-// mod year_2016;
-// mod year_2017;
-// mod year_2018;
-// mod year_2019;
-// mod year_2020;
-mod year_2021;
 mod year_2022;
 mod year_2023;
 
@@ -120,13 +113,6 @@ fn main() {
     let (target_year, target_day) = get_args();
 
     let mut runners = BTreeMap::new();
-    // year_2015::register(&mut runners);
-    // year_2016::register(&mut runners);
-    // year_2017::register(&mut runners);
-    // year_2018::register(&mut runners);
-    // year_2019::register(&mut runners);
-    // year_2020::register(&mut runners);
-    year_2021::register(&mut runners);
     year_2022::register(&mut runners);
     year_2023::register(&mut runners);
 

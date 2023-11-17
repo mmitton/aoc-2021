@@ -8,6 +8,7 @@ pub enum Error {
     MinReq(minreq::Error),
     ParseIntError(ParseIntError),
     MissingInput,
+    InvalidInput(String),
     Unsolved,
 }
 
