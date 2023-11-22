@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use crate::{output, output_noln, Error, Lines, LinesOpt, Output, Runner};
+use crate::{print, println, Error, Lines, LinesOpt, Output, Runner};
 
 #[derive(Debug)]
 pub enum RunnerError {}
@@ -24,22 +24,18 @@ impl Elf {
 }
 
 pub struct Day01 {
-    output: Output,
     elves: Vec<Elf>,
 }
 
 impl Day01 {
-    pub fn new(part: usize) -> Self {
-        Self {
-            output: Output::new(2022, 1, part),
-            elves: Vec::new(),
-        }
+    pub fn new() -> Self {
+        Self { elves: Vec::new() }
     }
 }
 
 impl Runner for Day01 {
     fn parse(&mut self, part: usize) -> Result<(), Error> {
-        let lines = Lines::find_day_part(&mut self.output, 2022, 1, part, LinesOpt::TRIM)?;
+        let lines = Lines::find_day_part(2022, 1, part, LinesOpt::RAW)?;
         let mut elf = Elf::default();
         for line in lines.iter() {
             if line.is_empty() {
@@ -57,14 +53,13 @@ impl Runner for Day01 {
 
     fn part1(&mut self) -> Result<(), Error> {
         self.elves.sort_by_key(|e| e.total);
-        output!(self.output, "{}", self.elves.iter().last().unwrap().total)?;
+        println!("{}", self.elves.iter().last().unwrap().total);
         Ok(())
     }
 
     fn part2(&mut self) -> Result<(), Error> {
         self.elves.sort_by_key(|e| e.total);
-        output!(
-            self.output,
+        println!(
             "{}",
             self.elves
                 .iter()
@@ -72,11 +67,7 @@ impl Runner for Day01 {
                 .take(3)
                 .map(|e| e.total)
                 .sum::<usize>()
-        )?;
+        );
         Ok(())
-    }
-
-    fn output(&mut self) -> &mut Output {
-        &mut self.output
     }
 }

@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use crate::{output, output_noln, Error, Lines, LinesOpt, Output, Runner};
+use crate::{print, println, Error, Lines, LinesOpt, Output, Runner};
 
 #[derive(Debug)]
 pub enum RunnerError {}
@@ -10,21 +10,17 @@ impl From<RunnerError> for Error {
     }
 }
 
-pub struct Day23 {
-    output: Output,
-}
+pub struct Day23 {}
 
 impl Day23 {
-    pub fn new(part: usize) -> Self {
-        Self { 
-            output: Output::new(2023, 23, part),
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
 impl Runner for Day23 {
     fn parse(&mut self, part: usize) -> Result<(), Error> {
-        let _lines = Lines::find_day_part(&mut self.output, 2023, 23, part, LinesOpt::RAW)?;
+        let _lines = Lines::find_day_part(2023, 23, part, LinesOpt::RAW)?;
         Ok(())
     }
 
@@ -34,9 +30,5 @@ impl Runner for Day23 {
 
     fn part2(&mut self) -> Result<(), Error> {
         Err(Error::Unsolved)
-    }
-
-    fn output(&mut self) -> &mut Output {
-        &mut self.output
     }
 }

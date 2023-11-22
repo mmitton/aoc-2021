@@ -15,41 +15,33 @@ pub trait Runner {
     fn parse(&mut self, part: usize) -> Result<(), Error>;
     fn part1(&mut self) -> Result<(), Error>;
     fn part2(&mut self) -> Result<(), Error>;
-    fn output(&mut self) -> &mut Output;
 }
 
-pub type NewRunner = fn(part: usize) -> Box<dyn Runner>;
+pub type NewRunner = fn() -> Box<dyn Runner>;
 
 #[macro_export]
-macro_rules! output_noln {
-    ($output:expr, $($args:tt)*) => {
-        $output.write_fmt_noln(format_args!($($args)*))
-    };
-
-    ($output:expr) => {
-        $output.write_fmt_noln(format_args!(""))
+macro_rules! print {
+    ($($args:tt)*) => {
+        Output::print(format_args!($($args)*));
     };
 }
 
 #[macro_export]
-macro_rules! output {
-    ($output:expr, $($args:tt)*) => {
-        $output.write_fmt(format_args!($($args)*))
-    };
-
-    ($output:expr) => {
-        $output.write_fmt(format_args!(""))
+macro_rules! println {
+    ($($args:tt)*) => {
+        Output::println(format_args!($($args)*));
     };
 }
 
 macro_rules! run {
-    ($runner:expr) => {{
-        run!($runner, 1, part1);
-        run!($runner, 2, part2);
+    ($runner:expr, $year:expr, $day:expr) => {{
+        run!($runner, $year, $day, 1, part1);
+        run!($runner, $year, $day, 2, part2);
     }};
 
-    ($runner:expr, $part_num:expr, $part_fn:ident) => {{
-        let mut runner = $runner($part_num);
+    ($runner:expr, $year:expr, $day:expr, $part_num:literal, $part_fn:ident) => {{
+        Output::start_test($year, $day, $part_num);
+        let mut runner = $runner();
         let run = |runner: &mut Box<dyn Runner>| {
             runner.parse($part_num)?;
             runner.$part_fn()?;
@@ -57,11 +49,11 @@ macro_rules! run {
         };
 
         let res = run(&mut runner);
-        let output = runner.output();
+        // let output = runner.output();
         if let Err(e) = res {
-            output.error(e);
+            Output::error(e);
         }
-        drop(runner);
+        Output::end_test();
     }};
 }
 
@@ -142,6 +134,6 @@ fn main() {
             _ => {}
         }
 
-        run!(new_runner);
+        run!(new_runner, *year, *day);
     }
 }

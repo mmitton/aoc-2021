@@ -37,7 +37,7 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
         writeln!(d, "#[allow(unused_imports)]")?;
         writeln!(
             d,
-            "use crate::{{output, output_noln, Error, Lines, LinesOpt, Output, Runner}};"
+            "use crate::{{print, println, Error, Lines, LinesOpt, Output, Runner}};"
         )?;
         writeln!(d)?;
         writeln!(d, "#[derive(Debug)]")?;
@@ -49,15 +49,11 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
         writeln!(d, "    }}")?;
         writeln!(d, "}}")?;
         writeln!(d)?;
-        writeln!(d, "pub struct Day{day:02} {{")?;
-        writeln!(d, "    output: Output,")?;
-        writeln!(d, "}}")?;
+        writeln!(d, "pub struct Day{day:02} {{}}")?;
         writeln!(d)?;
         writeln!(d, "impl Day{day:02} {{")?;
-        writeln!(d, "    pub fn new(part: usize) -> Self {{")?;
-        writeln!(d, "        Self {{ ")?;
-        writeln!(d, "            output: Output::new({year}, {day}, part),")?;
-        writeln!(d, "        }}")?;
+        writeln!(d, "    pub fn new() -> Self {{")?;
+        writeln!(d, "        Self {{}}")?;
         writeln!(d, "    }}")?;
         writeln!(d, "}}")?;
         writeln!(d)?;
@@ -68,7 +64,7 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
         )?;
         writeln!(
             d,
-            "        let _lines = Lines::find_day_part(&mut self.output, {year}, {day}, part, LinesOpt::RAW)?;"
+            "        let _lines = Lines::find_day_part({year}, {day}, part, LinesOpt::RAW)?;"
         )?;
         writeln!(d, "        Ok(())")?;
         writeln!(d, "    }}")?;
@@ -79,10 +75,6 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
         writeln!(d)?;
         writeln!(d, "    fn part2(&mut self) -> Result<(), Error> {{")?;
         writeln!(d, "        Err(Error::Unsolved)")?;
-        writeln!(d, "    }}")?;
-        writeln!(d)?;
-        writeln!(d, "    fn output(&mut self) -> &mut Output {{")?;
-        writeln!(d, "        &mut self.output")?;
         writeln!(d, "    }}")?;
         writeln!(d, "}}")?;
     }
@@ -95,7 +87,7 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
     for day in 1..=25 {
         writeln!(
             m,
-            "    runners.insert(({year}, {day}), |part| Box::new(day_{day:02}::Day{day:02}::new(part)));"
+            "    runners.insert(({year}, {day}), || Box::new(day_{day:02}::Day{day:02}::new()));"
         )?;
     }
     writeln!(m, "}}")?;

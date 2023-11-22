@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use crate::{output, output_noln, Error, Lines, LinesOpt, Output, Runner};
+use crate::{print, println, Error, Lines, LinesOpt, Output, Runner};
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
@@ -12,13 +12,12 @@ impl From<RunnerError> for Error {
 }
 
 pub struct Day02 {
-    output: Output,
     rounds: Vec<(char, char)>,
     results: BTreeMap<(Play, Play), RoundResult>,
 }
 
 impl Day02 {
-    pub fn new(part: usize) -> Self {
+    pub fn new() -> Self {
         let mut results = BTreeMap::new();
         results.insert((Play::Rock, Play::Rock), RoundResult::Draw);
         results.insert((Play::Rock, Play::Paper), RoundResult::Win);
@@ -33,7 +32,6 @@ impl Day02 {
         results.insert((Play::Scissors, Play::Scissors), RoundResult::Draw);
 
         Self {
-            output: Output::new(2022, 2, part),
             rounds: Vec::new(),
             results,
         }
@@ -42,7 +40,7 @@ impl Day02 {
 
 impl Runner for Day02 {
     fn parse(&mut self, part: usize) -> Result<(), Error> {
-        let lines = Lines::find_day_part(&mut self.output, 2022, 2, part, LinesOpt::TRIM)?;
+        let lines = Lines::find_day_part(2022, 2, part, LinesOpt::RAW)?;
         for line in lines.iter() {
             let chars: Vec<char> = line.chars().collect();
             if chars.len() != 3 {
@@ -82,7 +80,7 @@ impl Runner for Day02 {
             })
             .sum::<usize>();
 
-        output!(self.output, "Answer: {score}")?;
+        println!("Answer: {score}");
         Ok(())
     }
 
@@ -122,12 +120,8 @@ impl Runner for Day02 {
             })
             .sum::<usize>();
 
-        output!(self.output, "Answer: {score}")?;
+        println!("Answer: {score}");
         Ok(())
-    }
-
-    fn output(&mut self) -> &mut Output {
-        &mut self.output
     }
 }
 
