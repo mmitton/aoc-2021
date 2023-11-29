@@ -34,8 +34,8 @@ impl Day01 {
 }
 
 impl Runner for Day01 {
-    fn parse(&mut self, part: usize) -> Result<(), Error> {
-        let lines = Lines::find_day_part(2022, 1, part, LinesOpt::RAW)?;
+    fn parse(&mut self, path: &str) -> Result<(), Error> {
+        let lines = Lines::from_path(path, LinesOpt::RAW)?;
         let mut elf = Elf::default();
         for line in lines.iter() {
             if line.is_empty() {

@@ -12,7 +12,7 @@ use clap::{arg, Command};
 use std::{cmp::Ordering, collections::BTreeMap};
 
 pub trait Runner {
-    fn parse(&mut self, part: usize) -> Result<(), Error>;
+    fn parse(&mut self, path: &str) -> Result<(), Error>;
     fn part1(&mut self) -> Result<(), Error>;
     fn part2(&mut self) -> Result<(), Error>;
 }
@@ -40,20 +40,23 @@ macro_rules! run {
     }};
 
     ($runner:expr, $year:expr, $day:expr, $part_num:literal, $part_fn:ident) => {{
-        Output::start_test($year, $day, $part_num);
-        let mut runner = $runner();
-        let run = |runner: &mut Box<dyn Runner>| {
-            runner.parse($part_num)?;
-            runner.$part_fn()?;
-            Ok(())
-        };
+        for path in Lines::find_day_part_files($year, $day, $part_num)? {
+            Output::start_test($year, $day, $part_num);
+            let mut runner = $runner();
+            let run = |runner: &mut Box<dyn Runner>| {
+                println!("Using {path} as input");
+                runner.parse(&path)?;
+                runner.$part_fn()?;
+                Ok(())
+            };
 
-        let res = run(&mut runner);
-        // let output = runner.output();
-        if let Err(e) = res {
-            Output::error(e);
+            let res = run(&mut runner);
+            // let output = runner.output();
+            if let Err(e) = res {
+                Output::error(e);
+            }
+            Output::end_test();
         }
-        Output::end_test();
     }};
 }
 
@@ -101,7 +104,7 @@ fn get_args() -> (Option<usize>, Option<usize>) {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     let (target_year, target_day) = get_args();
 
     let mut runners = BTreeMap::new();
@@ -136,4 +139,6 @@ fn main() {
 
         run!(new_runner, *year, *day);
     }
+
+    Ok(())
 }

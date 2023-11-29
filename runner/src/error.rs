@@ -1,14 +1,18 @@
+use std::ffi::OsString;
 use std::num::ParseIntError;
 
 #[derive(Debug)]
 pub enum Error {
-    IO(std::io::Error),
     Fmt(std::fmt::Error),
-    Runner(String),
-    MinReq(minreq::Error),
-    ParseIntError(ParseIntError),
-    MissingInput,
+    IO(std::io::Error),
     InvalidInput(String),
+    InvalidInputFile(OsString),
+    MinReq(minreq::Error),
+    MissingCookies,
+    MissingInput,
+    ParseIntError(ParseIntError),
+    Runner(String),
+    SearchUpFailed(String),
     Unsolved,
 }
 

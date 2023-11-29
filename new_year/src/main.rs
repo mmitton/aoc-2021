@@ -60,11 +60,11 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
         writeln!(d, "impl Runner for Day{day:02} {{")?;
         writeln!(
             d,
-            "    fn parse(&mut self, part: usize) -> Result<(), Error> {{"
+            "    fn parse(&mut self, path: &str) -> Result<(), Error> {{"
         )?;
         writeln!(
             d,
-            "        let _lines = Lines::find_day_part({year}, {day}, part, LinesOpt::RAW)?;"
+            "        let _lines = Lines::from_path(path, LinesOpt::RAW)?;"
         )?;
         writeln!(d, "        Ok(())")?;
         writeln!(d, "    }}")?;

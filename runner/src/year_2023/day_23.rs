@@ -19,8 +19,8 @@ impl Day23 {
 }
 
 impl Runner for Day23 {
-    fn parse(&mut self, part: usize) -> Result<(), Error> {
-        let _lines = Lines::find_day_part(2023, 23, part, LinesOpt::RAW)?;
+    fn parse(&mut self, path: &str) -> Result<(), Error> {
+        let _lines = Lines::from_path(path, LinesOpt::RAW)?;
         Ok(())
     }
 

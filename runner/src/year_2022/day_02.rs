@@ -39,8 +39,8 @@ impl Day02 {
 }
 
 impl Runner for Day02 {
-    fn parse(&mut self, part: usize) -> Result<(), Error> {
-        let lines = Lines::find_day_part(2022, 2, part, LinesOpt::RAW)?;
+    fn parse(&mut self, path: &str) -> Result<(), Error> {
+        let lines = Lines::from_path(path, LinesOpt::RAW)?;
         for line in lines.iter() {
             let chars: Vec<char> = line.chars().collect();
             if chars.len() != 3 {
