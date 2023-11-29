@@ -1,155 +1,133 @@
 #[cfg(debug_assertions)]
-const INPUT_FILE: &str = "../input-sample.txt";
+const INPUT_FILE: &str = "../input-sample-2.txt";
 #[cfg(not(debug_assertions))]
 const INPUT_FILE: &str = "../input.txt";
 
-#[derive(Debug)]
-enum Error {
-    IO(std::io::Error),
-    NAN(std::num::ParseIntError),
+use std::collections::BTreeSet;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct Point {
+    x: isize,
+    y: isize,
+    z: isize,
 }
 
-impl From<std::num::ParseIntError> for Error {
-    fn from(e: std::num::ParseIntError) -> Error {
-        Error::NAN(e)
+impl Point {
+    fn new(x: isize, y: isize, z: isize) -> Self {
+        Self { x, y, z }
+    }
+
+    fn scale(&self, shift: u32) -> Self {
+        Self {
+            x: self.x >> shift,
+            y: self.y >> shift,
+            z: self.z >> shift,
+        }
+    }
+
+    fn dist(&self, other: &Self) -> isize {
+        (self.x - other.x).abs() + (self.y - other.y).abs() + (self.z - other.z).abs()
     }
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 struct NanoBot {
-    x: i32,
-    y: i32,
-    z: i32,
-    r: i32,
+    center: Point,
+    radius: isize,
 }
 
-fn load_input(filename: &str) -> Result<Vec<NanoBot>, Error> {
+impl NanoBot {
+    fn limits(&self) -> [Point; 6] {
+        [
+            Point::new(self.center.x - self.radius, self.center.y, self.center.z),
+            Point::new(self.center.x + self.radius, self.center.y, self.center.z),
+            Point::new(self.center.x, self.center.y - self.radius, self.center.z),
+            Point::new(self.center.x, self.center.y + self.radius, self.center.z),
+            Point::new(self.center.x, self.center.y, self.center.z - self.radius),
+            Point::new(self.center.x, self.center.y, self.center.z + self.radius),
+        ]
+    }
+
+    fn scale(&self, shift: u32) -> Self {
+        let center = self.center.scale(shift);
+        let mut radius = 0;
+        for limit in self.limits().map(|p| p.scale(shift)) {
+            radius = radius.max(center.dist(&limit));
+        }
+        Self { center, radius }
+    }
+
+    fn can_see(&self, p: &Point) -> bool {
+        self.center.dist(p) <= self.radius
+    }
+}
+
+fn load_input(filename: &str) -> Result<Vec<NanoBot>, std::io::Error> {
     use std::fs::File;
     use std::io::{BufRead, BufReader};
-    let f = File::open(filename).map_err(|e| Error::IO(e))?;
+    let f = File::open(filename)?;
 
     let lines = BufReader::new(f).lines();
     let mut nanobots = Vec::new();
 
     for line in lines {
-        let line = line.map_err(|e| Error::IO(e))?;
+        let line = line?;
         let line = line.trim().to_string();
-        if line == "" || line.starts_with("#") {
+        if line.is_empty() || line.starts_with('#') {
             continue;
         }
 
         let parts: Vec<&str> = line.split(">, r=").collect();
-        let r = parts[1].parse()?;
-        let parts: Vec<&str> = parts[0][5..].split(",").collect();
-        let x = parts[0].parse()?;
-        let y = parts[1].parse()?;
-        let z = parts[2].parse()?;
+        let r = parts[1].parse().expect("Could not parse int");
+        let parts: Vec<&str> = parts[0][5..].split(',').collect();
+        let x = parts[0].parse().expect("Could not parse int");
+        let y = parts[1].parse().expect("Could not parse int");
+        let z = parts[2].parse().expect("Could not parse int");
 
         nanobots.push(NanoBot {
-            x: x,
-            y: y,
-            z: z,
-            r: r,
+            center: Point { x, y, z },
+            radius: r,
         });
     }
 
     Ok(nanobots)
 }
 
-fn num_bots(nanobots: &Vec<NanoBot>, x: i32, y: i32, z: i32) -> usize {
-    let mut bots = 0;
+fn main() {
+    let nanobots = load_input(INPUT_FILE).expect("Could not read input");
 
-    for nanobot in nanobots {
-        let dist = (nanobot.x - x).abs() + (nanobot.y - y).abs() + (nanobot.z - z).abs();
-        if dist <= nanobot.r {
-            bots += 1;
-        }
-    }
+    let mut search_spaces: Vec<Point> = Vec::new();
+    let mut next_search_spaces: Vec<Point> = Vec::new();
+    let mut scaled_nanobots = Vec::with_capacity(nanobots.len());
+    let mut seen: BTreeSet<Point> = BTreeSet::new();
 
-    bots
-}
+    search_spaces.push(Point::new(0, 0, 0));
+    for shift in (0..isize::BITS).rev() {
+        scaled_nanobots.clear();
+        scaled_nanobots.extend(nanobots.iter().map(|nanobot| nanobot.scale(shift)));
 
-fn main() -> Result<(), Error> {
-    let nanobots = load_input(INPUT_FILE)?;
-
-    let mut x0 = i32::MAX;
-    let mut x1 = i32::MIN;
-    let mut y0 = i32::MAX;
-    let mut y1 = i32::MIN;
-    let mut z0 = i32::MAX;
-    let mut z1 = i32::MIN;
-
-    for nanobot in &nanobots {
-        if nanobot.x < x0 {
-            x0 = nanobot.x;
-        }
-        if nanobot.x > x1 {
-            x1 = nanobot.x;
-        }
-        if nanobot.y < y0 {
-            y0 = nanobot.y;
-        }
-        if nanobot.y > y1 {
-            y1 = nanobot.y;
-        }
-        if nanobot.z < z0 {
-            z0 = nanobot.z;
-        }
-        if nanobot.z > z1 {
-            z1 = nanobot.z;
-        }
-    }
-
-    println!("{},{},{} => {},{},{}", x0, y0, z0, x1, y1, z1);
-    println!("{},{},{}", x1 - x0, y1 - y0, z1 - z0);
-    let x_step = (x1 - x0) / 100;
-    let y_step = (y1 - y0) / 100;
-    let z_step = (z1 - z0) / 100;
-    let step = if x_step <= y_step && x_step <= z_step {
-        x_step
-    } else if y_step <= x_step && y_step <= z_step {
-        y_step
-    } else {
-        z_step
-    } as usize;
-
-    use std::collections::VecDeque;
-    let mut queue = VecDeque::new();
-    queue.push_front((step, x0, y0, z0, x1, y1, z1));
-
-    let mut best = 0;
-    loop {
-        let mut results = Vec::new();
-        let mut cur_step = 0;
-
-        let mut best_coord: Option<(i32, i32, i32)> = None;
-        let mut best_dist = i32::MAX;
-
-        while queue.len() > 0 {
-            let (step, x0, y0, z0, x1, y1, z1) = queue.pop_front().unwrap();
-            cur_step = step;
-
-            for z in (z0..=z1).step_by(step) {
-                for y in (y0..=y1).step_by(step) {
-                    for x in (x0..=x1).step_by(step) {
-                        let num = num_bots(&nanobots, x, y, z);
-                        if num >= best {
-                            if num > best {
-                                best = num;
-                                println!("new best: {}", best);
-                                results.clear();
-                                best_coord = None;
-                                best_dist = i32::MAX;
-                            }
-                            if step == 1 {
-                                let dist = x.abs() + y.abs() + z.abs();
-                                if dist < best_dist {
-                                    println!("New best coord: {:?} @ {}", (x, y, z), dist);
-                                    best_coord = Some((x, y, z));
-                                    best_dist = dist;
+        let mut max_seen = 0;
+        next_search_spaces.clear();
+        seen.clear();
+        for point in search_spaces.iter() {
+            for z in (point.z * 2) - 1..=(point.z * 2) + 1 {
+                for y in (point.y * 2) - 1..=(point.y * 2) + 1 {
+                    for x in (point.x * 2) - 1..=(point.x * 2) + 1 {
+                        let point = Point::new(x, y, z);
+                        if seen.insert(point) {
+                            let mut seen = 0;
+                            for nanobot in scaled_nanobots.iter() {
+                                if nanobot.can_see(&point) {
+                                    seen += 1;
                                 }
-                            } else {
-                                results.push((x, y, z));
+                            }
+
+                            if seen > max_seen {
+                                next_search_spaces.clear();
+                                max_seen = seen;
+                            }
+                            if seen == max_seen {
+                                next_search_spaces.push(point);
                             }
                         }
                     }
@@ -157,33 +135,18 @@ fn main() -> Result<(), Error> {
             }
         }
 
-        if let Some(best_coord) = best_coord {
-            println!("Done  {:?}  {}", best_coord, best_dist);
-            return Ok(());
-        }
+        std::mem::swap(&mut search_spaces, &mut next_search_spaces);
+    }
 
-        let mut new_step = cur_step / 10;
-        if new_step == 0 {
-            new_step = 1;
-        }
-        println!(
-            "best: {}  cur_step:{}  {}  next step:{}",
-            best,
-            cur_step,
-            results.len(),
-            new_step,
-        );
-        assert!(results.len() > 0);
+    let origin = Point::new(0, 0, 0);
+    let mut closest = isize::MAX;
 
-        for result in &results {
-            let (x, y, z) = *result;
-            let x0 = x - (cur_step / 2) as i32;
-            let x1 = x + (cur_step / 2) as i32;
-            let y0 = y - (cur_step / 2) as i32;
-            let y1 = y + (cur_step / 2) as i32;
-            let z0 = z - (cur_step / 2) as i32;
-            let z1 = z + (cur_step / 2) as i32;
-            queue.push_back((new_step, x0, y0, z0, x1, y1, z1));
+    for point in search_spaces {
+        let dist = origin.dist(&point);
+        if dist < closest {
+            closest = dist;
         }
     }
+
+    println!("Closest: {closest:?}");
 }
