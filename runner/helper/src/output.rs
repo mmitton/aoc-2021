@@ -168,12 +168,10 @@ impl std::fmt::Write for Output {
         }
         if !ends_with_nl {
             self.new_line = false;
+        } else if let Some(capture) = &mut self.capture {
+            capture.push('\n');
         } else {
-            if let Some(capture) = &mut self.capture {
-                capture.push('\n');
-            } else {
-                println!();
-            }
+            println!();
         }
         Ok(())
     }
