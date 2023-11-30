@@ -159,12 +159,13 @@ impl Lines {
         year: usize,
         day: usize,
         part: usize,
+        sample_data: bool,
     ) -> Result<Vec<(String, Option<String>)>, Error> {
         Self::download_input(year, day)?;
 
         let (sample_1, sample_2, real_1, real_2) = Self::get_files(year, day)?;
 
-        let (part1, mut part2) = if cfg!(debug_assertions) {
+        let (part1, mut part2) = if sample_data {
             (sample_1, sample_2)
         } else {
             (real_1, real_2)

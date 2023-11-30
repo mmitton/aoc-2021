@@ -9,6 +9,7 @@ pub struct Output {
     part: usize,
     new_line: bool,
     start: Option<Instant>,
+    capture: Option<String>,
 }
 
 static OUTPUT: Mutex<Output> = Mutex::new(Output {
@@ -17,6 +18,7 @@ static OUTPUT: Mutex<Output> = Mutex::new(Output {
     part: 0,
     new_line: true,
     start: None,
+    capture: None,
 });
 
 impl Output {
@@ -41,6 +43,30 @@ impl Output {
         output.part = part;
         output.new_line = true;
         output.start = Some(Instant::now());
+    }
+
+    pub fn start_capture() {
+        let mut output = OUTPUT.lock().expect("Could not get output lock");
+        if output.start.is_none() {
+            panic!("Test not running");
+        }
+        if output.capture.is_some() {
+            panic!("Capture already in progress");
+        }
+        output.capture = Some(String::new());
+    }
+
+    pub fn end_capture() -> String {
+        let mut output = OUTPUT.lock().expect("Could not get output lock");
+        if let Some(mut capture) = output.capture.take() {
+            if !capture.ends_with('\n') {
+                capture.push('\n');
+            }
+            output.new_line = true;
+            capture
+        } else {
+            panic!("Capture not in progress");
+        }
     }
 
     pub fn end_test() {
@@ -74,6 +100,12 @@ impl Output {
         let mut output = OUTPUT.lock().expect("Could not get output lock");
         output.ensure_nl();
 
+        if let Some(capture) = output.capture.take() {
+            if !capture.is_empty() {
+                println!("{capture}");
+            }
+        }
+
         output
             .write_fmt(format_args!("Error: {e:?}"))
             .expect("Could not write output");
@@ -101,46 +133,48 @@ impl std::fmt::Write for Output {
         };
         for (idx, line) in s.split('\n').enumerate() {
             if idx != 0 {
-                println!();
+                if let Some(capture) = &mut self.capture {
+                    capture.push('\n');
+                } else {
+                    println!();
+                }
             }
             if self.new_line {
-                print!(
-                    "{year}-{day:02} Part {part}: ",
-                    year = self.year,
-                    day = self.day,
-                    part = self.part
-                );
+                if let Some(capture) = &mut self.capture {
+                    write!(
+                        capture,
+                        "{year}-{day:02} Part {part}: ",
+                        year = self.year,
+                        day = self.day,
+                        part = self.part
+                    )
+                    .expect("Could not capture output");
+                } else {
+                    print!(
+                        "{year}-{day:02} Part {part}: ",
+                        year = self.year,
+                        day = self.day,
+                        part = self.part
+                    );
+                }
             }
-            print!("{line}");
+            if let Some(capture) = &mut self.capture {
+                capture.push_str(line);
+            } else {
+                print!("{line}");
+            }
 
             self.new_line = true;
         }
         if !ends_with_nl {
             self.new_line = false;
         } else {
-            println!()
+            if let Some(capture) = &mut self.capture {
+                capture.push('\n');
+            } else {
+                println!();
+            }
         }
         Ok(())
     }
 }
-
-/*
-impl Drop for Output {
-    fn drop(&mut self) {
-        let elapsed = self.start.elapsed();
-        let year = self.year;
-        let day = self.day;
-        let part = self.part;
-        let cursor = Cursor::new(&self.output);
-        for line in BufReader::new(cursor).lines() {
-            print!("{year}-{day:02} Part {part}: ");
-            match line {
-                Ok(line) => println!("{line}"),
-                Err(e) => println!("{e:?}"),
-            }
-        }
-        println!("{year}-{day:02} Part {part}: Elapsed {elapsed:?}");
-        println!();
-    }
-}
-*/
