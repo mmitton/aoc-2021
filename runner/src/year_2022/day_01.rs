@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use crate::{print, println, Error, Lines, LinesOpt, Output, Runner};
+use crate::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
 
 #[derive(Debug)]
 pub enum RunnerError {}
@@ -51,23 +51,20 @@ impl Runner for Day01 {
         Ok(())
     }
 
-    fn part1(&mut self) -> Result<(), Error> {
+    fn part1(&mut self) -> Result<RunOutput, Error> {
         self.elves.sort_by_key(|e| e.total);
-        println!("{}", self.elves.iter().last().unwrap().total);
-        Ok(())
+        Ok(self.elves.iter().last().unwrap().total.into())
     }
 
-    fn part2(&mut self) -> Result<(), Error> {
+    fn part2(&mut self) -> Result<RunOutput, Error> {
         self.elves.sort_by_key(|e| e.total);
-        println!(
-            "{}",
-            self.elves
-                .iter()
-                .rev()
-                .take(3)
-                .map(|e| e.total)
-                .sum::<usize>()
-        );
-        Ok(())
+        Ok(self
+            .elves
+            .iter()
+            .rev()
+            .take(3)
+            .map(|e| e.total)
+            .sum::<usize>()
+            .into())
     }
 }

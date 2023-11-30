@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use crate::{print, println, Error, Lines, LinesOpt, Output, Runner};
+use crate::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
 
 #[derive(Debug)]
 pub enum RunnerError {}
@@ -24,11 +24,11 @@ impl Runner for Day19 {
         Ok(())
     }
 
-    fn part1(&mut self) -> Result<(), Error> {
+    fn part1(&mut self) -> Result<RunOutput, Error> {
         Err(Error::Unsolved)
     }
 
-    fn part2(&mut self) -> Result<(), Error> {
+    fn part2(&mut self) -> Result<RunOutput, Error> {
         Err(Error::Unsolved)
     }
 }

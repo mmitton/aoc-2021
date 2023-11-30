@@ -155,7 +155,11 @@ impl Lines {
         Ok((sample_1, sample_2, real_1, real_2))
     }
 
-    pub fn find_day_part_files(year: usize, day: usize, part: usize) -> Result<Vec<String>, Error> {
+    pub fn find_day_part_files(
+        year: usize,
+        day: usize,
+        part: usize,
+    ) -> Result<Vec<(String, Option<String>)>, Error> {
         Self::download_input(year, day)?;
 
         let (sample_1, sample_2, real_1, real_2) = Self::get_files(year, day)?;
@@ -179,7 +183,22 @@ impl Lines {
         if files.is_empty() {
             Err(Error::MissingInput)
         } else {
-            Ok(files)
+            let mut ret = Vec::new();
+            for f in files {
+                let output = if let Some(output) = f.strip_suffix(".txt") {
+                    let output = format!("{output}.expect{part}");
+                    if PathBuf::from(&output).is_file() {
+                        Some(output)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                ret.push((f, output));
+            }
+            Ok(ret)
         }
     }
 

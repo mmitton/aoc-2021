@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use crate::{print, println, Error, Lines, LinesOpt, Output, Runner};
+use crate::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
@@ -57,7 +57,7 @@ impl Runner for Day02 {
         Ok(())
     }
 
-    fn part1(&mut self) -> Result<(), Error> {
+    fn part1(&mut self) -> Result<RunOutput, Error> {
         let score = self
             .rounds
             .clone()
@@ -80,11 +80,10 @@ impl Runner for Day02 {
             })
             .sum::<usize>();
 
-        println!("Answer: {score}");
-        Ok(())
+        Ok(score.into())
     }
 
-    fn part2(&mut self) -> Result<(), Error> {
+    fn part2(&mut self) -> Result<RunOutput, Error> {
         let score = self
             .rounds
             .clone()
@@ -120,8 +119,7 @@ impl Runner for Day02 {
             })
             .sum::<usize>();
 
-        println!("Answer: {score}");
-        Ok(())
+        Ok(score.into())
     }
 }
 

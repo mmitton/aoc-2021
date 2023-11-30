@@ -37,7 +37,7 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
         writeln!(d, "#[allow(unused_imports)]")?;
         writeln!(
             d,
-            "use crate::{{print, println, Error, Lines, LinesOpt, Output, Runner}};"
+            "use crate::{{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner}};"
         )?;
         writeln!(d)?;
         writeln!(d, "#[derive(Debug)]")?;
@@ -69,11 +69,11 @@ fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
         writeln!(d, "        Ok(())")?;
         writeln!(d, "    }}")?;
         writeln!(d)?;
-        writeln!(d, "    fn part1(&mut self) -> Result<(), Error> {{")?;
+        writeln!(d, "    fn part1(&mut self) -> Result<RunOutput, Error> {{")?;
         writeln!(d, "        Err(Error::Unsolved)")?;
         writeln!(d, "    }}")?;
         writeln!(d)?;
-        writeln!(d, "    fn part2(&mut self) -> Result<(), Error> {{")?;
+        writeln!(d, "    fn part2(&mut self) -> Result<RunOutput, Error> {{")?;
         writeln!(d, "        Err(Error::Unsolved)")?;
         writeln!(d, "    }}")?;
         writeln!(d, "}}")?;

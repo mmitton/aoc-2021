@@ -1,20 +1,22 @@
 mod error;
 mod output;
 mod parser;
+mod run_output;
 mod year_2022;
 mod year_2023;
 
 pub use error::Error;
 pub use output::Output;
 pub use parser::{Lines, LinesOpt};
+pub use run_output::RunOutput;
 
 use clap::{arg, Command};
 use std::{cmp::Ordering, collections::BTreeMap};
 
 pub trait Runner {
     fn parse(&mut self, path: &str) -> Result<(), Error>;
-    fn part1(&mut self) -> Result<(), Error>;
-    fn part2(&mut self) -> Result<(), Error>;
+    fn part1(&mut self) -> Result<RunOutput, Error>;
+    fn part2(&mut self) -> Result<RunOutput, Error>;
 }
 
 pub type NewRunner = fn() -> Box<dyn Runner>;
@@ -33,31 +35,51 @@ macro_rules! println {
     };
 }
 
-macro_rules! run {
-    ($runner:expr, $year:expr, $day:expr) => {{
-        run!($runner, $year, $day, 1, part1);
-        run!($runner, $year, $day, 2, part2);
-    }};
-
-    ($runner:expr, $year:expr, $day:expr, $part_num:literal, $part_fn:ident) => {{
-        for path in Lines::find_day_part_files($year, $day, $part_num)? {
-            Output::start_test($year, $day, $part_num);
-            let mut runner = $runner();
-            let run = |runner: &mut Box<dyn Runner>| {
-                println!("Using {path} as input");
-                runner.parse(&path)?;
-                runner.$part_fn()?;
-                Ok(())
+fn run(new_runner: &NewRunner, year: usize, day: usize, part: usize) -> Result<(), Error> {
+    for (path, expect_path) in Lines::find_day_part_files(year, day, part)? {
+        Output::start_test(year, day, part);
+        let mut runner = new_runner();
+        let run = |runner: &mut Box<dyn Runner>| {
+            println!("Using {path} as input");
+            runner.parse(&path)?;
+            let output = match part {
+                1 => runner.part1()?,
+                2 => runner.part2()?,
+                _ => unreachable!(),
             };
 
-            let res = run(&mut runner);
-            // let output = runner.output();
-            if let Err(e) = res {
-                Output::error(e);
+            let output = output.to_string();
+            if !output.contains('\n') {
+                println!("Answer: {output}");
+            } else {
+                println!("Answer: ** Multiline **");
+                println!("{output}");
             }
-            Output::end_test();
+            if let Some(expect_path) = expect_path {
+                let expect = std::fs::read_to_string(expect_path)?;
+                let expect = expect.trim_end_matches('\n');
+                if expect != output {
+                    println!("ERROR: Output did not match expected output.");
+                    if expect.contains('\n') {
+                        println!("Expected: {expect}");
+                    } else {
+                        println!("Expected: ** Multiline **");
+                        println!("{expect}");
+                    }
+                }
+            } else {
+                println!("No expected output to compare");
+            }
+            Ok(())
+        };
+
+        let res = run(&mut runner);
+        if let Err(e) = res {
+            Output::error(e);
         }
-    }};
+        Output::end_test();
+    }
+    Ok(())
 }
 
 fn get_args() -> (Option<usize>, Option<usize>) {
@@ -95,10 +117,14 @@ fn get_args() -> (Option<usize>, Option<usize>) {
             }
         }
         Some(("all", _)) => (None, None),
-        Some(("day", submatches)) | Some(("year", submatches)) => {
+        Some(("day", submatches)) => {
             let year = submatches.get_one::<usize>("YEAR").copied();
             let day = submatches.get_one::<usize>("DAY").copied();
             (year, day)
+        }
+        Some(("year", submatches)) => {
+            let year = submatches.get_one::<usize>("YEAR").copied();
+            (year, None)
         }
         subcommand => unreachable!("{subcommand:?}"),
     }
@@ -137,7 +163,8 @@ fn main() -> Result<(), Error> {
             _ => {}
         }
 
-        run!(new_runner, *year, *day);
+        run(new_runner, *year, *day, 1)?;
+        run(new_runner, *year, *day, 2)?;
     }
 
     Ok(())
