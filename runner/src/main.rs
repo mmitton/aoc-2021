@@ -1,39 +1,7 @@
-mod error;
-mod output;
-mod parser;
-mod run_output;
-mod year_2022;
-mod year_2023;
-
-pub use error::Error;
-pub use output::Output;
-pub use parser::{Lines, LinesOpt};
-pub use run_output::RunOutput;
-
 use clap::{arg, Arg, Command};
 use std::{cmp::Ordering, collections::BTreeMap};
 
-pub trait Runner {
-    fn parse(&mut self, path: &str) -> Result<(), Error>;
-    fn part1(&mut self) -> Result<RunOutput, Error>;
-    fn part2(&mut self) -> Result<RunOutput, Error>;
-}
-
-pub type NewRunner = fn() -> Box<dyn Runner>;
-
-#[macro_export]
-macro_rules! print {
-    ($($args:tt)*) => {
-        Output::print(format_args!($($args)*));
-    };
-}
-
-#[macro_export]
-macro_rules! println {
-    ($($args:tt)*) => {
-        Output::println(format_args!($($args)*));
-    };
-}
+use helper::{find_day_part_files, println, Error, NewRunner, Output, Runner};
 
 fn run(
     capture: bool,
@@ -43,7 +11,7 @@ fn run(
     day: usize,
     part: usize,
 ) -> Result<(), Error> {
-    for (path, expect_path) in Lines::find_day_part_files(year, day, part, sample_data)? {
+    for (path, expect_path) in find_day_part_files(year, day, part, sample_data)? {
         Output::start_test(year, day, part);
         let mut runner = new_runner();
         let run = |runner: &mut Box<dyn Runner>| {
@@ -209,8 +177,8 @@ fn main() -> Result<(), Error> {
     let (capture, sample_data, target_year, target_day) = get_args();
 
     let mut runners = BTreeMap::new();
-    year_2022::register(&mut runners);
-    year_2023::register(&mut runners);
+    aoc_2022::register(&mut runners);
+    aoc_2023::register(&mut runners);
 
     use chrono::prelude::*;
     let today = Local::now();

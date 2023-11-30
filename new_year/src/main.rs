@@ -2,42 +2,54 @@ use chrono::prelude::*;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug)]
-enum Error {
-    IO(std::io::Error),
-    YearExists,
+use helper::{search_up, Error, SearchType};
+
+fn exec(cmd: &str, args: &[&str]) -> Result<(), Error> {
+    use std::process::Command;
+
+    let mut cmd = Command::new(cmd);
+    cmd.args(args);
+    let status = cmd.status()?;
+    assert!(status.success());
+    Ok(())
 }
 
-impl From<std::io::Error> for Error {
-    fn from(e: std::io::Error) -> Self {
-        Self::IO(e)
+fn create_year(year: usize) -> Result<(), Error> {
+    // Find runner crate
+    let runner_path = search_up("runner", SearchType::Dir)?;
+    std::env::set_current_dir(&runner_path)?;
+
+    // Check to see if crate exists
+    let crate_path_str = format!("aoc_{year}");
+    let crate_path = Path::new(crate_path_str.as_str());
+    if crate_path.exists() {
+        return Err(Error::YearExists(year));
     }
-}
 
-fn create_year(path: impl AsRef<Path>, year: usize) -> Result<(), Error> {
-    let path = path.as_ref();
-    if path.exists() {
-        return Err(Error::YearExists);
-    }
+    // Create crate library and add it as a dependency to runner
+    exec("cargo", &["new", "--lib", &crate_path_str])?;
+    exec("cargo", &["add", "--path", &crate_path_str])?;
 
-    std::fs::create_dir(path)?;
+    // Change in to crate folder and build files
+    std::env::set_current_dir(&crate_path_str)?;
+    exec("cargo", &["add", "--path", "../helper"])?;
 
-    let mut mod_path = PathBuf::from(path);
-    mod_path.push("mod.rs");
+    let mut mod_path = PathBuf::from("src");
+    mod_path.push("lib.rs");
     let mut m = std::fs::File::create(mod_path)?;
-    writeln!(m, "use crate::NewRunner;")?;
+    writeln!(m, "use helper::NewRunner;")?;
     writeln!(m, "use std::collections::BTreeMap;")?;
     writeln!(m)?;
     for day in 1..=25 {
         writeln!(m, "mod day_{day:02};")?;
 
-        let mut day_path = PathBuf::from(path);
+        let mut day_path = PathBuf::from("src");
         day_path.push(format!("day_{day:02}.rs"));
         let mut d = std::fs::File::create(day_path)?;
         writeln!(d, "#[allow(unused_imports)]")?;
         writeln!(
             d,
-            "use crate::{{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner}};"
+            "use helper::{{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner}};"
         )?;
         writeln!(d)?;
         writeln!(d, "#[derive(Debug)]")?;
@@ -109,7 +121,7 @@ fn main() {
 
     println!("Making new year for {year}");
 
-    if let Err(e) = create_year(format!("runner/src/year_{year}"), year) {
+    if let Err(e) = create_year(year) {
         panic!("{e:?}");
     }
 }
