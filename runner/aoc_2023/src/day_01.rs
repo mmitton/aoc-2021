@@ -11,7 +11,7 @@ impl From<RunnerError> for Error {
 }
 
 pub struct Day01 {
-    lines: Vec<String>,
+    lines: Vec<Vec<char>>,
 }
 
 impl Day01 {
@@ -24,28 +24,47 @@ impl Runner for Day01 {
     fn parse(&mut self, path: &str) -> Result<(), Error> {
         self.lines = Lines::from_path(path, LinesOpt::RAW)?
             .iter()
-            .map(|s| s.to_string())
+            .map(|s| s.chars().collect())
             .collect();
         Ok(())
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
+        const MAP: &[(&[char], usize)] = &[
+            (&['0'], 0),
+            (&['1'], 1),
+            (&['2'], 2),
+            (&['3'], 3),
+            (&['4'], 4),
+            (&['5'], 5),
+            (&['6'], 6),
+            (&['7'], 7),
+            (&['8'], 8),
+            (&['9'], 9),
+        ];
+
+        let mut digits = Vec::new();
         Ok(self
             .lines
-            .iter()
+            .iter_mut()
             .map(|line| {
-                let digits: Vec<usize> = line
-                    .chars()
-                    .filter_map(|c| {
-                        if c.is_digit(10) {
-                            Some(c as usize - '0' as usize)
-                        } else {
-                            None
+                let mut remaining = line.as_slice();
+                digits.clear();
+                'search: while !remaining.is_empty() {
+                    for (from, to) in MAP.iter() {
+                        if remaining.len() < from.len() {
+                            continue;
                         }
-                    })
-                    .collect();
+                        if &remaining[0..from.len()] == *from {
+                            digits.push(*to);
+                            remaining = &remaining[from.len()..];
+                            continue 'search;
+                        }
+                    }
+                    remaining = &remaining[1..];
+                }
                 let num = (digits[0] * 10) + digits[digits.len() - 1];
-                println!("{digits:?} {num}");
+                println!("{line:?} {digits:?} {num}");
                 num
             })
             .sum::<usize>()
@@ -53,46 +72,51 @@ impl Runner for Day01 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        let digits = [
-            ("one", "1"),
-            ("two", "2"),
-            ("three", "3"),
-            ("four", "4"),
-            ("five", "5"),
-            ("six", "6"),
-            ("seven", "7"),
-            ("eight", "8"),
-            ("nine", "9"),
-            ("zero", "0"),
+        const MAP: &[(&[char], usize)] = &[
+            (&['0'], 0),
+            (&['1'], 1),
+            (&['2'], 2),
+            (&['3'], 3),
+            (&['4'], 4),
+            (&['5'], 5),
+            (&['6'], 6),
+            (&['7'], 7),
+            (&['8'], 8),
+            (&['9'], 9),
+            (&['z', 'e', 'r', 'o'], 0),
+            (&['o', 'n', 'e'], 1),
+            (&['t', 'w', 'o'], 2),
+            (&['t', 'h', 'r', 'e', 'e'], 3),
+            (&['f', 'o', 'u', 'r'], 4),
+            (&['f', 'i', 'v', 'e'], 5),
+            (&['s', 'i', 'x'], 6),
+            (&['s', 'e', 'v', 'e', 'n'], 7),
+            (&['e', 'i', 'g', 'h', 't'], 8),
+            (&['n', 'i', 'n', 'e'], 9),
         ];
+
+        let mut digits = Vec::new();
         Ok(self
             .lines
             .iter_mut()
             .map(|line| {
-                let mut idx = 0;
-                while idx < line.len() {
-                    for (from, to) in &digits {
-                        if idx + from.len() > line.len() {
+                let mut remaining = line.as_slice();
+                digits.clear();
+                'search: while !remaining.is_empty() {
+                    for (from, to) in MAP.iter() {
+                        if remaining.len() < from.len() {
                             continue;
                         }
-                        if &line[idx..idx + from.len()] == *from {
-                            line.replace_range(idx..idx + from.len(), to)
+                        if &remaining[0..from.len()] == *from {
+                            digits.push(*to);
+                            remaining = &remaining[from.len()..];
+                            continue 'search;
                         }
                     }
-                    idx += 1;
+                    remaining = &remaining[1..];
                 }
-                let digits: Vec<usize> = line
-                    .chars()
-                    .filter_map(|c| {
-                        if c.is_digit(10) {
-                            Some(c as usize - '0' as usize)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
                 let num = (digits[0] * 10) + digits[digits.len() - 1];
-                println!("{line} {digits:?} {num}");
+                println!("{line:?} {digits:?} {num}");
                 num
             })
             .sum::<usize>()
