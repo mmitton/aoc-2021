@@ -69,6 +69,7 @@ fn get_args() -> (bool, bool, Option<usize>, Option<usize>) {
         .arg(
             Arg::new("sample-data")
                 .long("sample-data")
+                .visible_alias("sample")
                 .num_args(0)
                 .required(false)
                 .help("Run Sample Data"),
@@ -76,6 +77,7 @@ fn get_args() -> (bool, bool, Option<usize>, Option<usize>) {
         .arg(
             Arg::new("real-data")
                 .long("real-data")
+                .visible_alias("real")
                 .num_args(0)
                 .required(false)
                 .help("Run Real Data"),
