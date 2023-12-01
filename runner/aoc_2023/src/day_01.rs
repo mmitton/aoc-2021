@@ -76,7 +76,6 @@ impl Runner for Day01 {
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
         const MAP: &[(&[char], usize)] = &[
-            (&['0'], 0),
             (&['1'], 1),
             (&['2'], 2),
             (&['3'], 3),
@@ -104,7 +103,7 @@ impl Runner for Day01 {
                 let mut remaining = line.as_slice();
                 let mut left = None;
                 let mut right = None;
-                'search: while !remaining.is_empty() {
+                while !remaining.is_empty() {
                     for (from, to) in MAP.iter() {
                         if remaining.len() < from.len() {
                             continue;
@@ -114,8 +113,7 @@ impl Runner for Day01 {
                                 left = Some(*to);
                             }
                             right = Some(*to);
-                            remaining = &remaining[from.len()..];
-                            continue 'search;
+                            break;
                         }
                     }
                     remaining = &remaining[1..];
