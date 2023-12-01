@@ -10,25 +10,66 @@ impl From<RunnerError> for Error {
     }
 }
 
-pub struct Day03 {}
+pub struct Day03 {
+    lines: Vec<Vec<char>>,
+}
 
 impl Day03 {
     pub fn new() -> Self {
-        Self {}
+        Self { lines: Vec::new() }
     }
 }
 
 impl Runner for Day03 {
     fn parse(&mut self, path: &str) -> Result<(), Error> {
-        let _lines = Lines::from_path(path, LinesOpt::RAW)?;
+        for line in Lines::from_path(path, LinesOpt::TRIM)?.iter() {
+            self.lines.push(line.chars().collect());
+        }
         Ok(())
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        Ok(self
+            .lines
+            .iter()
+            .map(|line| {
+                let split = line.len() / 2;
+                let left = &line[..split];
+                let right = &line[split..];
+                for c in left.iter().copied() {
+                    if right.contains(&c) {
+                        println!("Left:{left:?}  Right:{right:?}  In both: {c}");
+                        return match c {
+                            'a'..='z' => (c as usize - 'a' as usize) + 1,
+                            'A'..='Z' => (c as usize - 'A' as usize) + 27,
+                            _ => unreachable!("Invalid char '{c}'"),
+                        };
+                    }
+                }
+                unreachable!("Did not find a match");
+            })
+            .sum::<usize>()
+            .into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        Ok(self
+            .lines
+            .chunks(3)
+            .map(|lines| {
+                for c in lines[0].iter().copied() {
+                    if lines[1].contains(&c) && lines[2].contains(&c) {
+                        println!("Lines: {lines:?}  In all: {c}");
+                        return match c {
+                            'a'..='z' => (c as usize - 'a' as usize) + 1,
+                            'A'..='Z' => (c as usize - 'A' as usize) + 27,
+                            _ => unreachable!("Invalid char '{c}'"),
+                        };
+                    }
+                }
+                unreachable!("Did not find a match");
+            })
+            .sum::<usize>()
+            .into())
     }
 }
