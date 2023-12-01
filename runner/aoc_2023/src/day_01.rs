@@ -43,28 +43,31 @@ impl Runner for Day01 {
             (&['9'], 9),
         ];
 
-        let mut digits = Vec::new();
         Ok(self
             .lines
             .iter_mut()
             .map(|line| {
                 let mut remaining = line.as_slice();
-                digits.clear();
+                let mut left = None;
+                let mut right = None;
                 'search: while !remaining.is_empty() {
                     for (from, to) in MAP.iter() {
                         if remaining.len() < from.len() {
                             continue;
                         }
                         if &remaining[0..from.len()] == *from {
-                            digits.push(*to);
+                            if left.is_none() {
+                                left = Some(*to);
+                            }
+                            right = Some(*to);
                             remaining = &remaining[from.len()..];
                             continue 'search;
                         }
                     }
                     remaining = &remaining[1..];
                 }
-                let num = (digits[0] * 10) + digits[digits.len() - 1];
-                println!("{line:?} {digits:?} {num}");
+                let num = (left.unwrap() * 10) + right.unwrap();
+                println!("{line:?} {left:?} {right:?} {num}");
                 num
             })
             .sum::<usize>()
@@ -95,28 +98,31 @@ impl Runner for Day01 {
             (&['n', 'i', 'n', 'e'], 9),
         ];
 
-        let mut digits = Vec::new();
         Ok(self
             .lines
             .iter_mut()
             .map(|line| {
                 let mut remaining = line.as_slice();
-                digits.clear();
+                let mut left = None;
+                let mut right = None;
                 'search: while !remaining.is_empty() {
                     for (from, to) in MAP.iter() {
                         if remaining.len() < from.len() {
                             continue;
                         }
                         if &remaining[0..from.len()] == *from {
-                            digits.push(*to);
+                            if left.is_none() {
+                                left = Some(*to);
+                            }
+                            right = Some(*to);
                             remaining = &remaining[from.len()..];
                             continue 'search;
                         }
                     }
                     remaining = &remaining[1..];
                 }
-                let num = (digits[0] * 10) + digits[digits.len() - 1];
-                println!("{line:?} {digits:?} {num}");
+                let num = (left.unwrap() * 10) + right.unwrap();
+                println!("{line:?} {left:?} {right:?} {num}");
                 num
             })
             .sum::<usize>()
