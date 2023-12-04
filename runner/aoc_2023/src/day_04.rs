@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
 
@@ -27,27 +29,13 @@ impl Runner for Day04 {
             let (_, card) = card.split_once(' ').expect("Could not split card");
             let card = card.trim().parse().expect("Could not parse card number");
             let (winning, picked) = numbers.split_once("|").expect("Could not split numbers");
-            let winning: Vec<usize> = winning
-                .trim()
-                .split(' ')
-                .filter_map(|num| {
-                    if !num.is_empty() {
-                        Some(num.parse().expect("Could not parse number"))
-                    } else {
-                        None
-                    }
-                })
+            let winning = winning
+                .split_whitespace()
+                .map(|num| num.parse().expect("Could not parse number"))
                 .collect();
-            let picked: Vec<usize> = picked
-                .trim()
-                .split(' ')
-                .filter_map(|num| {
-                    if !num.is_empty() {
-                        Some(num.parse().expect("Could not parse number"))
-                    } else {
-                        None
-                    }
-                })
+            let picked = picked
+                .split_whitespace()
+                .map(|num| num.parse().expect("Could not parse number"))
                 .collect();
             self.cards.push(Card {
                 num: card,
@@ -63,14 +51,7 @@ impl Runner for Day04 {
         Ok(self
             .cards
             .iter()
-            .map(|c| {
-                let matched = c.numbers_matched();
-                if matched == 0 {
-                    0
-                } else {
-                    1 << (matched - 1)
-                }
-            })
+            .map(|c| 1 << c.numbers_matched() >> 1)
             .sum::<usize>()
             .into())
     }
@@ -89,17 +70,13 @@ impl Runner for Day04 {
 pub struct Card {
     num: usize,
     copies: usize,
-    winning: Vec<usize>,
-    picked: Vec<usize>,
+    winning: BTreeSet<usize>,
+    picked: BTreeSet<usize>,
 }
 
 impl Card {
     fn numbers_matched(&self) -> usize {
-        let matched: usize = self
-            .picked
-            .iter()
-            .map(|n| if self.winning.contains(n) { 1 } else { 0 })
-            .sum();
+        let matched = self.winning.intersection(&self.picked).count();
         println!("Card {} matched {matched} numbers", self.num);
         matched
     }
