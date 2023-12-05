@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, VecDeque},
-    ops::Range,
-};
+use std::ops::Range;
 
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
@@ -15,10 +12,16 @@ impl From<RunnerError> for Error {
     }
 }
 
+#[derive(Debug)]
+struct Map {
+    dest: Range<usize>,
+    src: Range<usize>,
+}
+
 #[derive(Default)]
 pub struct Day05 {
     seeds: Vec<usize>,
-    map: BTreeMap<Type, BTreeMap<Type, Vec<Map>>>,
+    maps: Vec<Vec<Map>>,
 }
 
 impl Day05 {
@@ -26,73 +29,68 @@ impl Day05 {
         Self::default()
     }
 
-    fn find_location(&self, start: usize, len: usize) -> usize {
-        let mut work: VecDeque<(Type, Range<usize>)> = VecDeque::new();
-        let mut location = usize::MAX;
-        work.push_front((Type::Seed, start..start + len));
-        while let Some((from_typ, seed_range)) = work.pop_front() {
-            if let Some(from) = self.map.get(&from_typ) {
-                for (to, map) in from.iter() {
-                    // Map the range using the current mappings, removing the covered ranges as you
-                    // go and then identity map the remaining at the end.
+    fn find_best_location(&self, range: Range<usize>, conversions: &[Vec<Map>]) -> usize {
+        if conversions.is_empty() {
+            // No more conversions, must be at Location.  Return the lowest in the range
+            return range.start;
+        }
+        let mut best_location = usize::MAX;
 
-                    let mut remaining = vec![seed_range.clone()];
-                    macro_rules! new_work {
-                        ($typ:expr, $dest:expr) => {{
-                            let new_work = ($typ, $dest);
-                            if (new_work.0 != Type::Location) {
-                                work.push_back(new_work);
-                            } else if new_work.1.start < location {
-                                location = new_work.1.start;
-                            }
-                        }};
-                    }
-                    for map in map.iter() {
-                        let mut i = 0;
-                        while i < remaining.len() {
-                            let cur_remaining = &mut remaining[i];
-                            let start = map.src.start.max(cur_remaining.start);
-                            let end = map.src.end.min(cur_remaining.end);
-                            if end > start {
-                                let offset = start - map.src.start;
-                                let dest =
-                                    map.dest.start + offset..map.dest.start + offset + end - start;
-                                new_work!(*to, dest.clone());
+        // Map the range using the current conversion (conversions[0]), removing the covered ranges as you
+        // go and then identity map the remaining at the end.  When you find a mapped range (or identity
+        // map a range), recurse for the remaining conversions.
 
-                                // Remove overlapping range from remaining
-                                if *cur_remaining == (start..end) {
-                                    // Whole cur_remaining is consumed
-                                    remaining.remove(i);
-                                    continue;
-                                } else if cur_remaining.start < start && cur_remaining.end > end {
-                                    // Remove gap in the middle of cur_remaining
-                                    let extra_remaining = end..cur_remaining.end;
-                                    cur_remaining.end = start;
-                                    remaining.push(extra_remaining);
-                                } else if cur_remaining.start < start {
-                                    // Remove the end of cur_remaining
-                                    cur_remaining.end = start;
-                                } else if cur_remaining.end > end {
-                                    // Remove the beginning of cur_remaining
-                                    cur_remaining.start = end;
-                                } else {
-                                    // Should not ever get here
-                                    unreachable!();
-                                }
-                            }
-                            i += 1;
-                        }
-                    }
+        let mut remaining = vec![range];
+        macro_rules! new_work {
+            ($typ:expr, $dest:expr) => {{
+                let location = self.find_best_location($dest, &conversions[1..]);
+                if location < best_location {
+                    best_location = location;
+                }
+            }};
+        }
+        for map in conversions[0].iter() {
+            let mut i = 0;
+            while i < remaining.len() {
+                let cur_remaining = &mut remaining[i];
+                let start = map.src.start.max(cur_remaining.start);
+                let end = map.src.end.min(cur_remaining.end);
+                if end > start {
+                    let offset = start - map.src.start;
+                    let dest = map.dest.start + offset..map.dest.start + offset + end - start;
+                    new_work!(*to, dest.clone());
 
-                    // Identity map any remaining ranges
-                    for remaining in remaining {
-                        new_work!(*to, remaining);
+                    // Remove overlapping range from remaining
+                    if *cur_remaining == (start..end) {
+                        // Whole cur_remaining is consumed
+                        remaining.remove(i);
+                        continue;
+                    } else if cur_remaining.start < start && cur_remaining.end > end {
+                        // Remove gap in the middle of cur_remaining
+                        let extra_remaining = end..cur_remaining.end;
+                        cur_remaining.end = start;
+                        remaining.push(extra_remaining);
+                    } else if cur_remaining.start < start {
+                        // Remove the end of cur_remaining
+                        cur_remaining.end = start;
+                    } else if cur_remaining.end > end {
+                        // Remove the beginning of cur_remaining
+                        cur_remaining.start = end;
+                    } else {
+                        // Should not ever get here
+                        unreachable!();
                     }
                 }
+                i += 1;
             }
         }
 
-        location
+        // Identity map any remaining ranges
+        for remaining in remaining {
+            new_work!(*to, remaining);
+        }
+
+        best_location
     }
 }
 
@@ -107,14 +105,13 @@ impl Runner for Day05 {
                 .map(|s| s.parse::<usize>().unwrap()),
         );
 
-        let mut from = Type::None;
-        let mut to = Type::None;
+        let mut map = Vec::new();
         for line in lines.iter().skip(1) {
-            if let Some(line) = line.strip_suffix(" map:") {
-                let parts = line.split('-').collect::<Vec<&str>>();
-                assert_eq!(parts.len(), 3);
-                from = parts[0].into();
-                to = parts[2].into();
+            if line.ends_with(" map:") {
+                if !map.is_empty() {
+                    self.maps.push(map);
+                    map = Vec::new();
+                }
             } else {
                 let parts = line.split_whitespace().collect::<Vec<&str>>();
                 assert_eq!(parts.len(), 3);
@@ -123,11 +120,11 @@ impl Runner for Day05 {
                 let len: usize = parts[2].parse().unwrap();
                 let dest = dest..dest + len;
                 let src = src..src + len;
-                assert_ne!(from, Type::None);
-                assert_ne!(to, Type::None);
-                let map = self.map.entry(from).or_default().entry(to).or_default();
                 map.push(Map { dest, src });
             }
+        }
+        if !map.is_empty() {
+            self.maps.push(map);
         }
 
         Ok(())
@@ -136,7 +133,7 @@ impl Runner for Day05 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let mut best_location = usize::MAX;
         for seed in self.seeds.iter() {
-            let location = self.find_location(*seed, 1);
+            let location = self.find_best_location(*seed..*seed + 1, &self.maps);
             println!("{seed} => Location {location}");
             if location < best_location {
                 best_location = location;
@@ -148,47 +145,12 @@ impl Runner for Day05 {
     fn part2(&mut self) -> Result<RunOutput, Error> {
         let mut best_location = usize::MAX;
         for seed in self.seeds.chunks(2) {
-            let location = self.find_location(seed[0], seed[1]);
+            let location = self.find_best_location(seed[0]..seed[0] + seed[1], &self.maps);
             println!("{seed:?} => Location {location}");
             if location < best_location {
                 best_location = location;
             }
         }
         Ok(best_location.into())
-    }
-}
-
-#[derive(Debug)]
-struct Map {
-    dest: Range<usize>,
-    src: Range<usize>,
-}
-
-#[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
-enum Type {
-    None,
-    Seed,
-    Soil,
-    Fertilizer,
-    Water,
-    Light,
-    Temperature,
-    Humidity,
-    Location,
-}
-
-impl From<&str> for Type {
-    fn from(value: &str) -> Self {
-        match value {
-            "seed" => Self::Seed,
-            "soil" => Self::Soil,
-            "fertilizer" => Self::Fertilizer,
-            "water" => Self::Water,
-            "light" => Self::Light,
-            "temperature" => Self::Temperature,
-            "humidity" => Self::Humidity,
-            "location" => Self::Location,
-            _ => unreachable!("Unknown Type: '{value}'"),
-        }
     }
 }
