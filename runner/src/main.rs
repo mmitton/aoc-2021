@@ -30,26 +30,39 @@ fn run(
                 let _ = Output::end_capture();
             }
             let output = output.to_string();
-            if !output.contains('\n') {
-                println!("Answer: {output}");
-            } else {
-                println!("Answer: ** Multiline **");
-                println!("{output}");
-            }
             if let Some(expect_path) = expect_path {
                 let expect = std::fs::read_to_string(expect_path)?;
                 let expect = expect.trim_end_matches('\n');
-                if expect != output {
+                if expect == output {
+                    let prev_color = Output::green();
+                    if !output.contains('\n') {
+                        println!("Answer: {output}");
+                    } else {
+                        println!("Answer: ** Multiline **");
+                        println!("{output}");
+                    }
+                    Output::color(prev_color);
+                } else {
+                    let prev_color = Output::red();
                     println!("ERROR: Output did not match expected output.");
-                    if expect.contains('\n') {
+                    if !expect.contains('\n') {
                         println!("Expected: {expect}");
                     } else {
                         println!("Expected: ** Multiline **");
                         println!("{expect}");
                     }
+                    Output::color(prev_color);
                 }
             } else {
+                let prev_color = Output::yellow();
+                if !output.contains('\n') {
+                    println!("Answer: {output}");
+                } else {
+                    println!("Answer: ** Multiline **");
+                    println!("{output}");
+                }
                 println!("No expected output to compare");
+                Output::color(prev_color);
             }
             Ok(())
         };

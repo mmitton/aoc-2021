@@ -10,6 +10,7 @@ pub struct Output {
     new_line: bool,
     start: Option<Instant>,
     capture: Option<String>,
+    color: Option<colored::Color>,
 }
 
 static OUTPUT: Mutex<Output> = Mutex::new(Output {
@@ -19,9 +20,34 @@ static OUTPUT: Mutex<Output> = Mutex::new(Output {
     new_line: true,
     start: None,
     capture: None,
+    color: None,
 });
 
 impl Output {
+    pub fn green() -> Option<colored::Color> {
+        let mut output = OUTPUT.lock().expect("Could not get output lock");
+        output.color.replace(colored::Color::BrightGreen)
+    }
+
+    pub fn red() -> Option<colored::Color> {
+        let mut output = OUTPUT.lock().expect("Could not get output lock");
+        output.color.replace(colored::Color::BrightRed)
+    }
+
+    pub fn yellow() -> Option<colored::Color> {
+        let mut output = OUTPUT.lock().expect("Could not get output lock");
+        output.color.replace(colored::Color::BrightYellow)
+    }
+
+    pub fn color(c: Option<colored::Color>) -> Option<colored::Color> {
+        let mut output = OUTPUT.lock().expect("Could not get output lock");
+        if let Some(c) = c {
+            output.color.replace(c)
+        } else {
+            output.color.take()
+        }
+    }
+
     pub fn print(args: std::fmt::Arguments) {
         let mut output = OUTPUT.lock().expect("Could not get output lock");
         output.write_fmt(args).expect("Could not write output");
@@ -97,6 +123,7 @@ impl Output {
     }
 
     pub fn error(e: Error) {
+        let prev_color = Self::red();
         let mut output = OUTPUT.lock().expect("Could not get output lock");
         output.ensure_nl();
 
@@ -109,6 +136,8 @@ impl Output {
         output
             .write_fmt(format_args!("Error: {e:?}"))
             .expect("Could not write output");
+        drop(output);
+        Self::color(prev_color);
     }
 
     /*
@@ -161,7 +190,12 @@ impl std::fmt::Write for Output {
             if let Some(capture) = &mut self.capture {
                 capture.push_str(line);
             } else {
-                print!("{line}");
+                if let Some(color) = &self.color {
+                    use colored::Colorize;
+                    print!("{}", Colorize::color(line, *color));
+                } else {
+                    print!("{line}");
+                }
             }
 
             self.new_line = true;
