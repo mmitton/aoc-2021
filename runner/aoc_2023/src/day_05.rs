@@ -33,6 +33,9 @@ impl Day05 {
         while let Some((from_typ, seed_range)) = work.pop_front() {
             if let Some(from) = self.map.get(&from_typ) {
                 for (to, map) in from.iter() {
+                    // Map the range using the current mappings, removing the covered ranges as you
+                    // go and then identity map the remaining at the end.
+
                     let mut remaining = vec![seed_range.clone()];
                     macro_rules! new_work {
                         ($typ:expr, $dest:expr) => {{
