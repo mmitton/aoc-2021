@@ -55,6 +55,8 @@ impl Day05 {
                 let cur_remaining = &mut remaining[i];
                 let start = map.src.start.max(cur_remaining.start);
                 let end = map.src.end.min(cur_remaining.end);
+
+                // If end > start then we found an overlap!
                 if end > start {
                     let offset = start - map.src.start;
                     let dest = map.dest.start + offset..map.dest.start + offset + end - start;
@@ -64,7 +66,6 @@ impl Day05 {
                     if *cur_remaining == (start..end) {
                         // Whole cur_remaining is consumed
                         remaining.remove(i);
-                        continue;
                     } else if cur_remaining.start < start && cur_remaining.end > end {
                         // Remove gap in the middle of cur_remaining
                         let extra_remaining = end..cur_remaining.end;
@@ -80,6 +81,10 @@ impl Day05 {
                         // Should not ever get here
                         unreachable!();
                     }
+
+                    // Continue to reprocess the cur_remaining (in case there is another overlap
+                    // somewhere)
+                    continue;
                 }
                 i += 1;
             }
