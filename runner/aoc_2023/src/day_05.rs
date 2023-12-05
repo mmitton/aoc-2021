@@ -1,4 +1,7 @@
-use std::collections::{BTreeMap, VecDeque};
+use std::{
+    collections::{BTreeMap, VecDeque},
+    ops::Range,
+};
 
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
@@ -24,15 +27,13 @@ impl Day05 {
     }
 
     fn find_location(&self, start: usize, len: usize) -> usize {
-        use std::ops::Range;
-
         let mut work: VecDeque<(Type, Range<usize>)> = VecDeque::new();
         let mut location = usize::MAX;
         work.push_front((Type::Seed, start..start + len));
         while let Some((from_typ, seed_range)) = work.pop_front() {
             if let Some(from) = self.map.get(&from_typ) {
                 for (to, map) in from.iter() {
-                    let mut pool = vec![seed_range.clone()];
+                    let mut remaining = vec![seed_range.clone()];
                     macro_rules! new_work {
                         ($typ:expr, $dest:expr) => {{
                             let new_work = ($typ, $dest);
@@ -44,41 +45,45 @@ impl Day05 {
                         }};
                     }
                     for map in map.iter() {
-                        let map_src = map.src..map.src + map.len;
-                        let map_dest = map.dest..map.dest + map.len;
                         let mut i = 0;
-                        while i < pool.len() {
-                            let cur_pool = &mut pool[i];
-                            let start = map_src.start.max(cur_pool.start);
-                            let end = map_src.end.min(cur_pool.end);
+                        while i < remaining.len() {
+                            let cur_remaining = &mut remaining[i];
+                            let start = map.src.start.max(cur_remaining.start);
+                            let end = map.src.end.min(cur_remaining.end);
                             if end > start {
-                                let offset = start - map_src.start;
+                                let offset = start - map.src.start;
                                 let dest =
-                                    map_dest.start + offset..map_dest.start + offset + end - start;
+                                    map.dest.start + offset..map.dest.start + offset + end - start;
                                 new_work!(*to, dest.clone());
-                                if *cur_pool == (start..end) {
-                                    pool.remove(i);
+
+                                // Remove overlapping range from remaining
+                                if *cur_remaining == (start..end) {
+                                    // Whole cur_remaining is consumed
+                                    remaining.remove(i);
                                     continue;
-                                } else if cur_pool.start < start && cur_pool.end > end {
-                                    let new_pool = cur_pool.start..start;
-                                    let new_pool2 = end..cur_pool.end;
-                                    *cur_pool = new_pool;
-                                    pool.push(new_pool2);
-                                } else if cur_pool.start < start {
-                                    let new_pool = cur_pool.start..start;
-                                    *cur_pool = new_pool;
-                                } else if cur_pool.end > end {
-                                    let new_pool = end..cur_pool.end;
-                                    *cur_pool = new_pool;
+                                } else if cur_remaining.start < start && cur_remaining.end > end {
+                                    // Remove gap in the middle of cur_remaining
+                                    let extra_remaining = end..cur_remaining.end;
+                                    cur_remaining.end = start;
+                                    remaining.push(extra_remaining);
+                                } else if cur_remaining.start < start {
+                                    // Remove the end of cur_remaining
+                                    cur_remaining.end = start;
+                                } else if cur_remaining.end > end {
+                                    // Remove the beginning of cur_remaining
+                                    cur_remaining.start = end;
                                 } else {
+                                    // Should not ever get here
                                     unreachable!();
                                 }
                             }
                             i += 1;
                         }
                     }
-                    for new in pool {
-                        new_work!(*to, new);
+
+                    // Identity map any remaining ranges
+                    for remaining in remaining {
+                        new_work!(*to, remaining);
                     }
                 }
             }
@@ -113,10 +118,12 @@ impl Runner for Day05 {
                 let dest: usize = parts[0].parse().unwrap();
                 let src: usize = parts[1].parse().unwrap();
                 let len: usize = parts[2].parse().unwrap();
+                let dest = dest..dest + len;
+                let src = src..src + len;
                 assert_ne!(from, Type::None);
                 assert_ne!(to, Type::None);
                 let map = self.map.entry(from).or_default().entry(to).or_default();
-                map.push(Map { dest, src, len });
+                map.push(Map { dest, src });
             }
         }
 
@@ -150,9 +157,8 @@ impl Runner for Day05 {
 
 #[derive(Debug)]
 struct Map {
-    dest: usize,
-    src: usize,
-    len: usize,
+    dest: Range<usize>,
+    src: Range<usize>,
 }
 
 #[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
