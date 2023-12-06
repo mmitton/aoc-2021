@@ -42,14 +42,11 @@ impl Race {
             roots.swap(0, 1);
         }
 
-        let fmin = roots[0].ceil();
-        let fmax = roots[1].floor();
-
-        let mut min = fmin as usize;
-        let mut max = fmax as usize;
+        let mut min = roots[0].ceil() as usize;
+        let mut max = roots[1].floor() as usize;
 
         // Might need to up min or down max as we cannot be exactly distance, must exceed it.
-        // Quadatic only gives roots for exactly going distance
+        // Quadratic only gives roots for exactly going distance
         if !self.is_win(min) {
             min += 1;
         }
@@ -58,7 +55,7 @@ impl Race {
         }
 
         println!(
-            "time:{}  distance:{}  {min}..={max}  {fmin}..={fmax}",
+            "time:{}  distance:{}  {min}..={max}",
             self.time, self.distance
         );
         min..=max
