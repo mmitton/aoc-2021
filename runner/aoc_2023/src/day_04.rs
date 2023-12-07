@@ -25,10 +25,10 @@ impl Day04 {
 impl Runner for Day04 {
     fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         for line in Lines::from_path(path, LinesOpt::TRIM)?.iter() {
-            let (card, numbers) = line.split_once(":").expect("Could not split card");
+            let (card, numbers) = line.split_once(':').expect("Could not split card");
             let (_, card) = card.split_once(' ').expect("Could not split card");
             let card = card.trim().parse().expect("Could not parse card number");
-            let (winning, picked) = numbers.split_once("|").expect("Could not split numbers");
+            let (winning, picked) = numbers.split_once('|').expect("Could not split numbers");
             let winning = winning
                 .split_whitespace()
                 .map(|num| num.parse().expect("Could not parse number"))

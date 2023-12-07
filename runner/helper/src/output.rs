@@ -189,13 +189,11 @@ impl std::fmt::Write for Output {
             }
             if let Some(capture) = &mut self.capture {
                 capture.push_str(line);
+            } else if let Some(color) = &self.color {
+                use colored::Colorize;
+                print!("{}", Colorize::color(line, *color));
             } else {
-                if let Some(color) = &self.color {
-                    use colored::Colorize;
-                    print!("{}", Colorize::color(line, *color));
-                } else {
-                    print!("{line}");
-                }
+                print!("{line}");
             }
 
             self.new_line = true;

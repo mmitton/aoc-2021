@@ -168,7 +168,7 @@ impl Runner for Day05 {
         let mut next_ranges = Vec::new();
         for line in lines.iter().skip(1) {
             if line.ends_with(" map:") {
-                self.ranges.extend(next_ranges.drain(..));
+                self.ranges.append(&mut next_ranges);
             } else {
                 let parts = line.split_whitespace().collect::<Vec<&str>>();
                 assert_eq!(parts.len(), 3);
@@ -211,7 +211,7 @@ impl Runner for Day05 {
                 next_ranges.extend(cur_ranges);
             }
         }
-        self.ranges.extend(next_ranges.drain(..));
+        self.ranges.append(&mut next_ranges);
         self.ranges.retain(|m| m.start != m.end);
 
         // Convert all ranges from dest to source
