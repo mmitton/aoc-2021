@@ -20,6 +20,18 @@ impl Day07 {
     pub fn new() -> Self {
         Self { hands: Vec::new() }
     }
+
+    fn score(&mut self) -> usize {
+        self.hands.sort();
+        for hand in self.hands.iter() {
+            println!("{hand:?}");
+        }
+        self.hands
+            .iter()
+            .enumerate()
+            .map(|(i, hand)| (i + 1) * hand.bid)
+            .sum::<usize>()
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -33,12 +45,12 @@ enum HandType {
     FiveOfAKind,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Hand {
-    card_str: String,
-    cards: Vec<u8>,
-    bid: usize,
     hand_type: HandType,
+    cards: Vec<u8>,
+    card_str: String,
+    bid: usize,
 }
 
 impl Hand {
@@ -129,30 +141,6 @@ impl Hand {
     }
 }
 
-impl PartialOrd for Hand {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(<Self as Ord>::cmp(self, other))
-    }
-}
-
-impl Ord for Hand {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        use std::cmp::Ordering;
-        match self.hand_type.cmp(&other.hand_type) {
-            Ordering::Equal => {
-                for (a, b) in self.cards.iter().zip(other.cards.iter()) {
-                    match a.cmp(b) {
-                        Ordering::Equal => continue,
-                        x => return x,
-                    }
-                }
-                panic!("tie?  {self:?} {other:?}");
-            }
-            x => x,
-        }
-    }
-}
-
 impl Runner for Day07 {
     fn parse(&mut self, path: &str, part1: bool) -> Result<(), Error> {
         let lines = Lines::from_path(path, LinesOpt::RAW)?;
@@ -163,30 +151,10 @@ impl Runner for Day07 {
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        self.hands.sort();
-        for hand in self.hands.iter() {
-            println!("{hand:?}");
-        }
-        Ok(self
-            .hands
-            .iter()
-            .enumerate()
-            .map(|(i, hand)| (i + 1) * hand.bid)
-            .sum::<usize>()
-            .into())
+        Ok(self.score().into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        self.hands.sort();
-        for hand in self.hands.iter() {
-            println!("{hand:?}");
-        }
-        Ok(self
-            .hands
-            .iter()
-            .enumerate()
-            .map(|(i, hand)| (i + 1) * hand.bid)
-            .sum::<usize>()
-            .into())
+        Ok(self.score().into())
     }
 }
