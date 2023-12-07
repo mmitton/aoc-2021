@@ -60,7 +60,7 @@ impl Hand {
                     }
                 }
                 'T' => 10,
-                '2'..='9' => c as u8 - '0' as u8,
+                '2'..='9' => c as u8 - b'0',
                 _ => unreachable!("Unknown card '{c}'"),
             })
             .collect();
@@ -90,31 +90,19 @@ impl Hand {
         match card_count.len() {
             5 => HandType::HighCard,
             4 => HandType::OnePair,
-            3 => match card_count_values.as_slice() {
-                &[1, 2, 2] => HandType::TwoPair,
-                &[1, 1, 3] => HandType::ThreeOfAKind,
+            3 => match *card_count_values.as_slice() {
+                [1, 2, 2] => HandType::TwoPair,
+                [1, 1, 3] => HandType::ThreeOfAKind,
                 _ => unreachable!("What?  {cards:?}  {card_count:?} {card_count_values:?}"),
             },
-            2 => match card_count_values.as_slice() {
-                &[2, 3] => HandType::FullHouse,
-                &[1, 4] => HandType::FourOfAKind,
+            2 => match *card_count_values.as_slice() {
+                [2, 3] => HandType::FullHouse,
+                [1, 4] => HandType::FourOfAKind,
                 _ => unreachable!("What?  {cards:?}  {card_count:?} {card_count_values:?}"),
             },
             1 => HandType::FiveOfAKind,
             _ => unreachable!(),
         }
-    }
-
-    fn mutate_jokers(cards: &mut [u8], jokers_at: &[usize]) -> bool {
-        for joker_at in jokers_at.iter() {
-            if cards[*joker_at] == 13 {
-                cards[*joker_at] = 2;
-            } else {
-                cards[*joker_at] += 1;
-                return true;
-            }
-        }
-        false
     }
 
     fn part2_hand_type(cards: &[u8]) -> HandType {
@@ -124,21 +112,20 @@ impl Hand {
             .flat_map(|(i, card)| if *card == 1 { Some(i) } else { None })
             .collect();
 
-        let mut transformed_cards: Vec<u8> = cards.into();
-        for joker_at in jokers_at.iter() {
-            transformed_cards[*joker_at] = 2;
+        match (jokers_at.len(), Self::part1_hand_type(cards)) {
+            (1, HandType::HighCard) => HandType::OnePair,
+            (1, HandType::OnePair) => HandType::ThreeOfAKind,
+            (1, HandType::TwoPair) => HandType::FullHouse,
+            (1, HandType::ThreeOfAKind) => HandType::FourOfAKind,
+            (1, HandType::FourOfAKind) => HandType::FiveOfAKind,
+            (2, HandType::OnePair) => HandType::ThreeOfAKind,
+            (2, HandType::TwoPair) => HandType::FourOfAKind,
+            (2, HandType::FullHouse) => HandType::FiveOfAKind,
+            (3, HandType::ThreeOfAKind) => HandType::FourOfAKind,
+            (3, HandType::FullHouse) => HandType::FiveOfAKind,
+            (4, HandType::FourOfAKind) => HandType::FiveOfAKind,
+            (_, x) => x,
         }
-        let mut best_hand_type = HandType::HighCard;
-        loop {
-            let cur_hand_type = Self::part1_hand_type(&transformed_cards);
-            if cur_hand_type > best_hand_type {
-                best_hand_type = cur_hand_type;
-            }
-            if !Self::mutate_jokers(&mut transformed_cards, &jokers_at) {
-                break;
-            }
-        }
-        best_hand_type
     }
 }
 
@@ -154,7 +141,7 @@ impl Ord for Hand {
         match self.hand_type.cmp(&other.hand_type) {
             Ordering::Equal => {
                 for (a, b) in self.cards.iter().zip(other.cards.iter()) {
-                    match a.cmp(&b) {
+                    match a.cmp(b) {
                         Ordering::Equal => continue,
                         x => return x,
                     }
