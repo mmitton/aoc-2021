@@ -39,7 +39,7 @@ impl Day02 {
 }
 
 impl Runner for Day02 {
-    fn parse(&mut self, path: &str) -> Result<(), Error> {
+    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         let lines = Lines::from_path(path, LinesOpt::RAW)?;
         for line in lines.iter() {
             let chars: Vec<char> = line.chars().collect();

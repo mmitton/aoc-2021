@@ -21,7 +21,7 @@ impl Day03 {
 }
 
 impl Runner for Day03 {
-    fn parse(&mut self, path: &str) -> Result<(), Error> {
+    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         for line in Lines::from_path(path, LinesOpt::TRIM)?.iter() {
             self.lines.push(line.chars().collect());
         }

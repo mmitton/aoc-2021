@@ -148,7 +148,7 @@ impl Day05 {
 }
 
 impl Runner for Day05 {
-    fn parse(&mut self, path: &str) -> Result<(), Error> {
+    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         let lines = Lines::from_path(path, LinesOpt::TRIM | LinesOpt::REMOVE_EMPTY)?;
         let lines: Vec<&str> = lines.iter().collect();
         self.seeds.extend(

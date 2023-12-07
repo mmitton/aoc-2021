@@ -23,7 +23,7 @@ impl Day04 {
 }
 
 impl Runner for Day04 {
-    fn parse(&mut self, path: &str) -> Result<(), Error> {
+    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         for line in Lines::from_path(path, LinesOpt::TRIM)?.iter() {
             let (card, numbers) = line.split_once(":").expect("Could not split card");
             let (_, card) = card.split_once(' ').expect("Could not split card");

@@ -19,7 +19,7 @@ impl Day07 {
 }
 
 impl Runner for Day07 {
-    fn parse(&mut self, path: &str) -> Result<(), Error> {
+    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         let _lines = Lines::from_path(path, LinesOpt::RAW)?;
         Ok(())
     }

@@ -19,7 +19,7 @@ fn run(
             if capture {
                 Output::start_capture();
             }
-            runner.parse(&path)?;
+            runner.parse(&path, part == 1)?;
             let output = match part {
                 1 => runner.part1()?,
                 2 => runner.part2()?,
@@ -44,6 +44,12 @@ fn run(
                     Output::color(prev_color);
                 } else {
                     let prev_color = Output::red();
+                    if !output.contains('\n') {
+                        println!("Answer: {output}");
+                    } else {
+                        println!("Answer: ** Multiline **");
+                        println!("{output}");
+                    }
                     println!("ERROR: Output did not match expected output.");
                     if !expect.contains('\n') {
                         println!("Expected: {expect}");

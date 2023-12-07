@@ -72,7 +72,7 @@ fn create_year(year: usize) -> Result<(), Error> {
         writeln!(d, "impl Runner for Day{day:02} {{")?;
         writeln!(
             d,
-            "    fn parse(&mut self, path: &str) -> Result<(), Error> {{"
+            "    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {{"
         )?;
         writeln!(
             d,

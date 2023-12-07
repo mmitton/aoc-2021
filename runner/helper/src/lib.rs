@@ -9,7 +9,7 @@ pub use parser::{find_day_part_files, search_up, Lines, LinesOpt, SearchType};
 pub use run_output::RunOutput;
 
 pub trait Runner {
-    fn parse(&mut self, path: &str) -> Result<(), Error>;
+    fn parse(&mut self, path: &str, part1: bool) -> Result<(), Error>;
     fn part1(&mut self) -> Result<RunOutput, Error>;
     fn part2(&mut self) -> Result<RunOutput, Error>;
 }
