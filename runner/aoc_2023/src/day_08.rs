@@ -66,25 +66,17 @@ impl Runner for Day08 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        let mut starts: Vec<String> = self
+        // Get all possible starting positions
+        // Map to number of steps for each starting position
+        // Reduce to the least common multiple
+        Ok(self
             .map
             .keys()
             .filter(|k| k.ends_with('A'))
             .cloned()
-            .collect();
-        println!("starts: {}", starts.len());
-
-        let cycles: Vec<usize> = starts
-            .drain(..)
             .map(|start| self.steps(start, |pos| pos.ends_with('Z')))
-            .collect();
-
-        let mut ans = 1;
-        for steps in cycles.iter() {
-            ans = helper::lcm(ans, *steps);
-        }
-
-        println!("cycles: {cycles:?}");
-        Ok(ans.into())
+            .reduce(helper::lcm)
+            .unwrap()
+            .into())
     }
 }
