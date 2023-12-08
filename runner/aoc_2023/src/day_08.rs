@@ -25,18 +25,18 @@ impl Day08 {
         }
     }
 
-    pub fn steps<F>(&self, from: &str, to: F) -> usize
+    pub fn steps<F>(&self, from: String, to: F) -> usize
     where
         F: Fn(&str) -> bool,
     {
-        let mut pos = from.to_string();
+        let mut pos: &String = &from;
         let mut steps = 0;
         let num_inst = self.instructions.len();
-        while !to(&pos) {
+        while !to(pos) {
             println!("step {steps} at {pos}");
             match self.instructions[steps % num_inst] {
-                'L' => pos = self.map[&pos].0.clone(),
-                'R' => pos = self.map[&pos].1.clone(),
+                'L' => pos = &self.map.get(pos).unwrap().0,
+                'R' => pos = &self.map.get(pos).unwrap().1,
                 _ => unreachable!(),
             }
             steps += 1;
@@ -62,11 +62,11 @@ impl Runner for Day08 {
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        Ok(self.steps("AAA", |pos| pos == "ZZZ").into())
+        Ok(self.steps("AAA".into(), |pos| pos == "ZZZ").into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        let starts: Vec<String> = self
+        let mut starts: Vec<String> = self
             .map
             .keys()
             .filter(|k| k.ends_with('A'))
@@ -75,7 +75,7 @@ impl Runner for Day08 {
         println!("starts: {}", starts.len());
 
         let cycles: Vec<usize> = starts
-            .iter()
+            .drain(..)
             .map(|start| self.steps(start, |pos| pos.ends_with('Z')))
             .collect();
 
