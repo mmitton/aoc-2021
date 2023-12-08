@@ -1,8 +1,6 @@
 [workspace]
 members = [
-    "new_year",
     "runner",
-    "runner/helper",
 ]
 exclude = [
     "2015", 
@@ -12,7 +10,8 @@ exclude = [
     "2019", 
     "2020", 
     "2021", 
-    "2022"
+    "2022",
+    "new_year"
 ]
 resolver = "2"
 
