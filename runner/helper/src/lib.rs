@@ -1,8 +1,10 @@
+mod algorithms;
 mod error;
 mod output;
 mod parser;
 mod run_output;
 
+pub use algorithms::*;
 pub use error::Error;
 pub use output::Output;
 pub use parser::{find_day_part_files, search_up, Lines, LinesOpt, SearchType};

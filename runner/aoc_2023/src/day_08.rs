@@ -79,29 +79,9 @@ impl Runner for Day08 {
             .map(|start| self.steps(start, |pos| pos.ends_with('Z')))
             .collect();
 
-        fn gcd(mut a: usize, mut b: usize) -> usize {
-            if a == b {
-                return a;
-            }
-            if b > a {
-                std::mem::swap(&mut a, &mut b);
-            }
-            while b > 0 {
-                let temp = a;
-                a = b;
-                b = temp % b;
-            }
-            a
-        }
-
-        fn lcm(a: usize, b: usize) -> usize {
-            // LCM = a*b / gcd
-            a * (b / gcd(a, b))
-        }
-
         let mut ans = 1;
         for steps in cycles.iter() {
-            ans = lcm(ans, *steps);
+            ans = helper::lcm(ans, *steps);
         }
 
         println!("cycles: {cycles:?}");
