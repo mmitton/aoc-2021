@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
@@ -171,7 +171,8 @@ impl Runner for Day10 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        let path = self.get_loop();
+        let mut path: BTreeSet<Point> = BTreeSet::new();
+        path.extend(self.get_loop().as_slice());
         let x_vals: Vec<_> = path.iter().map(|p| p.x).collect();
         let y_vals: Vec<_> = path.iter().map(|p| p.x).collect();
         let x_min = *x_vals.iter().min().unwrap();
@@ -195,14 +196,12 @@ impl Runner for Day10 {
                         }
 
                         if t.a.y != p.y && t.b.y != p.y {
-                            // println!("{p:?} must be a vert pipe");
                             crosses += 1;
                         } else {
                             let next_y = if t.a.y != p.y { t.a.y } else { t.b.y };
 
                             if let Some(last_y) = last_y.take() {
                                 if last_y != next_y {
-                                    // println!("{p:?} zig zags from {last_y} to {next_y}");
                                     crosses += 1;
                                 }
                             } else {
@@ -212,7 +211,6 @@ impl Runner for Day10 {
                     }
                     continue;
                 } else if crosses % 2 == 1 {
-                    println!("{p:?}  {crosses}");
                     inside += 1;
                 }
             }
