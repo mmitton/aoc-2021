@@ -128,26 +128,24 @@ impl Springs {
             if spaces.is_empty() {
                 return if left == 0 { 1 } else { 0 };
             }
-            if spaces[0].num_at[pos] != usize::MAX {
-                return spaces[0].num_at[pos];
+            let (space, remaining_spaces) = spaces.split_first_mut().unwrap();
+            if space.num_at[pos] != usize::MAX {
+                return space.num_at[pos];
             }
 
-            let (space, remaining_spaces) = spaces.split_at_mut(1);
-            let space = &mut space[0];
-
             let test_mask = if space.state == State::Working {
-                working_mask
+                working_mask >> pos
             } else {
-                damaged_mask
+                damaged_mask >> pos
             };
+
             let mut found = 0;
             for (idx, mask) in space.masks.iter().enumerate() {
                 let len = space.min + idx;
                 if len > left - space.min_after {
                     break;
                 }
-                let mask = mask << pos;
-                if mask & test_mask == mask {
+                if mask & test_mask == *mask {
                     found += recurse(
                         remaining_spaces,
                         pos + len,
