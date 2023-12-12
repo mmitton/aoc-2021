@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub enum RunnerError {}
@@ -60,11 +60,7 @@ impl std::fmt::Display for Springs {
             write!(f, "{state}")?;
         }
 
-        write!(f, " ")?;
-        for num in self.nums.iter() {
-            write!(f, "{num},")?;
-        }
-        Ok(())
+        write!(f, " {:?}", self.nums)
     }
 }
 
@@ -73,7 +69,6 @@ struct Search {
     state: State,
     min: usize,
     max: usize,
-    ok_at: BTreeSet<(usize, usize)>,
     num_at: BTreeMap<usize, usize>,
 }
 
@@ -88,14 +83,12 @@ impl Springs {
                 state: State::Operational,
                 min: if i == 0 { 0 } else { 1 },
                 max: if i == 0 { 0 } else { 1 } + extra_spaces,
-                ok_at: BTreeSet::new(),
                 num_at: BTreeMap::new(),
             });
             search_space.push(Search {
                 state: State::Damaged,
                 min: *damaged,
                 max: *damaged,
-                ok_at: BTreeSet::new(),
                 num_at: BTreeMap::new(),
             });
         }
@@ -103,9 +96,45 @@ impl Springs {
             state: State::Operational,
             min: 0,
             max: extra_spaces,
-            ok_at: BTreeSet::new(),
             num_at: BTreeMap::new(),
         });
+
+        fn recurse(
+            spaces: &mut [Search],
+            pos: usize,
+            left: usize,
+            possible: &[Vec<usize>; 2],
+        ) -> usize {
+            if spaces.is_empty() {
+                return if left == 0 { 1 } else { 0 };
+            }
+            if let Some(found) = spaces[0].num_at.get(&pos) {
+                return *found;
+            }
+
+            let (space, remaining_spaces) = spaces.split_at_mut(1);
+            let space = &mut space[0];
+
+            let state_possible = if space.state == State::Operational {
+                &possible[0]
+            } else {
+                &possible[1]
+            };
+            let min_after = remaining_spaces.iter().map(|s| s.min).sum::<usize>();
+            let mut found = 0;
+            for len in space.min..=space.max {
+                if len > left - min_after {
+                    break;
+                }
+                if state_possible[pos..pos + len].iter().sum::<usize>() == len {
+                    found += recurse(remaining_spaces, pos + len, left - len, possible);
+                }
+            }
+
+            space.num_at.insert(pos, found);
+
+            found
+        }
 
         let possible: [Vec<usize>; 2] = [
             self.map
@@ -118,60 +147,7 @@ impl Springs {
                 .collect(),
         ];
 
-        let mut min_start = 0;
-        for i in 0..search_space.len() {
-            let min_after: usize = search_space.iter().skip(i + 1).map(|s| s.min).sum();
-            for start in min_start..=self.map.len() - min_after {
-                for len in search_space[i].min..=search_space[i].max {
-                    if start + len > self.map.len() {
-                        break;
-                    }
-                    let possible = if search_space[i].state == State::Operational {
-                        &possible[0]
-                    } else {
-                        &possible[1]
-                    };
-                    if possible[start..start + len].iter().sum::<usize>() == len {
-                        search_space[i].ok_at.insert((start, len));
-                    }
-                }
-            }
-            min_start += search_space[i].min;
-        }
-
-        fn recurse(spaces: &mut [Search], pos: usize, left: usize) -> usize {
-            if spaces.is_empty() {
-                return if left == 0 { 1 } else { 0 };
-            }
-            if let Some(found) = spaces[0].num_at.get(&pos) {
-                return *found;
-            }
-
-            let mut found = 0;
-
-            let lengths = spaces[0]
-                .ok_at
-                .iter()
-                .filter_map(|(p, len)| {
-                    if *p == pos && *len <= left {
-                        Some(*len)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<usize>>();
-            for len in lengths {
-                found += recurse(&mut spaces[1..], pos + len, left - len);
-            }
-
-            spaces[0].num_at.insert(pos, found);
-
-            found
-        }
-
-        // println!("{:?}", search_space[0]);
-
-        let arrangements = recurse(&mut search_space, 0, self.map.len());
+        let arrangements = recurse(&mut search_space, 0, self.map.len(), &possible);
         println!("{self} => {arrangements}");
         arrangements
     }
