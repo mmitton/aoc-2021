@@ -1,6 +1,5 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
-use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub enum RunnerError {}
@@ -18,7 +17,7 @@ struct Springs {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum State {
-    Operational,
+    Working,
     Damaged,
     Unknown,
 }
@@ -35,7 +34,7 @@ impl std::fmt::Display for State {
             f,
             "{}",
             match self {
-                Self::Operational => '.',
+                Self::Working => '.',
                 Self::Damaged => '#',
                 Self::Unknown => '?',
             }
@@ -46,7 +45,7 @@ impl std::fmt::Display for State {
 impl From<char> for State {
     fn from(value: char) -> Self {
         match value {
-            '.' => Self::Operational,
+            '.' => Self::Working,
             '#' => Self::Damaged,
             '?' => Self::Unknown,
             _ => unreachable!(),
@@ -69,7 +68,9 @@ struct Search {
     state: State,
     min: usize,
     max: usize,
-    num_at: BTreeMap<usize, usize>,
+    min_after: usize,
+    num_at: Vec<usize>,
+    masks: Vec<u128>,
 }
 
 impl Springs {
@@ -80,74 +81,102 @@ impl Springs {
         let mut search_space = Vec::new();
         for (i, damaged) in self.nums.iter().enumerate() {
             search_space.push(Search {
-                state: State::Operational,
+                state: State::Working,
                 min: if i == 0 { 0 } else { 1 },
                 max: if i == 0 { 0 } else { 1 } + extra_spaces,
-                num_at: BTreeMap::new(),
+                min_after: 0,
+                num_at: vec![usize::MAX; self.map.len() + 1],
+                masks: Vec::new(),
             });
             search_space.push(Search {
                 state: State::Damaged,
                 min: *damaged,
                 max: *damaged,
-                num_at: BTreeMap::new(),
+                min_after: 0,
+                num_at: vec![usize::MAX; self.map.len() + 1],
+                masks: Vec::new(),
             });
         }
         search_space.push(Search {
-            state: State::Operational,
+            state: State::Working,
             min: 0,
             max: extra_spaces,
-            num_at: BTreeMap::new(),
+            min_after: 0,
+            num_at: vec![usize::MAX; self.map.len() + 1],
+            masks: Vec::new(),
         });
+
+        for i in 0..search_space.len() {
+            let min_after = search_space
+                .iter()
+                .skip(i + 1)
+                .map(|s| s.min)
+                .sum::<usize>();
+            search_space[i].min_after = min_after;
+            for len in search_space[i].min..=search_space[i].max {
+                search_space[i].masks.push(!(u128::MAX << len));
+            }
+        }
 
         fn recurse(
             spaces: &mut [Search],
             pos: usize,
             left: usize,
-            possible: &[Vec<usize>; 2],
+            working_mask: u128,
+            damaged_mask: u128,
         ) -> usize {
             if spaces.is_empty() {
                 return if left == 0 { 1 } else { 0 };
             }
-            if let Some(found) = spaces[0].num_at.get(&pos) {
-                return *found;
+            if spaces[0].num_at[pos] != usize::MAX {
+                return spaces[0].num_at[pos];
             }
 
             let (space, remaining_spaces) = spaces.split_at_mut(1);
             let space = &mut space[0];
 
-            let state_possible = if space.state == State::Operational {
-                &possible[0]
+            let test_mask = if space.state == State::Working {
+                working_mask
             } else {
-                &possible[1]
+                damaged_mask
             };
-            let min_after = remaining_spaces.iter().map(|s| s.min).sum::<usize>();
             let mut found = 0;
-            for len in space.min..=space.max {
-                if len > left - min_after {
+            for (idx, mask) in space.masks.iter().enumerate() {
+                let len = space.min + idx;
+                if len > left - space.min_after {
                     break;
                 }
-                if state_possible[pos..pos + len].iter().sum::<usize>() == len {
-                    found += recurse(remaining_spaces, pos + len, left - len, possible);
+                let mask = mask << pos;
+                if mask & test_mask == mask {
+                    found += recurse(
+                        remaining_spaces,
+                        pos + len,
+                        left - len,
+                        working_mask,
+                        damaged_mask,
+                    );
                 }
             }
 
-            space.num_at.insert(pos, found);
+            space.num_at[pos] = found;
 
             found
         }
 
-        let possible: [Vec<usize>; 2] = [
-            self.map
-                .iter()
-                .map(|s| if s.matches(State::Operational) { 1 } else { 0 })
-                .collect(),
-            self.map
-                .iter()
-                .map(|s| if s.matches(State::Damaged) { 1 } else { 0 })
-                .collect(),
-        ];
+        let working_mask = self.map.iter().enumerate().fold(0, |acc, (i, s)| {
+            acc | if s.matches(State::Working) { 1 << i } else { 0 }
+        });
+        let damaged_mask = self.map.iter().enumerate().fold(0, |acc, (i, s)| {
+            acc | if s.matches(State::Damaged) { 1 << i } else { 0 }
+        });
 
-        let arrangements = recurse(&mut search_space, 0, self.map.len(), &possible);
+        let arrangements = recurse(
+            &mut search_space,
+            0,
+            self.map.len(),
+            working_mask,
+            damaged_mask,
+        );
         println!("{self} => {arrangements}");
         arrangements
     }
