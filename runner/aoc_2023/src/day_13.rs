@@ -1,6 +1,5 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
-use std::collections::BTreeSet;
 
 #[derive(Debug)]
 pub enum RunnerError {}
@@ -25,21 +24,21 @@ impl Point {
 
 struct Map {
     max: Point,
-    rocks: BTreeSet<Point>,
+    rocks: Vec<Point>,
 }
 
 impl Map {
     fn new() -> Self {
         Self {
             max: Point::new(0, 0),
-            rocks: BTreeSet::new(),
+            rocks: Vec::new(),
         }
     }
 
     fn add_rock(&mut self, rock: Point) {
         self.max.x = self.max.x.max(rock.x);
         self.max.y = self.max.y.max(rock.y);
-        self.rocks.insert(rock);
+        self.rocks.push(rock);
     }
 
     fn _dump(&self) {
@@ -89,6 +88,7 @@ impl Map {
                 })
                 .collect();
 
+            // Calculate the number of rocks that are in 1 set but not the other
             if rocks_after
                 .iter()
                 .filter(|r| !rocks_before_mirrored.contains(r))
@@ -99,11 +99,29 @@ impl Map {
                     .count()
                 == diff
             {
+                // Number of mismatched rocks equals the number of rocks we were expecting!
+                // 0 => Perfect mirron
+                // 1 => One smudged rock/mirror
                 return Some(x + y);
             }
         }
 
         None
+    }
+
+    fn get_mirror_ans(&self, diff: usize) -> isize {
+        self._dump();
+        let mut ans = 0;
+        if let Some(x_split) = self.find_split(1, 0, diff) {
+            print!("x_split: {x_split}  ");
+            ans += x_split;
+        }
+        if let Some(y_split) = self.find_split(0, 1, diff) {
+            print!("y_split: {y_split}  ");
+            ans += 100 * y_split;
+        }
+        println!("ans: {ans}");
+        ans
     }
 }
 
@@ -149,20 +167,7 @@ impl Runner for Day13 {
         Ok(self
             .maps
             .iter()
-            .map(|map| {
-                map._dump();
-                let mut ans = 0;
-                if let Some(x_split) = map.find_split(1, 0, 0) {
-                    print!("x_split: {x_split}  ");
-                    ans += x_split;
-                }
-                if let Some(y_split) = map.find_split(0, 1, 0) {
-                    print!("y_split: {y_split}  ");
-                    ans += 100 * y_split;
-                }
-                println!("ans: {ans}");
-                ans
-            })
+            .map(|map| map.get_mirror_ans(0))
             .sum::<isize>()
             .into())
     }
@@ -171,20 +176,7 @@ impl Runner for Day13 {
         Ok(self
             .maps
             .iter()
-            .map(|map| {
-                map._dump();
-                let mut ans = 0;
-                if let Some(x_split) = map.find_split(1, 0, 1) {
-                    print!("x_split: {x_split}  ");
-                    ans += x_split;
-                }
-                if let Some(y_split) = map.find_split(0, 1, 1) {
-                    print!("y_split: {y_split}  ");
-                    ans += 100 * y_split;
-                }
-                println!("ans: {ans}");
-                ans
-            })
+            .map(|map| map.get_mirror_ans(1))
             .sum::<isize>()
             .into())
     }
