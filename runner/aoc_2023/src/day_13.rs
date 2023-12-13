@@ -10,113 +10,67 @@ impl From<RunnerError> for Error {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-struct Point {
-    x: isize,
-    y: isize,
-}
-
-impl Point {
-    fn new(x: isize, y: isize) -> Self {
-        Self { x, y }
-    }
-}
-
 struct Map {
-    max: Point,
-    rocks: Vec<Point>,
+    pattern: Vec<usize>,
+    pattern_rotated: Vec<usize>,
 }
 
 impl Map {
     fn new() -> Self {
         Self {
-            max: Point::new(0, 0),
-            rocks: Vec::new(),
+            pattern: Vec::new(),
+            pattern_rotated: Vec::new(),
         }
     }
 
-    fn add_rock(&mut self, rock: Point) {
-        self.max.x = self.max.x.max(rock.x);
-        self.max.y = self.max.y.max(rock.y);
-        self.rocks.push(rock);
-    }
-
-    fn _dump(&self) {
-        for y in 0..=self.max.y {
-            for x in 0..=self.max.x {
-                if self.rocks.contains(&Point::new(x, y)) {
-                    print!("#");
-                } else {
-                    print!(".");
-                }
-            }
-            println!();
+    fn rotate_pattern(&mut self, width: usize) {
+        for bit in (0..=width).rev() {
+            let pattern = self
+                .pattern
+                .iter()
+                .rev()
+                .enumerate()
+                .fold(0, |r, (i, p)| r | ((p >> bit) & 1) << i);
+            self.pattern_rotated.push(pattern);
         }
-        println!();
     }
 
-    fn find_split(&self, dx: isize, dy: isize, diff: usize) -> Option<isize> {
-        let mut x = 0;
-        let mut y = 0;
-        while x < self.max.x && y < self.max.y {
-            x += dx;
-            y += dy;
-
-            // All rocks after the split line (but only enough rows/col to match the before depth)
-            let rocks_after: Vec<Point> = self
-                .rocks
+    fn find_split(&self, pattern: &[usize], diff: usize) -> Option<usize> {
+        for i in 1..pattern.len() {
+            // Split the pattern at i
+            let (a, b) = pattern.split_at(i);
+            // Reverse a, zip it with b, and then count the total number of different bits (rocks)
+            // Example:
+            // p0, p1, p2, p3, p4
+            // Split at i = 2
+            // a = [p0, p1]
+            // b = [p2, p3, p4]
+            // Reverse a and zip with b gives
+            // (p1, p2), (p0, p3) and no more since zip stops when either iterator returns None
+            // This way we don't go off the end in either direction
+            let mirrored_diff = a
                 .iter()
-                .filter(|r| {
-                    (dx != 0 && r.x >= x && r.x < x * 2) || (dy != 0 && r.y >= y && r.y < y * 2)
-                })
-                .copied()
-                .collect();
+                .rev()
+                .zip(b.iter())
+                .map(|(a, b)| (a ^ b).count_ones() as usize)
+                .sum::<usize>();
 
-            // Mirror all of the rocks before the split line
-            let rocks_before_mirrored: Vec<Point> = self
-                .rocks
-                .iter()
-                .filter_map(|r| {
-                    if (dx != 0 && r.x < x) || (dy != 0 && r.y < y) {
-                        let rx = if dx != 0 { 2 * (x - 1) - r.x + 1 } else { r.x };
-                        let ry = if dy != 0 { 2 * (y - 1) - r.y + 1 } else { r.y };
-                        if rx <= self.max.x && ry <= self.max.y {
-                            return Some(Point::new(rx, ry));
-                        }
-                    }
-                    None
-                })
-                .collect();
-
-            // Calculate the number of rocks that are in 1 set but not the other
-            if rocks_after
-                .iter()
-                .filter(|r| !rocks_before_mirrored.contains(r))
-                .count()
-                + rocks_before_mirrored
-                    .iter()
-                    .filter(|r| !rocks_after.contains(r))
-                    .count()
-                == diff
-            {
-                // Number of mismatched rocks equals the number of rocks we were expecting!
-                // 0 => Perfect mirron
-                // 1 => One smudged rock/mirror
-                return Some(x + y);
+            // If the total number of different rocks == number of different rocks expected (0 for
+            // perfect match, 1 for smudged), return the index of the split
+            if diff == mirrored_diff {
+                return Some(i);
             }
         }
-
         None
     }
 
-    fn get_mirror_ans(&self, diff: usize) -> isize {
-        self._dump();
+    fn get_mirror_ans(&self, diff: usize) -> usize {
         let mut ans = 0;
-        if let Some(x_split) = self.find_split(1, 0, diff) {
+        if let Some(x_split) = self.find_split(&self.pattern_rotated, diff) {
             print!("x_split: {x_split}  ");
             ans += x_split;
         }
-        if let Some(y_split) = self.find_split(0, 1, diff) {
+        if let Some(y_split) = self.find_split(&self.pattern, diff) {
             print!("y_split: {y_split}  ");
             ans += 100 * y_split;
         }
@@ -138,26 +92,31 @@ impl Day13 {
 impl Runner for Day13 {
     fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         let mut map = Map::new();
-        let mut y = 0;
+        let mut w = 0;
         for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
             if line.is_empty() {
-                if !map.rocks.is_empty() {
+                if !map.pattern.is_empty() {
+                    map.rotate_pattern(w);
                     self.maps.push(map);
                     map = Map::new();
-                    y = 0;
+                    w = 0;
                 }
             } else {
-                for (x, c) in line.chars().enumerate() {
+                w = line.len() - 1;
+                let mut pattern = 0;
+                for c in line.chars() {
+                    pattern <<= 1;
                     match c {
-                        '#' => map.add_rock(Point::new(x as isize, y)),
+                        '#' => pattern |= 1,
                         '.' => {}
                         _ => unreachable!("Wrong map char '{c}'"),
                     }
                 }
-                y += 1;
+                map.pattern.push(pattern);
             }
         }
-        if !map.rocks.is_empty() {
+        if !map.pattern.is_empty() {
+            map.rotate_pattern(w);
             self.maps.push(map);
         }
         Ok(())
@@ -168,7 +127,7 @@ impl Runner for Day13 {
             .maps
             .iter()
             .map(|map| map.get_mirror_ans(0))
-            .sum::<isize>()
+            .sum::<usize>()
             .into())
     }
 
@@ -177,7 +136,7 @@ impl Runner for Day13 {
             .maps
             .iter()
             .map(|map| map.get_mirror_ans(1))
-            .sum::<isize>()
+            .sum::<usize>()
             .into())
     }
 }
