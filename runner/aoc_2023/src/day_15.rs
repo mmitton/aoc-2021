@@ -1,15 +1,6 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
 
-#[derive(Debug)]
-pub enum RunnerError {}
-
-impl From<RunnerError> for Error {
-    fn from(e: RunnerError) -> Self {
-        Self::Runner(format!("{e:?}"))
-    }
-}
-
 pub struct Day15 {
     steps: Vec<Vec<char>>,
 }
@@ -20,28 +11,24 @@ impl Day15 {
     }
 
     fn hash(chars: &[char]) -> u8 {
-        let mut hash = 0u8;
-        for &c in chars.iter() {
-            hash = hash.wrapping_add(c as u8);
-            hash = hash.wrapping_mul(17);
-        }
-        hash
+        chars
+            .iter()
+            .fold(0, |hash, &c| hash.wrapping_add(c as u8).wrapping_mul(17))
     }
 
-    fn extract(step: &[char]) -> (u8, String, char, usize) {
+    fn extract(step: &[char]) -> (usize, String, char, usize) {
         let op_at = step.iter().position(|c| matches!(c, '-' | '=')).unwrap();
         let hash = Self::hash(&step[..op_at]);
         let op = step[op_at];
 
         let num = if op == '=' {
-            step.iter()
-                .skip(op_at + 1)
-                .fold(0, |num, &c| num * 10 + (c as usize - '0' as usize))
+            // num will be 1-9
+            step[op_at + 1] as usize - b'0' as usize
         } else {
             0
         };
 
-        (hash, step[..op_at].iter().collect(), op, num)
+        (hash as usize, step[..op_at].iter().collect(), op, num)
     }
 
     fn hash_sum(&self) -> usize {
@@ -52,32 +39,23 @@ impl Day15 {
     }
 
     fn focusing_power(&self) -> usize {
-        let mut hashmap: [Vec<(String, usize)>; 256] = std::array::from_fn(|_| Vec::new());
-        'step: for step in self.steps.iter() {
+        let mut hashmap: [Vec<_>; 256] = std::array::from_fn(|_| Vec::new());
+        for step in self.steps.iter() {
             let (hash, label, op, num) = Self::extract(step);
-            println!("{step:?} hash:{hash} label:{label} op:{op} num:{num}");
             match op {
                 '-' => {
                     // Remove label from box
-                    hashmap[hash as usize].retain(|(l, _)| l != &label);
+                    hashmap[hash].retain(|(l, _)| l != &label);
                 }
                 '=' => {
                     // Add/Set label in box
-                    for (l, n) in hashmap[hash as usize].iter_mut() {
-                        if l == &label {
-                            *n = num;
-                            continue 'step;
-                        }
+                    if let Some((_, n)) = hashmap[hash].iter_mut().find(|(l, _)| l == &label) {
+                        *n = num;
+                    } else {
+                        hashmap[hash].push((label, num));
                     }
-                    hashmap[hash as usize].push((label, num));
                 }
                 _ => unreachable!(),
-            }
-        }
-
-        for (bn, b) in hashmap.iter().enumerate() {
-            for (sn, (label, num)) in b.iter().enumerate() {
-                println!("Box {bn}: Slot {sn}:  [{label} {num}]");
             }
         }
 
@@ -85,10 +63,9 @@ impl Day15 {
             .iter()
             .enumerate()
             .map(|(bn, b)| {
-                let bn = bn + 1;
                 b.iter()
                     .enumerate()
-                    .map(|(sn, (_, s))| bn * (sn + 1) * *s)
+                    .map(|(sn, (_, s))| (bn + 1) * (sn + 1) * *s)
                     .sum::<usize>()
             })
             .sum::<usize>()
