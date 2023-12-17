@@ -11,13 +11,11 @@ pub struct Day17 {
 struct Edge {
     to: usize,
     heat_loss: usize,
-    vert: bool,
 }
 
 #[derive(Debug)]
 struct Node {
-    min_cost_vert: usize,
-    min_cost_horz: usize,
+    cost: usize,
     outbound: Vec<Edge>,
 }
 
@@ -33,16 +31,21 @@ impl Day17 {
         let mut nodes: Vec<Node> = Vec::with_capacity(self.map[0].len() * self.map.len());
         for (ny, row) in self.map.iter().enumerate() {
             for (nx, _) in row.iter().enumerate() {
-                let mut node = Node {
-                    min_cost_vert: usize::MAX,
-                    min_cost_horz: usize::MAX,
-                    outbound: Vec::new(),
-                };
+                let mut node = vec![
+                    Node {
+                        cost: usize::MAX,
+                        outbound: Vec::new(),
+                    },
+                    Node {
+                        cost: usize::MAX,
+                        outbound: Vec::new(),
+                    },
+                ];
 
                 macro_rules! build_outbound {
                     ($dx:literal, $dy:literal) => {{
                         let mut heat_loss = 0;
-                        let vert = $dx == 0;
+                        let vert = if $dx == 0 { 0 } else { 1 };
                         let mut x = nx as isize;
                         let mut y = ny as isize;
                         for i in 1..=max {
@@ -51,85 +54,55 @@ impl Day17 {
                             if x >= 0 && x <= fx as isize && y >= 0 && y <= fy as isize {
                                 let x = x as usize;
                                 let y = y as usize;
-                                let to = y * self.map[0].len() + x;
+                                let to = (y * self.map[0].len() + x) * 2 + 1 - vert;
                                 heat_loss += self.map[y][x].0;
                                 if i >= min {
-                                    node.outbound.push(Edge {
-                                        to,
-                                        heat_loss,
-                                        vert,
-                                    });
+                                    node[vert].outbound.push(Edge { to, heat_loss });
                                 }
                             }
                         }
                     }};
                 }
-                build_outbound!(1, 0);
-                build_outbound!(-1, 0);
-                build_outbound!(0, 1);
-                build_outbound!(0, -1);
+                if fx != nx || fy != ny {
+                    // Don't build outbound edges for the final tile
+                    build_outbound!(1, 0);
+                    build_outbound!(-1, 0);
+                    build_outbound!(0, 1);
+                    build_outbound!(0, -1);
+                }
 
-                nodes.push(node);
+                nodes.append(&mut node);
             }
         }
 
-        nodes[0].min_cost_vert = 0;
-        nodes[0].min_cost_horz = 0;
+        nodes[0].cost = 0;
+        nodes[1].cost = 0;
         let mut costs = BTreeSet::new();
-        for i in 0..nodes[0].outbound.len() {
-            let edge = nodes[0].outbound[i];
-            if edge.vert {
-                nodes[edge.to].min_cost_vert = edge.heat_loss;
-            } else {
-                nodes[edge.to].min_cost_horz = edge.heat_loss;
+        for i in 0..2 {
+            for j in 0..nodes[i].outbound.len() {
+                let edge = nodes[i].outbound[j];
+                nodes[edge.to].cost = edge.heat_loss;
+                costs.insert(edge.heat_loss);
             }
-            costs.insert((edge.heat_loss, edge.vert));
         }
 
-        let fto = nodes.len() - 1;
-
-        'search_loop: while let Some((cost, vert)) = costs.pop_first() {
+        while let Some(cost) = costs.pop_first() {
             for i in 0..nodes.len() {
-                if vert {
-                    // Next is horz
-                    if nodes[i].min_cost_vert == cost {
-                        if i == fto {
-                            break 'search_loop;
-                        }
-                        for j in 0..nodes[i].outbound.len() {
-                            if !nodes[i].outbound[j].vert {
-                                let edge = nodes[i].outbound[j];
-                                let new_cost = cost + edge.heat_loss;
-                                if nodes[edge.to].min_cost_horz > new_cost {
-                                    nodes[edge.to].min_cost_horz = new_cost;
-                                    costs.insert((new_cost, false));
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // Next is vert
-                    if nodes[i].min_cost_horz == cost {
-                        if i == fto {
-                            break 'search_loop;
-                        }
-                        for j in 0..nodes[i].outbound.len() {
-                            if nodes[i].outbound[j].vert {
-                                let edge = nodes[i].outbound[j];
-                                let new_cost = cost + edge.heat_loss;
-                                if nodes[edge.to].min_cost_vert > new_cost {
-                                    nodes[edge.to].min_cost_vert = new_cost;
-                                    costs.insert((new_cost, true));
-                                }
-                            }
+                if nodes[i].cost == cost {
+                    for j in 0..nodes[i].outbound.len() {
+                        let edge = nodes[i].outbound[j];
+                        let new_cost = cost + edge.heat_loss;
+                        if nodes[edge.to].cost > new_cost {
+                            nodes[edge.to].cost = new_cost;
+                            costs.insert(new_cost);
                         }
                     }
                 }
             }
         }
 
-        let min_cost_vert = nodes[nodes.len() - 1].min_cost_vert;
-        let min_cost_horz = nodes[nodes.len() - 1].min_cost_horz;
+        let min_cost_vert = nodes[nodes.len() - 2].cost;
+        let min_cost_horz = nodes[nodes.len() - 1].cost;
         min_cost_horz.min(min_cost_vert)
     }
 }
