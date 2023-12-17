@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
@@ -77,24 +77,24 @@ impl Day17 {
 
         nodes[0].cost = 0;
         nodes[1].cost = 0;
-        let mut costs = BTreeSet::new();
+        let mut costs: BTreeMap<usize, BTreeSet<usize>> = BTreeMap::new();
         for i in 0..2 {
             for j in 0..nodes[i].outbound.len() {
                 let edge = nodes[i].outbound[j];
                 nodes[edge.to].cost = edge.heat_loss;
-                costs.insert(edge.heat_loss);
+                costs.entry(edge.heat_loss).or_default().insert(edge.to);
             }
         }
 
-        while let Some(cost) = costs.pop_first() {
-            for i in 0..nodes.len() {
-                if nodes[i].cost == cost {
-                    for j in 0..nodes[i].outbound.len() {
-                        let edge = nodes[i].outbound[j];
+        while let Some((cost, canidates)) = costs.pop_first() {
+            for canidate in canidates {
+                if nodes[canidate].cost == cost {
+                    for j in 0..nodes[canidate].outbound.len() {
+                        let edge = nodes[canidate].outbound[j];
                         let new_cost = cost + edge.heat_loss;
                         if nodes[edge.to].cost > new_cost {
                             nodes[edge.to].cost = new_cost;
-                            costs.insert(new_cost);
+                            costs.entry(new_cost).or_default().insert(edge.to);
                         }
                     }
                 }
