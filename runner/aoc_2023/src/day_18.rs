@@ -89,12 +89,9 @@ impl Day18 {
     }
 
     fn area(&mut self, part: usize) -> isize {
-        let mut left = 0;
-        let mut right = 0;
-        let mut perimeter = 0;
-
         let mut p1 = Point::new(0, 0);
-        for inst in self.instructions.iter() {
+
+        let area = self.instructions.iter().fold(0, |area, inst| {
             let (dir, dist) = inst.parts[part - 1];
             let (dx, dy) = match dir {
                 Dir::Up => (0, -1),
@@ -104,13 +101,12 @@ impl Day18 {
             };
             let p2 = Point::new(p1.x + dx * dist, p1.y + dy * dist);
 
-            left += p1.x * p2.y;
-            right += p1.y * p2.x;
-            perimeter += (p2.y - p1.y).abs() + (p2.x - p1.x).abs();
+            let cur_area = p1.x * p2.y - p1.y * p2.x + dist;
             p1 = p2;
-        }
+            area + cur_area
+        });
 
-        (left - right + perimeter) / 2 + 1
+        area / 2 + 1
     }
 }
 
