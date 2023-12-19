@@ -1,5 +1,3 @@
-#![feature(map_first_last)]
-
 #[cfg(debug_assertions)]
 const INPUT_FILE: &str = "../input-sample.txt";
 #[cfg(not(debug_assertions))]

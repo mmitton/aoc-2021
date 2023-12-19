@@ -1,5 +1,3 @@
-#![feature(binary_heap_retain)]
-
 #[cfg(debug_assertions)]
 const INPUT_FILE: &str = "../input-sample.txt";
 #[cfg(not(debug_assertions))]
