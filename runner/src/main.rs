@@ -74,8 +74,10 @@ fn run(
         };
 
         let res = run(&mut runner);
-        if let Err(e) = res {
-            Output::error(e);
+        match res {
+            Err(Error::Skipped) => println!("Skipped"),
+            Err(e) => Output::error(e),
+            _ => {}
         }
         Output::end_test();
     }

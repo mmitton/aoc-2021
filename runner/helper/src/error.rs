@@ -13,6 +13,7 @@ pub enum Error {
     ParseIntError(ParseIntError),
     Runner(String),
     SearchUpFailed(String),
+    Skipped,
     Unsolved,
     YearExists(usize),
 }

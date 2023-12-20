@@ -171,7 +171,7 @@ impl Runner for Day20 {
             println!("{module_idx} module: {module:?}");
             module_idx
         } else {
-            unreachable!();
+            return Err(Error::Skipped);
         };
 
         let mut memory = if let Module::Conjunction(memory) = &self.modules[pre_rx] {
