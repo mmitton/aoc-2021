@@ -16,7 +16,7 @@ impl From<std::num::ParseIntError> for Error {
 
 #[derive(Clone, Debug)]
 struct Sue {
-    num: usize,
+    _num: usize,
     known: BTreeMap<String, usize>,
 }
 
@@ -47,10 +47,7 @@ impl TryFrom<&str> for Sue {
             known.insert(parts[0].to_string(), parts[1].parse()?);
         }
 
-        Ok(Sue {
-            num: num,
-            known: known,
-        })
+        Ok(Sue { _num: num, known })
     }
 }
 

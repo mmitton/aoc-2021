@@ -11,7 +11,7 @@ enum Error {
 
 #[derive(Debug)]
 struct Reindeer {
-    name: String,
+    _name: String,
     speed: usize,
     speed_sec: usize,
     cooldown: usize,
@@ -40,7 +40,7 @@ fn load_input(filename: &str) -> Result<Vec<Reindeer>, Error> {
 
         let parts: Vec<&str> = line.split(" ").collect();
         let reindeer = Reindeer {
-            name: parts[0].to_string(),
+            _name: parts[0].to_string(),
             speed: parts[1].parse().map_err(|e| Error::NAN(e))?,
             speed_sec: parts[2].parse().map_err(|e| Error::NAN(e))?,
             cooldown: parts[3].parse().map_err(|e| Error::NAN(e))?,

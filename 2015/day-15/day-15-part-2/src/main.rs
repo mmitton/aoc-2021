@@ -11,7 +11,7 @@ enum Error {
 
 #[derive(Debug)]
 struct Ingredient {
-    name: String,
+    _name: String,
     capacity: isize,
     durability: isize,
     flavor: isize,
@@ -43,7 +43,7 @@ fn load_input(filename: &str) -> Result<Vec<Ingredient>, Error> {
         let parts: Vec<&str> = line.split(" ").collect();
 
         let ingredient = Ingredient {
-            name: parts[0].to_string(),
+            _name: parts[0].to_string(),
             capacity: parts[1].parse().map_err(|e| Error::NAN(e))?,
             durability: parts[2].parse().map_err(|e| Error::NAN(e))?,
             flavor: parts[3].parse().map_err(|e| Error::NAN(e))?,

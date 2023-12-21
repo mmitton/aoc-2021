@@ -11,12 +11,12 @@ enum Error {
 
 #[derive(Debug)]
 struct Ingredient {
-    name: String,
+    _name: String,
     capacity: isize,
     durability: isize,
     flavor: isize,
     texture: isize,
-    calories: isize,
+    _calories: isize,
 }
 
 fn load_input(filename: &str) -> Result<Vec<Ingredient>, Error> {
@@ -43,12 +43,12 @@ fn load_input(filename: &str) -> Result<Vec<Ingredient>, Error> {
         let parts: Vec<&str> = line.split(" ").collect();
 
         let ingredient = Ingredient {
-            name: parts[0].to_string(),
+            _name: parts[0].to_string(),
             capacity: parts[1].parse().map_err(|e| Error::NAN(e))?,
             durability: parts[2].parse().map_err(|e| Error::NAN(e))?,
             flavor: parts[3].parse().map_err(|e| Error::NAN(e))?,
             texture: parts[4].parse().map_err(|e| Error::NAN(e))?,
-            calories: parts[5].parse().map_err(|e| Error::NAN(e))?,
+            _calories: parts[5].parse().map_err(|e| Error::NAN(e))?,
         };
 
         ingredients.push(ingredient);
@@ -81,7 +81,6 @@ fn main() -> Result<(), Error> {
         let mut durability: isize = 0;
         let mut flavor: isize = 0;
         let mut texture: isize = 0;
-        let mut calories: isize = 0;
 
         for i in 0..ingredients.len() {
             sum += quant[i];
@@ -90,7 +89,6 @@ fn main() -> Result<(), Error> {
             durability += quant[i] * ingredients[i].durability;
             flavor += quant[i] * ingredients[i].flavor;
             texture += quant[i] * ingredients[i].texture;
-            calories += quant[i] * ingredients[i].calories;
         }
 
         if sum != TARGET {

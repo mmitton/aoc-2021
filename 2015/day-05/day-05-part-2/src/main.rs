@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 #[cfg(debug_assertions)]
 const INPUT_FILE: &str = "../input-sample-2.txt";
 #[cfg(not(debug_assertions))]
