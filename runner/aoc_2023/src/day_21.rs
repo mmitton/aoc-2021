@@ -87,15 +87,18 @@ impl Day21 {
         }
     }
 
-    fn take_steps(&self, steps: &[usize], infinite_map: bool) -> Vec<usize> {
+    fn take_steps(&self, steps: &[usize]) -> Vec<usize> {
         let (start, _) = self
             .points
             .iter()
             .find(|(_, &typ)| typ == Type::Start)
             .unwrap();
 
+        let mut prev_pos: HashSet<Point> = HashSet::new();
         let mut cur_pos: HashSet<Point> = HashSet::new();
         let mut next_pos: HashSet<Point> = HashSet::new();
+        let mut prev_count = 0;
+        let mut cur_count = 1;
 
         let mut start_offsets = HashSet::new();
         start_offsets.insert(Point::new(0, 0));
@@ -107,20 +110,21 @@ impl Day21 {
             next_pos.clear();
             for p in cur_pos.iter() {
                 for np in p.neighbors() {
-                    if infinite_map {
-                        let real_np = np.normalize(&self.max);
-                        if self.points.contains_key(&real_np) {
-                            next_pos.insert(np);
-                        }
-                    } else if self.points.contains_key(&np) {
+                    let real_np = np.normalize(&self.max);
+                    if self.points.contains_key(&real_np) && !prev_pos.contains(&np) {
                         next_pos.insert(np);
                     }
                 }
             }
-            std::mem::swap(&mut cur_pos, &mut next_pos);
+
+            let next_count = next_pos.len() + prev_count;
             if let Some(i) = steps.iter().position(|s| *s == step) {
-                results[i] = cur_pos.len();
+                results[i] = next_count;
             }
+            prev_count = cur_count;
+            cur_count = next_count;
+            std::mem::swap(&mut prev_pos, &mut cur_pos);
+            std::mem::swap(&mut cur_pos, &mut next_pos);
         }
 
         results
@@ -129,7 +133,6 @@ impl Day21 {
 
 impl Runner for Day21 {
     fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let mut start = Point::new(0, 0);
         for (y, line) in Lines::from_path(path, LinesOpt::RAW)?.iter().enumerate() {
             self.max.y = y as i16 + 1;
             self.max.x = line.len() as i16;
@@ -137,42 +140,27 @@ impl Runner for Day21 {
                 let typ: Type = c.try_into()?;
                 if matches!(typ, Type::Plot | Type::Start) {
                     let p = Point::new(x as i16, y as i16);
-                    if typ == Type::Start {
-                        start = p;
-                    }
                     self.points.insert(p, typ);
                 }
             }
         }
-
-        let mut seen = vec![start];
-        let mut i = 0;
-        while i < seen.len() {
-            for p in seen[i].neighbors() {
-                if !seen.contains(&p) && self.points.contains_key(&p) {
-                    seen.push(p);
-                }
-            }
-            i += 1;
-        }
-        self.points.retain(|k, _| seen.contains(k));
 
         Ok(())
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let steps = if self.points.len() == 81 { 6 } else { 64 };
-        Ok(self.take_steps(&[steps], false)[0].into())
+        Ok(self.take_steps(&[steps])[0].into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
         if self.points.len() == 81 {
-            return Ok(self.take_steps(&[100], true)[0].into());
+            return Ok(self.take_steps(&[100])[0].into());
         }
 
         let n = 26501365 / self.max.x as usize;
 
-        let a = self.take_steps(&[65, 65 + 131, 65 + 131 * 2], true);
+        let a = self.take_steps(&[65, 65 + 131, 65 + 131 * 2]);
         println!("{a:?}");
 
         let b0 = a[0];
