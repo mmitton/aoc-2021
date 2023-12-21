@@ -160,7 +160,10 @@ impl Runner for Day21 {
 
         let n = 26501365 / self.max.x as usize;
 
-        let a = self.take_steps(&[65, 65 + 131, 65 + 131 * 2]);
+        let s1 = self.max.x as usize / 2;
+        let s2 = s1 + self.max.x as usize;
+        let s3 = s1 + self.max.x as usize * 2;
+        let a = self.take_steps(&[s1, s2, s3]);
         println!("{a:?}");
 
         let b0 = a[0];
