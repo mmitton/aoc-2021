@@ -2,44 +2,39 @@
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
 use std::collections::{HashMap, HashSet};
 
+type Number = i16;
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct Point {
-    x: i16,
-    y: i16,
+    x: Number,
+    y: Number,
 }
 
 impl Point {
-    fn new(x: i16, y: i16) -> Self {
+    fn new(x: Number, y: Number) -> Self {
         Self { x, y }
     }
 
-    fn delta(&self, dx: i16, dy: i16) -> Self {
-        Self {
-            x: self.x + dx,
-            y: self.y + dy,
-        }
+    fn delta(&self, dx: Number, dy: Number, max: Self) -> (Self, Self) {
+        (
+            Self {
+                x: self.x + dx,
+                y: self.y + dy,
+            },
+            Self {
+                x: (self.x + dx).rem_euclid(max.x),
+                y: (self.y + dy).rem_euclid(max.y),
+            },
+        )
     }
 
-    fn neighbors(&self) -> [Self; 4] {
+    fn neighbors(&self, max: Self) -> [(Self, Self); 4] {
         [
-            self.delta(1, 0),
-            self.delta(-1, 0),
-            self.delta(0, 1),
-            self.delta(0, -1),
+            self.delta(1, 0, max),
+            self.delta(-1, 0, max),
+            self.delta(0, 1, max),
+            self.delta(0, -1, max),
         ]
-    }
-
-    fn normalize(&self, max: &Self) -> Self {
-        let mut x = self.x % max.x;
-        let mut y = self.y % max.y;
-        if x < 0 {
-            x += max.x;
-        }
-        if y < 0 {
-            y += max.y;
-        }
-
-        Self { x, y }
     }
 }
 
@@ -109,8 +104,7 @@ impl Day21 {
         for step in 1..=max_steps {
             next_pos.clear();
             for p in cur_pos.iter() {
-                for np in p.neighbors() {
-                    let real_np = np.normalize(&self.max);
+                for (np, real_np) in p.neighbors(self.max) {
                     if self.points.contains_key(&real_np) && !prev_pos.contains(&np) {
                         next_pos.insert(np);
                     }
@@ -134,12 +128,12 @@ impl Day21 {
 impl Runner for Day21 {
     fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         for (y, line) in Lines::from_path(path, LinesOpt::RAW)?.iter().enumerate() {
-            self.max.y = y as i16 + 1;
-            self.max.x = line.len() as i16;
+            self.max.y = y as Number + 1;
+            self.max.x = line.len() as Number;
             for (x, c) in line.chars().enumerate() {
                 let typ: Type = c.try_into()?;
                 if matches!(typ, Type::Plot | Type::Start) {
-                    let p = Point::new(x as i16, y as i16);
+                    let p = Point::new(x as Number, y as Number);
                     self.points.insert(p, typ);
                 }
             }
