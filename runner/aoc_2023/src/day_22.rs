@@ -83,21 +83,22 @@ impl FromStr for Brick {
 }
 
 impl Brick {
-    fn overlaps(&self, other: &Self) -> bool {
-        let overlap_start = Point {
-            x: self.min.x.max(other.min.x),
-            y: self.min.y.max(other.min.y),
-            z: self.min.z.max(other.min.z),
-        };
-        let overlap_end = Point {
-            x: self.max.x.min(other.max.x),
-            y: self.max.y.min(other.max.y),
-            z: self.max.z.min(other.max.z),
-        };
+    fn overlaps_at(&self, other: &Self) -> Option<usize> {
+        let sx = self.min.x.max(other.min.x);
+        let sy = self.min.y.max(other.min.y);
 
-        overlap_start.x <= overlap_end.x
-            && overlap_start.y <= overlap_end.y
-            && overlap_start.z <= overlap_end.z
+        let ex = self.max.x.min(other.max.x);
+        let ey = self.max.y.min(other.max.y);
+
+        if sx > ex || sy > ey {
+            return None;
+        }
+
+        if self.max.z < other.min.z {
+            Some(self.max.z)
+        } else {
+            Some(other.max.z)
+        }
     }
 }
 
@@ -113,64 +114,52 @@ impl Day22 {
     fn settle_bricks(&mut self) {
         self.bricks.sort();
         for i in 0..self.bricks.len() {
-            while self.bricks[i].min.z != 1 {
-                self.bricks[i].start.z -= 1;
-                self.bricks[i].end.z -= 1;
-                self.bricks[i].min.z -= 1;
-                self.bricks[i].max.z -= 1;
-
-                for j in 0..self.bricks.len() {
-                    if j == i {
-                        continue;
+            let mut max_z = 0;
+            for j in 0..i {
+                if let Some(z) = self.bricks[i].overlaps_at(&self.bricks[j]) {
+                    if z > max_z {
+                        self.bricks[i].sitting_on.clear();
+                        max_z = z;
                     }
-                    if self.bricks[i].overlaps(&self.bricks[j]) {
+                    if z == max_z {
                         self.bricks[i].sitting_on.push(j);
-                        self.bricks[j].holding_up.push(i);
                     }
-                }
-
-                if !self.bricks[i].sitting_on.is_empty() {
-                    self.bricks[i].start.z += 1;
-                    self.bricks[i].end.z += 1;
-                    self.bricks[i].min.z += 1;
-                    self.bricks[i].max.z += 1;
-
-                    break;
                 }
             }
+            for j in 0..self.bricks[i].sitting_on.len() {
+                let idx = self.bricks[i].sitting_on[j];
+                self.bricks[idx].holding_up.push(i);
+            }
+            max_z += 1;
+            let dz = self.bricks[i].min.z - max_z;
+            self.bricks[i].start.z -= dz;
+            self.bricks[i].end.z -= dz;
+            self.bricks[i].min.z -= dz;
+            self.bricks[i].max.z -= dz;
         }
 
         for i in 0..self.bricks.len() {
             let mut holding_up = HashSet::new();
             holding_up.insert(i);
             loop {
-                let additional: Vec<usize> = self
-                    .bricks
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, b)| {
-                        if b.sitting_on.is_empty() || holding_up.contains(&i) {
-                            return None;
-                        }
-                        if b.sitting_on
-                            .iter()
-                            .filter(|so| holding_up.contains(so))
-                            .count()
-                            == b.sitting_on.len()
-                        {
-                            Some(i)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-
-                if additional.is_empty() {
-                    break;
+                let mut added = false;
+                for j in i..self.bricks.len() {
+                    if self.bricks[j].sitting_on.is_empty() || holding_up.contains(&j) {
+                        continue;
+                    }
+                    if self.bricks[j]
+                        .sitting_on
+                        .iter()
+                        .filter(|so| holding_up.contains(so))
+                        .count()
+                        == self.bricks[j].sitting_on.len()
+                    {
+                        added = true;
+                        holding_up.insert(j);
+                    }
                 }
-
-                for idx in additional {
-                    holding_up.insert(idx);
+                if !added {
+                    break;
                 }
             }
 
