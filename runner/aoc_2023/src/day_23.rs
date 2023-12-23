@@ -64,6 +64,7 @@ impl Day23 {
 
         let mut work = VecDeque::new();
         let mut seen = HashSet::new();
+        #[allow(clippy::type_complexity)]
         let mut paths: BTreeMap<(usize, usize), Vec<((usize, usize), usize)>> = BTreeMap::new();
         for i in 0..intersections.len() {
             // Walk from i to next intersections
