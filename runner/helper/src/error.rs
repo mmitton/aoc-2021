@@ -1,5 +1,5 @@
 use std::ffi::OsString;
-use std::num::ParseIntError;
+use std::num::{ParseFloatError, ParseIntError};
 
 #[derive(Debug)]
 pub enum Error {
@@ -11,6 +11,7 @@ pub enum Error {
     MissingCookies,
     MissingInput,
     ParseIntError(ParseIntError),
+    ParseFloatError(ParseFloatError),
     Runner(String),
     SearchUpFailed(String),
     Skipped,
@@ -39,5 +40,11 @@ impl From<minreq::Error> for Error {
 impl From<ParseIntError> for Error {
     fn from(e: ParseIntError) -> Self {
         Self::ParseIntError(e)
+    }
+}
+
+impl From<ParseFloatError> for Error {
+    fn from(e: ParseFloatError) -> Self {
+        Self::ParseFloatError(e)
     }
 }
