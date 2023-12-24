@@ -91,6 +91,11 @@ impl Day18 {
     fn area(&mut self, part: usize) -> isize {
         let mut p1 = Point::new(0, 0);
 
+        let mut min = Point::new(isize::MAX, isize::MAX);
+        let mut max = Point::new(isize::MIN, isize::MIN);
+        let mut svg = Vec::new();
+        let mut top_corner = Point::new(isize::MAX, isize::MAX);
+
         let area = self.instructions.iter().fold(0, |area, inst| {
             let (dir, dist) = inst.parts[part - 1];
             let (dx, dy) = match dir {
@@ -101,10 +106,38 @@ impl Day18 {
             };
             let p2 = Point::new(p1.x + dx * dist, p1.y + dy * dist);
 
+            if top_corner.y > p2.y {
+                top_corner.y = p2.y;
+                top_corner.x = p2.x;
+            } else if top_corner.y == p2.y && top_corner.x > p2.x {
+                top_corner.x = p2.x;
+            }
+
+            min.x = min.x.min(p2.x);
+            min.y = min.y.min(p2.y);
+            max.x = max.x.max(p2.x);
+            max.y = max.y.max(p2.y);
+
+            svg.push(format!(
+                "<line stroke='black' x1='{}' y1='{}' x2='{}' y2='{}' />",
+                p1.x, p1.y, p2.x, p2.y
+            ));
+
             let cur_area = p1.x * p2.y - p1.y * p2.x + dist;
             p1 = p2;
             area + cur_area
         });
+
+        std::println!("{min:?} {max:?}");
+        std::println!("{top_corner:?}");
+        std::println!(
+            "<svg viewBox='{} {} {} {}' xmlns='http://www.w3.org/2000/svg' style='background-color:green'>",
+            min.x-10, min.y-10, max.x - min.x + 21, max.y - min.y + 21
+        );
+        for line in svg {
+            std::println!("{}", line);
+        }
+        std::println!("</svg>");
 
         area / 2 + 1
     }
