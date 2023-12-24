@@ -93,7 +93,7 @@ impl Day18 {
 
         let mut min = Point::new(isize::MAX, isize::MAX);
         let mut max = Point::new(isize::MIN, isize::MIN);
-        let mut svg = Vec::new();
+        // let mut svg = Vec::new();
         let mut top_corner = Point::new(isize::MAX, isize::MAX);
 
         let area = self.instructions.iter().fold(0, |area, inst| {
@@ -118,26 +118,26 @@ impl Day18 {
             max.x = max.x.max(p2.x);
             max.y = max.y.max(p2.y);
 
-            svg.push(format!(
-                "<line stroke='black' x1='{}' y1='{}' x2='{}' y2='{}' />",
-                p1.x, p1.y, p2.x, p2.y
-            ));
+            // svg.push(format!(
+            //     "<line stroke='black' x1='{}' y1='{}' x2='{}' y2='{}' />",
+            //     p1.x, p1.y, p2.x, p2.y
+            // ));
 
             let cur_area = p1.x * p2.y - p1.y * p2.x + dist;
             p1 = p2;
             area + cur_area
         });
 
-        std::println!("{min:?} {max:?}");
-        std::println!("{top_corner:?}");
-        std::println!(
-            "<svg viewBox='{} {} {} {}' xmlns='http://www.w3.org/2000/svg' style='background-color:green'>",
-            min.x-10, min.y-10, max.x - min.x + 21, max.y - min.y + 21
-        );
-        for line in svg {
-            std::println!("{}", line);
-        }
-        std::println!("</svg>");
+        // std::println!("{min:?} {max:?}");
+        // std::println!("{top_corner:?}");
+        // std::println!(
+        //     "<svg viewBox='{} {} {} {}' xmlns='http://www.w3.org/2000/svg' style='background-color:green'>",
+        //     min.x-10, min.y-10, max.x - min.x + 21, max.y - min.y + 21
+        // );
+        // for line in svg {
+        //     std::println!("{}", line);
+        // }
+        // std::println!("</svg>");
 
         area / 2 + 1
     }
