@@ -22,18 +22,36 @@ pub type NewRunner = fn() -> Box<dyn Runner>;
 macro_rules! print {
     () => {};
 
-    ($($args:tt)*) => {
+    (FORCE $($args:tt)*) => {
         Output::print(format_args!($($args)*));
+    };
+
+    ($($args:tt)*) => {
+        if cfg!(debug_assertions) {
+            Output::print(format_args!($($args)*));
+        }
     };
 }
 
 #[macro_export]
 macro_rules! println {
-    () => {
+    (FORCE) => {
         Output::println(format_args!(""));
     };
 
-    ($($args:tt)*) => {
+    (FORCE $($args:tt)*) => {
         Output::println(format_args!($($args)*));
+    };
+
+    () => {
+        if cfg!(debug_assertions) {
+            Output::println(format_args!(""));
+        }
+    };
+
+    ($($args:tt)*) => {
+        if cfg!(debug_assertions) {
+            Output::println(format_args!($($args)*));
+        }
     };
 }

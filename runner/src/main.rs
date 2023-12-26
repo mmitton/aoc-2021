@@ -15,7 +15,7 @@ fn run(
         Output::start_test(year, day, part);
         let mut runner = new_runner();
         let run = |runner: &mut Box<dyn Runner>| {
-            println!("Using {path} as input");
+            println!(FORCE "Using {path} as input");
             if capture {
                 Output::start_capture();
             }
@@ -36,38 +36,38 @@ fn run(
                 if expect == output {
                     let prev_color = Output::green();
                     if !output.contains('\n') {
-                        println!("Answer: {output}");
+                        println!(FORCE "Answer: {output}");
                     } else {
-                        println!("Answer: ** Multiline **");
-                        println!("{output}");
+                        println!(FORCE "Answer: ** Multiline **");
+                        println!(FORCE "{output}");
                     }
                     Output::color(prev_color);
                 } else {
                     let prev_color = Output::red();
                     if !output.contains('\n') {
-                        println!("Answer: {output}");
+                        println!(FORCE "Answer: {output}");
                     } else {
-                        println!("Answer: ** Multiline **");
-                        println!("{output}");
+                        println!(FORCE "Answer: ** Multiline **");
+                        println!(FORCE "{output}");
                     }
-                    println!("ERROR: Output did not match expected output.");
+                    println!(FORCE "ERROR: Output did not match expected output.");
                     if !expect.contains('\n') {
-                        println!("Expected: {expect}");
+                        println!(FORCE "Expected: {expect}");
                     } else {
-                        println!("Expected: ** Multiline **");
-                        println!("{expect}");
+                        println!(FORCE "Expected: ** Multiline **");
+                        println!(FORCE "{expect}");
                     }
                     Output::color(prev_color);
                 }
             } else {
                 let prev_color = Output::yellow();
                 if !output.contains('\n') {
-                    println!("Answer: {output}");
+                    println!(FORCE "Answer: {output}");
                 } else {
-                    println!("Answer: ** Multiline **");
-                    println!("{output}");
+                    println!(FORCE "Answer: ** Multiline **");
+                    println!(FORCE "{output}");
                 }
-                println!("No expected output to compare");
+                println!(FORCE "No expected output to compare");
                 Output::color(prev_color);
             }
             Ok(())
@@ -80,7 +80,7 @@ fn run(
                     let _ = Output::end_capture();
                 }
                 let prev_color = Output::yellow();
-                println!("Skipped");
+                println!(FORCE "Skipped");
                 Output::color(prev_color);
             }
             Err(e) => Output::error(e),
