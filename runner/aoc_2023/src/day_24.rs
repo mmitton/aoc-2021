@@ -13,9 +13,55 @@ impl From<RunnerError> for Error {
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 struct Triple {
-    x: isize,
-    y: isize,
-    z: isize,
+    x: i128,
+    y: i128,
+    z: i128,
+}
+
+impl Triple {
+    fn cross(&self, other: Self) -> Self {
+        Self {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        }
+    }
+
+    fn dot(&self, other: Self) -> i128 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
+
+    fn add(&self, other: Self) -> Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
+    }
+
+    fn sub(&self, other: Self) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+
+    fn mul(&self, n: i128) -> Self {
+        Self {
+            x: self.x * n,
+            y: self.y * n,
+            z: self.z * n,
+        }
+    }
+
+    fn div(&self, n: i128) -> Self {
+        Self {
+            x: self.x / n,
+            y: self.y / n,
+            z: self.z / n,
+        }
+    }
 }
 
 impl FromStr for Triple {
@@ -126,113 +172,48 @@ impl Runner for Day24 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        /*
-        use z3::ast::Ast;
-        let cfg = z3::Config::new();
-        let context = z3::Context::new(&cfg);
-        let solver = z3::Solver::new(&context);
+        let h0 = self.hailstones[0];
 
-        let x = z3::ast::Int::new_const(&context, "x");
-        let y = z3::ast::Int::new_const(&context, "y");
-        let z = z3::ast::Int::new_const(&context, "z");
-        let vx = z3::ast::Int::new_const(&context, "vx");
-        let vy = z3::ast::Int::new_const(&context, "vy");
-        let vz = z3::ast::Int::new_const(&context, "vz");
+        let transformed = self
+            .hailstones
+            .iter()
+            .take(4)
+            .map(|h| Hailstone {
+                p: h.p.sub(h0.p),
+                v: h.v.sub(h0.v),
+            })
+            .collect::<Vec<_>>();
 
-        for (i, hs) in hailstones.iter().take(3).enumerate() {
-            let a = z3::ast::Int::from_i64(&context, hs.p.x);
-            let va = z3::ast::Int::from_i64(&context, hs.v.x);
-            let b = z3::ast::Int::from_i64(&context, hs.p.y);
-            let vb = z3::ast::Int::from_i64(&context, hs.v.y);
-            let c = z3::ast::Int::from_i64(&context, hs.p.z);
-            let vc = z3::ast::Int::from_i64(&context, hs.v.z);
+        // h1 defines a line that the target stone must pass through. Define a plane
+        // using the origin and that line.
+        let h1 = transformed[1];
+        let normal = h1.p.cross(h1.v);
 
-            let t = z3::ast::Int::new_const(&context, format!("t{i}"));
-            solver.assert(&t.gt(&z3::ast::Int::from_i64(&context, 0)));
-            solver.assert(&(x.clone() + vx.clone() * t.clone())._eq(&(a + va * t.clone())));
-            solver.assert(&(y.clone() + vy.clone() * t.clone())._eq(&(b + vb * t.clone())));
-            solver.assert(&(z.clone() + vz.clone() * t.clone())._eq(&(c + vc * t.clone())));
-        }
-        if solver.check() == z3::SatResult::Sat {
-            let Some(m) = solver.get_model() else {
-                println!("Failed to solve!");
-                return;
-            };
-            Ok(m.eval(&(x + y + z), true).unwrap().into())
-        } else {
-            Err(Error::Unsolved)
-        }
-        */
-        println!("(declare-const x Int)");
-        println!("(declare-const y Int)");
-        println!("(declare-const z Int)");
-        println!("(declare-const vx Int)");
-        println!("(declare-const vy Int)");
-        println!("(declare-const vz Int)");
+        // calculate the time and location of the intersection of h2 with
+        // the plane defined by the line from the origin to h1 and normal.
+        let h2 = transformed[2];
+        let t2 = h1.p.sub(h2.p).dot(normal) / h2.v.dot(normal);
+        let h2_intersection = h2.p.add(h2.v.mul(t2));
 
-        for (i, hs) in self.hailstones.iter().take(3).enumerate() {
-            let x = hs.p.x;
-            let y = hs.p.y;
-            let z = hs.p.z;
+        // and same for h3
+        let h3 = transformed[3];
+        let t3 = h1.p.sub(h3.p).dot(normal) / h3.v.dot(normal);
+        let h3_intersection = h3.p.add(h3.v.mul(t3));
 
-            let vx = hs.v.x;
-            let vy = hs.v.y;
-            let vz = hs.v.z;
+        let rock_vel = h3_intersection.sub(h2_intersection).div(t3 - t2);
+        let rock_pos = h3_intersection.add(rock_vel.mul(-t3));
+        let rock = Hailstone {
+            p: rock_pos,
+            v: rock_vel,
+        };
 
-            println!("(declare-const t{i} Int)");
-            println!("(assert (> t{i} 0))");
-            println!("(assert (= (+ x (* vx t{i})) (+ {x} (* {vx} t{i}))))");
-            println!("(assert (= (+ y (* vy t{i})) (+ {y} (* {vy} t{i}))))");
-            println!("(assert (= (+ z (* vz t{i})) (+ {z} (* {vz} t{i}))))");
-        }
-        println!("(check-sat)");
-        println!("(eval x)");
-        println!("(eval y)");
-        println!("(eval z)");
-        println!("(eval (+ x y z))");
+        // retransform rock back to the starting coordinate system
+        let rock = Hailstone {
+            p: rock.p.add(h0.p),
+            v: rock.v.add(h0.v),
+        };
+        let sum = (rock.p.x + rock.p.y + rock.p.z) as usize;
 
-        Ok(540355811503157usize.into())
+        Ok(sum.into())
     }
 }
-
-/*
-
-px0 + t1*vx0 = px1 + t1*vx1
-py0 + t1*vy0 = py1 + t1*vy1
-pz0 + t1*vz0 = pz1 + t1*vz1
-
-px0 + t2*vx0 = px2 + t2*vx2
-py0 + t2*vy0 = py2 + t2*vy2
-pz0 + t2*vz0 = pz2 + t2*vz2
-
-px0 + t3*vx0 = px3 + t3*vx3
-py0 + t3*vy0 = py3 + t3*vy3
-pz0 + t3*vz0 = pz3 + t3*vz3
-
-..
-
-px0 = px1 + t1 * (vx1 - vx0)
-py0 = py1 + t1 * (vy1 - vy0)
-pz0 = pz1 + t1 * (vz1 - vz0)
-
-px1 + t1 * (vx1 - vx0) + t2*vx0 = px2 + t2*vx2
-py1 + t1 * (vy1 - vy0) + t2*vy0 = py2 + t2*vy2
-pz1 + t1 * (vz1 - vz0) + t2*vz0 = pz2 + t2*vz2
-
-px1 + t1 * (vx1 - vx0) + t3*vx0 = px3 + t3*vx3
-py1 + t1 * (vy1 - vy0) + t3*vy0 = py3 + t3*vy3
-pz1 + t1 * (vz1 - vz0) + t3*vz0 = pz3 + t3*vz3
-
-..
-
-t1 * (vx1 - vx0) + t2 * (vx0 - vx2) = px2 - px1
-t1 * (vy1 - vy0) + t2 * (vy0 - vy2) = py2 - py1
-t1 * (vz1 - vz0) + t2 * (vz0 - vz2) = pz2 - pz1
-
-t1 * (vx1 - vx0) + t3 * (vx0 - vx3) = px3 - px1
-t1 * (vy1 - vy0) + t3 * (vy0 - vy3) = py3 - py1
-t1 * (vz1 - vz0) + t3 * (vz0 - vz3) = pz3 - pz1
-
-t1 = (px2 - px1 - t2 * (vx0 - vx2)) / (vx1 - vx0)
-(px2 - px1 - t2 * (vx0 - vx2)) / (vx1 - vx0) * (vy1 - vy0) + t2 * (vy0 - vy2) = py2 - py1
-*/
