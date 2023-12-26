@@ -75,7 +75,14 @@ fn run(
 
         let res = run(&mut runner);
         match res {
-            Err(Error::Skipped) => println!("Skipped"),
+            Err(Error::Skipped) => {
+                if capture {
+                    let _ = Output::end_capture();
+                }
+                let prev_color = Output::yellow();
+                println!("Skipped");
+                Output::color(prev_color);
+            }
             Err(e) => Output::error(e),
             _ => {}
         }

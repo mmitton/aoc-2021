@@ -125,25 +125,34 @@ impl Day23 {
                 let to = intersections.iter().position(|p| p == to).unwrap();
                 self.paths[from].push((to, *steps));
             }
+            self.paths[from].sort();
         }
     }
 
-    fn longest_path(&self, at: usize, steps: usize, visited: &mut [bool]) -> usize {
-        let mut longest = 0;
-        for (next, next_steps) in self.paths[at].iter() {
-            if visited[*next] {
-                continue;
+    fn longest_path(&self) -> usize {
+        fn find_paths(
+            paths: &[Vec<(usize, usize)>],
+            at: usize,
+            steps: usize,
+            visited: u64,
+        ) -> usize {
+            let mut longest = 0;
+            for &(next, next_steps) in paths[at].iter() {
+                if visited & (1 << (next + 1)) != 0 {
+                    continue;
+                }
+                if next == 1 {
+                    return longest.max(steps + next_steps);
+                } else {
+                    let visited = visited | (1 << (next + 1));
+                    longest = longest.max(find_paths(paths, next, steps + next_steps, visited));
+                }
             }
-            if *next == 1 {
-                return longest.max(steps + next_steps);
-            } else {
-                visited[*next] = true;
-                longest = longest.max(self.longest_path(*next, steps + next_steps, visited));
-                visited[*next] = false;
-            }
+
+            longest
         }
 
-        longest
+        find_paths(&self.paths, 0, 0, 1)
     }
 }
 
@@ -161,15 +170,11 @@ impl Runner for Day23 {
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
         self.make_paths(true);
-        let mut visited = vec![false; self.paths.len()];
-        visited[0] = true;
-        Ok(self.longest_path(0, 0, &mut visited).into())
+        Ok(self.longest_path().into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
         self.make_paths(false);
-        let mut visited = vec![false; self.paths.len()];
-        visited[0] = true;
-        Ok(self.longest_path(0, 0, &mut visited).into())
+        Ok(self.longest_path().into())
     }
 }
