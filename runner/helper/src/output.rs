@@ -1,4 +1,5 @@
 use crate::Error;
+use std::collections::BTreeMap;
 use std::fmt::Write;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -12,8 +13,7 @@ pub struct Output {
     capture: Option<String>,
     color: Option<colored::Color>,
     times_mode: bool,
-    part1: Duration,
-    part2: Duration,
+    times: BTreeMap<usize, [Option<Duration>; 2]>,
 }
 
 static OUTPUT: Mutex<Output> = Mutex::new(Output {
@@ -25,8 +25,7 @@ static OUTPUT: Mutex<Output> = Mutex::new(Output {
     capture: None,
     color: None,
     times_mode: false,
-    part1: Duration::new(0, 0),
-    part2: Duration::new(0, 0),
+    times: BTreeMap::new(),
 });
 
 impl Output {
@@ -86,20 +85,52 @@ impl Output {
     pub fn start_times_mode() {
         let mut output = OUTPUT.lock().expect("Could not get output lock");
         output.times_mode = true;
-        println!("+-------+------------+------------+");
-        println!("| Day   | Part 1     | Part 2     |");
-        println!("+-------+------------+------------+");
     }
 
     pub fn end_times_mode() {
         let mut output = OUTPUT.lock().expect("Could not get output lock");
         output.times_mode = false;
-        let part1 = format!("{elapsed:0.4?}", elapsed = output.part1);
-        let part2 = format!("{elapsed:0.4?}", elapsed = output.part2);
-        let total = format!("{elapsed:0.4?}", elapsed = output.part1 + output.part2);
-        println!("+-------+------------+------------+------------+");
-        println!("| Total | {part1:>10} | {part2:>10} | {total:>10} |");
-        println!("+-------+------------+------------+------------+");
+        let mut prt1 = Duration::new(0, 0);
+        let mut prt2 = Duration::new(0, 0);
+        let mut total = Duration::new(0, 0);
+        println!("+-------+------------+------------+--------+--------+");
+        println!("| Day   | Part 1     | Part 2     | P1 %   | P2 %   |");
+        println!("+-------+------------+------------+--------+--------+");
+        for parts in output.times.values() {
+            if let Some(part1) = parts[0] {
+                prt1 += part1;
+                total += part1;
+            }
+            if let Some(part2) = parts[1] {
+                prt2 += part2;
+                total += part2;
+            }
+        }
+        for (day, parts) in output.times.iter() {
+            let (prt1, per1) = if let Some(prt1) = parts[0] {
+                (
+                    format!("{:0.5} s", prt1.as_secs_f64()),
+                    format!("{:0.2}%", prt1.as_secs_f64() / total.as_secs_f64() * 100.),
+                )
+            } else {
+                ("".to_string(), "".to_string())
+            };
+            let (prt2, per2) = if let Some(prt2) = parts[1] {
+                (
+                    format!("{:0.5} s", prt2.as_secs_f64()),
+                    format!("{:0.2}%", prt2.as_secs_f64() / total.as_secs_f64() * 100.),
+                )
+            } else {
+                ("".to_string(), "".to_string())
+            };
+            println!("| {day:>5} | {prt1:>10} | {prt2:>10} | {per1:>6} | {per2:>6} |");
+        }
+        let prt1 = format!("{elapsed:0.5} s", elapsed = prt1.as_secs_f64());
+        let prt2 = format!("{elapsed:0.5} s", elapsed = prt2.as_secs_f64());
+        let total = format!("{elapsed:0.5} s", elapsed = total.as_secs_f64());
+        println!("+-------+------------+------------+-----------------+");
+        println!("| Total | {prt1:>10} | {prt2:>10} | Both {total:>10} |");
+        println!("+-------+------------+------------+-----------------+");
     }
 
     pub fn start_capture() {
@@ -134,16 +165,10 @@ impl Output {
             } else {
                 panic!("Not in test");
             };
-            if output.part == 1 {
-                print!("| {day:5}", day = output.day);
-                output.part1 += elapsed;
-            }
-            let time = format!("{elapsed:0.4?}");
-            print!(" | {time:>10}");
-            if output.part == 2 {
-                println!(" |");
-                output.part2 += elapsed;
-            }
+            let day = output.day;
+            let part = output.part - 1;
+            let day = output.times.entry(day).or_default();
+            day[part] = Some(elapsed);
         } else {
             let start = if let Some(start) = output.start.take() {
                 start
