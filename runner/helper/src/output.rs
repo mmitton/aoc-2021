@@ -1,7 +1,7 @@
 use crate::Error;
 use std::fmt::Write;
 use std::sync::Mutex;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 pub struct Output {
     year: usize,
@@ -11,6 +11,9 @@ pub struct Output {
     start: Option<Instant>,
     capture: Option<String>,
     color: Option<colored::Color>,
+    times_mode: bool,
+    part1: Duration,
+    part2: Duration,
 }
 
 static OUTPUT: Mutex<Output> = Mutex::new(Output {
@@ -21,6 +24,9 @@ static OUTPUT: Mutex<Output> = Mutex::new(Output {
     start: None,
     capture: None,
     color: None,
+    times_mode: false,
+    part1: Duration::new(0, 0),
+    part2: Duration::new(0, 0),
 });
 
 impl Output {
@@ -50,11 +56,17 @@ impl Output {
 
     pub fn print(args: std::fmt::Arguments) {
         let mut output = OUTPUT.lock().expect("Could not get output lock");
+        if output.times_mode {
+            return;
+        }
         output.write_fmt(args).expect("Could not write output");
     }
 
     pub fn println(args: std::fmt::Arguments) {
         let mut output = OUTPUT.lock().expect("Could not get output lock");
+        if output.times_mode {
+            return;
+        }
         output.write_fmt(args).expect("Could not write output");
         output.write_char('\n').expect("Could not write output");
     }
@@ -69,6 +81,25 @@ impl Output {
         output.part = part;
         output.new_line = true;
         output.start = Some(Instant::now());
+    }
+
+    pub fn start_times_mode() {
+        let mut output = OUTPUT.lock().expect("Could not get output lock");
+        output.times_mode = true;
+        println!("+-------+------------+------------+");
+        println!("| Day   | Part 1     | Part 2     |");
+        println!("+-------+------------+------------+");
+    }
+
+    pub fn end_times_mode() {
+        let mut output = OUTPUT.lock().expect("Could not get output lock");
+        output.times_mode = false;
+        let part1 = format!("{elapsed:0.4?}", elapsed = output.part1);
+        let part2 = format!("{elapsed:0.4?}", elapsed = output.part2);
+        let total = format!("{elapsed:0.4?}", elapsed = output.part1 + output.part2);
+        println!("+-------+------------+------------+------------+");
+        println!("| Total | {part1:>10} | {part2:>10} | {total:>10} |");
+        println!("+-------+------------+------------+------------+");
     }
 
     pub fn start_capture() {
@@ -97,22 +128,41 @@ impl Output {
 
     pub fn end_test() {
         let mut output = OUTPUT.lock().expect("Could not get output lock");
-        let elapsed = if let Some(start) = output.start {
-            start.elapsed()
+        if output.times_mode {
+            let elapsed = if let Some(parsed) = output.start.take() {
+                parsed.elapsed()
+            } else {
+                panic!("Not in test");
+            };
+            if output.part == 1 {
+                print!("| {day:5}", day = output.day);
+                output.part1 += elapsed;
+            }
+            let time = format!("{elapsed:0.4?}");
+            print!(" | {time:>10}");
+            if output.part == 2 {
+                println!(" |");
+                output.part2 += elapsed;
+            }
         } else {
-            panic!("Not in test");
-        };
-        output.ensure_nl();
-        output
-            .write_fmt(format_args!("Elapsed {elapsed:?}",))
-            .expect("Coult not write output");
+            let start = if let Some(start) = output.start.take() {
+                start
+            } else {
+                panic!("Not in test");
+            };
+            let run = start.elapsed();
+            output.ensure_nl();
+            output
+                .write_fmt(format_args!("Run {run:?}",))
+                .expect("Coult not write output");
+            println!();
+            println!();
+        }
         output.year = 0;
         output.day = 0;
         output.part = 0;
         output.new_line = true;
         output.start = None;
-        println!();
-        println!();
     }
 
     fn ensure_nl(&mut self) {

@@ -91,7 +91,7 @@ fn run(
     Ok(())
 }
 
-fn get_args() -> (bool, bool, Option<usize>, Option<usize>) {
+fn get_args() -> (bool, bool, bool, Option<usize>, Option<usize>) {
     let matches = Command::new("runner")
         .about("AoC Runner")
         .arg(
@@ -106,6 +106,13 @@ fn get_args() -> (bool, bool, Option<usize>, Option<usize>) {
             Arg::new("real-data")
                 .long("real-data")
                 .visible_alias("real")
+                .num_args(0)
+                .required(false)
+                .help("Run Real Data"),
+        )
+        .arg(
+            Arg::new("times")
+                .long("times")
                 .num_args(0)
                 .required(false)
                 .help("Run Real Data"),
@@ -149,6 +156,10 @@ fn get_args() -> (bool, bool, Option<usize>, Option<usize>) {
         .unwrap_or_default();
     let real_data = matches
         .get_one::<bool>("real-data")
+        .copied()
+        .unwrap_or_default();
+    let times = matches
+        .get_one::<bool>("times")
         .copied()
         .unwrap_or_default();
 
@@ -200,15 +211,19 @@ fn get_args() -> (bool, bool, Option<usize>, Option<usize>) {
         subcommand => unreachable!("{subcommand:?}"),
     };
 
-    (capture, sample_data, year, day)
+    (capture, sample_data, times, year, day)
 }
 
 fn main() -> Result<(), Error> {
-    let (capture, sample_data, target_year, target_day) = get_args();
+    let (capture, sample_data, times, target_year, target_day) = get_args();
 
     let mut runners = BTreeMap::new();
     aoc_2022::register(&mut runners);
     aoc_2023::register(&mut runners);
+
+    if times {
+        Output::start_times_mode();
+    }
 
     use chrono::prelude::*;
     let today = Local::now();
@@ -238,6 +253,10 @@ fn main() -> Result<(), Error> {
 
         run(capture, sample_data, new_runner, *year, *day, 1)?;
         run(capture, sample_data, new_runner, *year, *day, 2)?;
+    }
+
+    if times {
+        Output::end_times_mode();
     }
 
     Ok(())
