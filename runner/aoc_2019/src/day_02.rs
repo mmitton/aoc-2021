@@ -1,25 +1,44 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
 
-pub struct Day02 {}
+use crate::IntCode;
+
+pub struct Day02 {
+    intcode: IntCode<u32>,
+}
 
 impl Day02 {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            intcode: IntCode::default(),
+        }
     }
 }
 
 impl Runner for Day02 {
     fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let _lines = Lines::from_path(path, LinesOpt::RAW)?;
-        Ok(())
+        self.intcode.load(Lines::from_path(path, LinesOpt::RAW)?)
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        self.intcode[1] = 12;
+        self.intcode[2] = 2;
+        self.intcode.run();
+        Ok(self.intcode[0].into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
+        for a in 0..100 {
+            for b in 0..100 {
+                let mut intcode = self.intcode.clone();
+                intcode[1] = a;
+                intcode[2] = b;
+                intcode.run();
+                if intcode[0] == 19690720 {
+                    return Ok(((a * 100) + b).into());
+                }
+            }
+        }
         Err(Error::Unsolved)
     }
 }
