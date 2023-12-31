@@ -1,3 +1,4 @@
+workspace = { members = ["aoc_2019"] }
 [package]
 name = "runner"
 version = "0.1.0"
@@ -11,3 +12,4 @@ clap = "4.4.8"
 chrono = "0.4.31"
 aoc_2023 = { version = "0.1.0", path = "aoc_2023" }
 aoc_2022 = { version = "0.1.0", path = "aoc_2022" }
+aoc_2019 = { version = "0.1.0", path = "aoc_2019" }

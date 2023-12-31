@@ -218,6 +218,7 @@ fn main() -> Result<(), Error> {
     let (capture, sample_data, times, target_year, target_day) = get_args();
 
     let mut runners = BTreeMap::new();
+    aoc_2019::register(&mut runners);
     aoc_2022::register(&mut runners);
     aoc_2023::register(&mut runners);
 

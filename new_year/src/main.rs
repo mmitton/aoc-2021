@@ -52,15 +52,6 @@ fn create_year(year: usize) -> Result<(), Error> {
             "use helper::{{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner}};"
         )?;
         writeln!(d)?;
-        writeln!(d, "#[derive(Debug)]")?;
-        writeln!(d, "pub enum RunnerError {{}}")?;
-        writeln!(d)?;
-        writeln!(d, "impl From<RunnerError> for Error {{")?;
-        writeln!(d, "    fn from(e: RunnerError) -> Self {{")?;
-        writeln!(d, "        Self::Runner(format!(\"{{e:?}}\"))")?;
-        writeln!(d, "    }}")?;
-        writeln!(d, "}}")?;
-        writeln!(d)?;
         writeln!(d, "pub struct Day{day:02} {{}}")?;
         writeln!(d)?;
         writeln!(d, "impl Day{day:02} {{")?;
