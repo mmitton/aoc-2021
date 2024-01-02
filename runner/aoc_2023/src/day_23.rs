@@ -138,13 +138,13 @@ impl Day23 {
         ) -> usize {
             let mut longest = 0;
             for &(next, next_steps) in paths[at].iter() {
-                if visited & (1 << (next + 1)) != 0 {
+                if visited & (1 << next) != 0 {
                     continue;
                 }
                 if next == 1 {
                     return longest.max(steps + next_steps);
                 } else {
-                    let visited = visited | (1 << (next + 1));
+                    let visited = visited | (1 << next);
                     longest = longest.max(find_paths(paths, next, steps + next_steps, visited));
                 }
             }
