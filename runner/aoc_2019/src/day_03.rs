@@ -11,7 +11,6 @@ struct Point {
 #[derive(Copy, Clone, Debug)]
 struct Line {
     p0: Point,
-    p1: Point,
     min: Point,
     max: Point,
     dist: usize,
@@ -21,7 +20,6 @@ impl Line {
     fn new(p0: Point, p1: Point, dist: usize) -> Self {
         Self {
             p0,
-            p1,
             min: Point {
                 x: p0.x.min(p1.x),
                 y: p0.y.min(p1.y),
@@ -32,10 +30,6 @@ impl Line {
             },
             dist,
         }
-    }
-
-    fn contains(&self, p: &Point) -> Option<isize> {
-        None
     }
 }
 
