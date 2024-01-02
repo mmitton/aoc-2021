@@ -6,7 +6,7 @@ mod run_output;
 
 pub use algorithms::*;
 pub use error::Error;
-pub use output::Output;
+pub use output::{Output, YearDayPart, OUTPUT};
 pub use parser::{find_day_part_files, search_up, Lines, LinesOpt, SearchType};
 pub use run_output::RunOutput;
 
@@ -18,40 +18,36 @@ pub trait Runner {
 
 pub type NewRunner = fn() -> Box<dyn Runner>;
 
+pub fn output<F>(f: F)
+where
+    F: Fn(std::cell::RefMut<Output>),
+{
+    output::OUTPUT.with(|output| f(output.borrow_mut()));
+}
+
 #[macro_export]
 macro_rules! print {
-    () => {};
-
-    (FORCE $($args:tt)*) => {
-        Output::print(format_args!($($args)*));
-    };
-
     ($($args:tt)*) => {
-        if cfg!(debug_assertions) {
-            Output::print(format_args!($($args)*));
-        }
+        $crate::output(|mut output| {
+            use std::fmt::Write;
+            let _ = write!(output.mode, $($args)*);
+        });
     };
 }
 
 #[macro_export]
 macro_rules! println {
-    (FORCE) => {
-        Output::println(format_args!(""));
-    };
-
-    (FORCE $($args:tt)*) => {
-        Output::println(format_args!($($args)*));
-    };
-
     () => {
-        if cfg!(debug_assertions) {
-            Output::println(format_args!(""));
-        }
+        $crate::output(|mut output| {
+            use std::fmt::Write;
+            let _ = writeln!(output.mode);
+        });
     };
 
     ($($args:tt)*) => {
-        if cfg!(debug_assertions) {
-            Output::println(format_args!($($args)*));
-        }
+        $crate::output(|mut output| {
+            use std::fmt::Write;
+            let _ = writeln!(output.mode, $($args)*);
+        });
     };
 }

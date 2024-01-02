@@ -1,20 +1,139 @@
-use crate::Error;
-use std::collections::BTreeMap;
-use std::fmt::Write;
-use std::sync::Mutex;
-use std::time::{Duration, Instant};
+use std::cell::RefCell;
+use std::fmt::{Display, Write};
 
-pub struct Output {
+thread_local! {
+    pub static OUTPUT: RefCell<Output> = RefCell::new(Output::default());
+}
+
+#[derive(Copy, Clone)]
+pub struct YearDayPart {
     year: usize,
     day: usize,
     part: usize,
-    new_line: bool,
-    start: Option<Instant>,
-    capture: Option<String>,
-    color: Option<colored::Color>,
-    times_mode: bool,
-    times: BTreeMap<usize, [Option<Duration>; 2]>,
 }
+
+impl YearDayPart {
+    pub fn new(year: usize, day: usize, part: usize) -> Self {
+        Self { year, day, part }
+    }
+}
+
+impl Display for YearDayPart {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{year}-{day:02} Part {part}",
+            year = self.year,
+            day = self.day,
+            part = self.part
+        )
+    }
+}
+
+#[derive(Default)]
+pub struct Output {
+    pub mode: Mode,
+}
+
+#[derive(Default)]
+pub enum Mode {
+    #[default]
+    NoOutput,
+    Stdout {
+        ydp: YearDayPart,
+        new_line: bool,
+    },
+    Capture {
+        ydp: YearDayPart,
+        new_line: bool,
+        capture: String,
+    },
+}
+
+impl Output {
+    pub fn start_run(&mut self, ydp: YearDayPart) {
+        self.mode.reset(ydp);
+    }
+}
+
+impl Mode {
+    pub fn get_capture(&self) -> &str {
+        match self {
+            Self::NoOutput | Self::Stdout { .. } => "",
+            Self::Capture { capture, .. } => capture,
+        }
+    }
+
+    pub fn reset(&mut self, ydp: YearDayPart) {
+        match self {
+            Self::NoOutput => {}
+            Self::Stdout {
+                ydp: _ydp,
+                new_line,
+            } => {
+                *_ydp = ydp;
+                *new_line = true;
+            }
+            Self::Capture {
+                ydp: _ydp,
+                new_line,
+                capture,
+            } => {
+                *_ydp = ydp;
+                *new_line = true;
+                capture.clear();
+            }
+        }
+    }
+}
+
+impl Write for Mode {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        use std::io::Write;
+        macro_rules! output {
+            ($ydp:ident, $new_line:ident, $w:expr) => {{
+                #[allow(unused_mut)]
+                let mut w = $w;
+                let _ = write!(w, "{s}");
+                *$new_line = s.ends_with('\n');
+            }};
+        }
+
+        match self {
+            Self::NoOutput => {}
+            Self::Stdout { ydp, new_line } => {
+                output!(ydp, new_line, std::io::stdout().lock())
+            }
+            Self::Capture {
+                ydp,
+                new_line,
+                capture,
+            } => output!(ydp, new_line, capture),
+        }
+
+        Ok(())
+    }
+
+    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> std::fmt::Result {
+        match self {
+            Self::NoOutput => {}
+            Self::Stdout { .. } | Self::Capture { .. } => self.write_str(&args.to_string())?,
+        }
+
+        Ok(())
+    }
+
+    fn write_char(&mut self, c: char) -> std::fmt::Result {
+        match self {
+            Self::NoOutput => {}
+            Self::Stdout { .. } | Self::Capture { .. } => write!(self, "{c}")?,
+        }
+
+        Ok(())
+    }
+}
+
+/*
 
 static OUTPUT: Mutex<Output> = Mutex::new(Output {
     year: 0,
@@ -283,3 +402,4 @@ impl std::fmt::Write for Output {
         Ok(())
     }
 }
+*/
