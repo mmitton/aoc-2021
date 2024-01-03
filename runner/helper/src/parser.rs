@@ -2,6 +2,7 @@ use crate::Error;
 use bitflags::bitflags;
 use std::fs::{canonicalize, read_dir, File};
 use std::io::{BufRead, BufReader, Read};
+use std::ops::Deref;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
@@ -52,6 +53,14 @@ impl Lines {
 
     pub fn iter(&self) -> LinesIter {
         LinesIter(self.0.iter())
+    }
+}
+
+impl Deref for Lines {
+    type Target = [String];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -216,6 +225,7 @@ pub fn find_day_part_files(
 
             ret.push((f, output));
         }
+        ret.sort();
         Ok(ret)
     }
 }
