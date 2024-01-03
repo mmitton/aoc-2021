@@ -119,6 +119,10 @@ pub fn run(
             }
             println!("{ydp}: {elapsed:?}");
             println!();
+        } else if let Err(e) = result {
+            if !matches!(e, Error::Skipped) {
+                return Err(e);
+            }
         }
     }
     Ok(total_elapsed)
