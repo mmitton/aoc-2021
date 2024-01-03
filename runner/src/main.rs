@@ -1,4 +1,5 @@
 use clap::{arg, Arg, Command};
+use colored::Colorize;
 use std::{cmp::Ordering, collections::BTreeMap};
 
 use helper::{find_day_part_files, Error, NewRunner, Output, Runner};
@@ -13,7 +14,15 @@ fn run(
 ) -> Result<(), Error> {
     let ydp = helper::YearDayPart::new(year, day, part);
 
-    for (path, expect_path) in find_day_part_files(year, day, part, sample_data)? {
+    let files = match find_day_part_files(year, day, part, sample_data) {
+        Ok(files) => files,
+        Err(e) => {
+            println!("{ydp}: Error: {}", format!("{e:?}").bright_red());
+            return Ok(());
+        }
+    };
+
+    for (path, expect_path) in files {
         helper::output(|mut output| output.start_run(ydp));
         let mut runner = new_runner();
         let run = |runner: &mut Box<dyn Runner>| {
@@ -30,21 +39,22 @@ fn run(
                 let expect = std::fs::read_to_string(expect_path)?;
                 let expect = expect.trim_end_matches('\n');
                 if expect == output {
-                    // let prev_color = Output::green();
                     if !output.contains('\n') {
-                        println!("{ydp}: Answer: {output}");
+                        println!("{ydp}: Answer: {output}", output = output.bright_green());
                     } else {
                         println!("{ydp}: Answer: ** Multiline **");
-                        println!("{ydp}: {output}");
+                        for line in output.split('\n') {
+                            println!("{ydp}: {output}", output = line.bright_green());
+                        }
                     }
-                    // Output::color(prev_color);
                 } else {
-                    // let prev_color = Output::red();
                     if !output.contains('\n') {
-                        println!("{ydp}: Answer: {output}");
+                        println!("{ydp}: Answer: {output}", output = output.bright_red());
                     } else {
                         println!("{ydp}: Answer: ** Multiline **");
-                        println!("{ydp}: {output}");
+                        for line in output.split('\n') {
+                            println!("{ydp}: {output}", output = line.bright_red());
+                        }
                     }
                     println!("{ydp}: ERROR: Output did not match expected output.");
                     if !expect.contains('\n') {
@@ -56,15 +66,15 @@ fn run(
                     // Output::color(prev_color);
                 }
             } else {
-                // let prev_color = Output::yellow();
                 if !output.contains('\n') {
-                    println!("{ydp}: Answer: {output}");
+                    println!("{ydp}: Answer: {output}", output = output.bright_yellow());
                 } else {
                     println!("{ydp}: Answer: ** Multiline **");
-                    println!("{ydp}: {output}");
+                    for line in output.split('\n') {
+                        println!("{ydp}: {output}", output = line.bright_yellow());
+                    }
                 }
                 println!("{ydp}: No expected output to compare");
-                // Output::color(prev_color);
             }
             Ok(())
         };
@@ -72,14 +82,10 @@ fn run(
         let res = run(&mut runner);
         match res {
             Err(Error::Skipped) => {
-                // let prev_color = Output::yellow();
-                println!("{ydp}: Skipped");
-                // Output::color(prev_color);
+                println!("{ydp}: {}", "Skipped".bright_yellow());
             }
             Err(e) => {
-                // let prev_color = Output::red();
-                println!("{ydp}: Error: {e:?}");
-                // Output::color(prev_color);
+                println!("{ydp}: Error: {}", format!("{e:?}").bright_red());
             }
             _ => {}
         }
