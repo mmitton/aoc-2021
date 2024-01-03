@@ -23,6 +23,7 @@ impl Day04 {
         ) -> u32 {
             if pos == 6 {
                 if num_dups > 0 && range.contains(&num) {
+                    println!("{num}");
                     return 1;
                 }
                 return 0;
