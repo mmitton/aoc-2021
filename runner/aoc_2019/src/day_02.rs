@@ -1,7 +1,6 @@
+use crate::intcode::IntCode;
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
-
-use crate::IntCode;
 
 pub struct Day02 {
     intcode: IntCode<u32>,

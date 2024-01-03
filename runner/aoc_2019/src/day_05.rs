@@ -1,7 +1,6 @@
+use crate::intcode::{IntCode, State};
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
-
-use crate::intcode::IntCode;
 
 pub struct Day05 {
     intcode: IntCode<i32>,
@@ -22,13 +21,29 @@ impl Runner for Day05 {
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
         self.intcode.input.push_front(1);
-        self.intcode.run();
-        Ok(self.intcode.output.unwrap().into())
+        let mut output = 0;
+        loop {
+            match self.intcode.run() {
+                State::HasOutput(v) => output = v,
+                State::Running => {}
+                State::Stopped => break,
+                _ => unreachable!(),
+            }
+        }
+        Ok(output.into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
         self.intcode.input.push_front(5);
-        self.intcode.run();
-        Ok(self.intcode.output.unwrap().into())
+        let mut output = 0;
+        loop {
+            match self.intcode.run() {
+                State::HasOutput(v) => output = v,
+                State::Running => {}
+                State::Stopped => break,
+                _ => unreachable!(),
+            }
+        }
+        Ok(output.into())
     }
 }

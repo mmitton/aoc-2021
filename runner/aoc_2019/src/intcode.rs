@@ -44,21 +44,21 @@ macro_rules! impl_word {
 impl_word!(u8, u16, u32, u64, u128, usize);
 impl_word!(i8, i16, i32, i64, i128, isize);
 
-#[derive(Default, Copy, Clone)]
-pub(crate) enum State {
+#[derive(Default, Copy, Clone, Debug)]
+pub(crate) enum State<T> {
     #[default]
     Running,
     WaitingForInput(usize),
+    HasOutput(T),
     Stopped,
 }
 
 #[derive(Default, Clone)]
 pub(crate) struct IntCode<T> {
     pc: usize,
-    state: State,
+    state: State<T>,
     mem: Vec<T>,
     pub(crate) input: VecDeque<T>,
-    pub(crate) output: Option<T>,
 }
 
 impl<T> Deref for IntCode<T> {
@@ -94,7 +94,7 @@ where
         Ok(())
     }
 
-    pub(crate) fn run(&mut self) -> State {
+    pub(crate) fn run(&mut self) -> State<T> {
         loop {
             match self.state {
                 State::Stopped => return self.state,
@@ -106,6 +106,10 @@ where
                     }
                     self.state = State::Running;
                     self.tick();
+                }
+                State::HasOutput(v) => {
+                    self.state = State::Running;
+                    return State::HasOutput(v);
                 }
                 State::Running => self.tick(),
             }
@@ -163,7 +167,7 @@ where
             4 => {
                 // Output rs1
                 let rs1 = self.get_arg(mode_p1);
-                self.output = Some(rs1);
+                self.state = State::HasOutput(rs1);
             }
             5 => {
                 // Jump-if-true rs1 target_pc
