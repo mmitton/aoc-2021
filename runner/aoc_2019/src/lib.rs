@@ -26,9 +26,9 @@ mod day_22;
 mod day_23;
 mod day_24;
 mod day_25;
-mod intcode;
+pub(crate) mod intcode;
 
-pub use intcode::IntCode;
+pub(crate) use intcode::IntCode;
 
 pub fn register(runners: &mut BTreeMap<(usize, usize), NewRunner>) {
     runners.insert((2019, 1), || Box::new(day_01::Day01::new()));
