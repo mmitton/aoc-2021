@@ -5,6 +5,7 @@ mod args;
 mod run;
 
 fn print_times(
+    run_count: usize,
     year: usize,
     times_cache: &mut Vec<(usize, Result<Duration, Error>, Result<Duration, Error>)>,
 ) {
@@ -21,7 +22,11 @@ fn print_times(
             total += *dur;
         }
     }
-    println!("Year: {year}");
+    if run_count > 1 {
+        println!("Year: {year}  Averaged over {run_count} runs.");
+    } else {
+        println!("Year: {year}");
+    }
     println!("+-------+------------+------------+--------+--------+");
     println!("|   Day |     Part 1 |     Part 2 |   P1 % |   P2 % |");
     println!("+-------+------------+------------+--------+--------+");
@@ -75,10 +80,11 @@ fn main() -> Result<(), Error> {
 
     let mut times_cache = Vec::new();
     let mut prev_year = 0;
+    let run_count = if times { 5 } else { 1 };
 
     for ((year, day), new_runner) in runners.iter() {
         if times && !times_cache.is_empty() && prev_year != *year {
-            print_times(prev_year, &mut times_cache);
+            print_times(run_count, prev_year, &mut times_cache);
         }
         prev_year = *year;
 
@@ -104,8 +110,8 @@ fn main() -> Result<(), Error> {
             _ => {}
         }
 
-        let part1 = run::run(sample_data, new_runner, !times, *year, *day, 1);
-        let part2 = run::run(sample_data, new_runner, !times, *year, *day, 2);
+        let part1 = run::run(sample_data, new_runner, !times, run_count, *year, *day, 1);
+        let part2 = run::run(sample_data, new_runner, !times, run_count, *year, *day, 2);
 
         if times {
             times_cache.push((*day, part1, part2));
@@ -113,11 +119,8 @@ fn main() -> Result<(), Error> {
     }
 
     if times && !times_cache.is_empty() {
-        print_times(prev_year, &mut times_cache);
+        print_times(run_count, prev_year, &mut times_cache);
     }
-    // if times {
-    //     Output::end_times_mode();
-    // }
 
     Ok(())
 }
