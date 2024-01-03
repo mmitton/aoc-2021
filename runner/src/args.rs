@@ -1,0 +1,94 @@
+use clap::{arg, Arg, Command};
+
+pub fn get() -> (bool, bool, Option<usize>, Option<usize>) {
+    let matches = Command::new("runner")
+        .about("AoC Runner")
+        .arg(
+            Arg::new("sample-data")
+                .long("sample-data")
+                .visible_alias("sample")
+                .num_args(0)
+                .required(false)
+                .help("Run Sample Data"),
+        )
+        .arg(
+            Arg::new("real-data")
+                .long("real-data")
+                .visible_alias("real")
+                .num_args(0)
+                .required(false)
+                .help("Run Real Data"),
+        )
+        .arg(
+            Arg::new("times")
+                .long("times")
+                .num_args(0)
+                .required(false)
+                .help("Run Real Data"),
+        )
+        .subcommand(
+            Command::new("today").about("Run latest day available.  Will be today during AoC"),
+        )
+        .subcommand(Command::new("all").about("Run all days"))
+        .subcommand(
+            Command::new("day")
+                .about("Run a given day")
+                .arg_required_else_help(true)
+                .arg(arg!(<YEAR> "Year").value_parser(clap::value_parser!(usize)))
+                .arg(arg!(<DAY> "Day").value_parser(clap::value_parser!(usize))),
+        )
+        .subcommand(
+            Command::new("year")
+                .about("Run all days in a given year")
+                .arg_required_else_help(true)
+                .arg(arg!(<YEAR> "Year").value_parser(clap::value_parser!(usize))),
+        )
+        .get_matches();
+
+    let sample_data = matches
+        .get_one::<bool>("sample-data")
+        .copied()
+        .unwrap_or_default();
+    let real_data = matches
+        .get_one::<bool>("real-data")
+        .copied()
+        .unwrap_or_default();
+    let times = matches
+        .get_one::<bool>("times")
+        .copied()
+        .unwrap_or_default();
+
+    let sample_data = match (sample_data, real_data) {
+        (true, true) => panic!("Cannot use both sample-data and real-data"),
+        (true, false) => true,
+        (false, true) => false,
+        (false, false) => cfg!(debug_assertions),
+    };
+
+    let (year, day) = match matches.subcommand() {
+        None | Some(("today", _)) => {
+            use chrono::prelude::*;
+            let today = Local::now();
+            match today.month() {
+                12 => match today.day() {
+                    1..=25 => (Some(today.year() as usize), Some(today.day() as usize)),
+                    _ => (Some(today.year() as usize), Some(25)),
+                },
+                _ => (Some(today.year() as usize - 1), Some(25)),
+            }
+        }
+        Some(("all", _)) => (None, None),
+        Some(("day", submatches)) => {
+            let year = submatches.get_one::<usize>("YEAR").copied();
+            let day = submatches.get_one::<usize>("DAY").copied();
+            (year, day)
+        }
+        Some(("year", submatches)) => {
+            let year = submatches.get_one::<usize>("YEAR").copied();
+            (year, None)
+        }
+        subcommand => unreachable!("{subcommand:?}"),
+    };
+
+    (sample_data, times, year, day)
+}

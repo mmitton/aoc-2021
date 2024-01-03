@@ -9,13 +9,15 @@ pub enum Error {
     InvalidInputFile(OsString),
     MinReq(minreq::Error),
     MissingCookies,
+    MissingExpect(String),
     MissingInput,
-    ParseIntError(ParseIntError),
     ParseFloatError(ParseFloatError),
+    ParseIntError(ParseIntError),
     Runner(String),
     SearchUpFailed(String),
     Skipped,
     Unsolved,
+    WrongAnswer(String, String),
     YearExists(usize),
 }
 

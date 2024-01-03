@@ -18,17 +18,17 @@ pub trait Runner {
 
 pub type NewRunner = fn() -> Box<dyn Runner>;
 
-pub fn output<F>(f: F)
+pub fn output<F, R>(f: F) -> R
 where
-    F: Fn(std::cell::RefMut<Output>),
+    F: Fn(&mut Output) -> R,
 {
-    output::OUTPUT.with(|output| f(output.borrow_mut()));
+    output::OUTPUT.with(|output| f(unsafe { &mut *output.get() }))
 }
 
 #[macro_export]
 macro_rules! print {
     ($($args:tt)*) => {
-        $crate::output(|mut output| {
+        $crate::output(|output| {
             use std::fmt::Write;
             let _ = write!(output.mode, $($args)*);
         });
@@ -38,14 +38,14 @@ macro_rules! print {
 #[macro_export]
 macro_rules! println {
     () => {
-        $crate::output(|mut output| {
+        $crate::output(|output| {
             use std::fmt::Write;
             let _ = writeln!(output.mode);
         });
     };
 
     ($($args:tt)*) => {
-        $crate::output(|mut output| {
+        $crate::output(|output| {
             use std::fmt::Write;
             let _ = writeln!(output.mode, $($args)*);
         });

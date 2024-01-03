@@ -1,239 +1,87 @@
-use clap::{arg, Arg, Command};
-use colored::Colorize;
-use std::{cmp::Ordering, collections::BTreeMap};
+use helper::Error;
+use std::{cmp::Ordering, collections::BTreeMap, time::Duration};
 
-use helper::{find_day_part_files, Error, NewRunner, Output, Runner};
+mod args;
+mod run;
 
-fn run(
-    capture: bool,
-    sample_data: bool,
-    new_runner: &NewRunner,
+fn print_times(
     year: usize,
-    day: usize,
-    part: usize,
-) -> Result<(), Error> {
-    let ydp = helper::YearDayPart::new(year, day, part);
-
-    let files = match find_day_part_files(year, day, part, sample_data) {
-        Ok(files) => files,
-        Err(e) => {
-            println!("{ydp}: Error: {}", format!("{e:?}").bright_red());
-            return Ok(());
+    times_cache: &mut Vec<(usize, Result<Duration, Error>, Result<Duration, Error>)>,
+) {
+    let mut total = Duration::new(0, 0);
+    let mut part1_total = Duration::new(0, 0);
+    let mut part2_total = Duration::new(0, 0);
+    for (_, part1, part2) in times_cache.iter() {
+        if let Ok(dur) = part1 {
+            part1_total += *dur;
+            total += *dur;
         }
-    };
-
-    for (path, expect_path) in files {
-        helper::output(|mut output| output.start_run(ydp));
-        let mut runner = new_runner();
-        let run = |runner: &mut Box<dyn Runner>| {
-            println!("{ydp}: Using {path} as input");
-            runner.parse(&path, part == 1)?;
-            let output = match part {
-                1 => runner.part1()?,
-                2 => runner.part2()?,
-                _ => unreachable!(),
-            };
-
-            let output = output.to_string();
-            if let Some(expect_path) = expect_path {
-                let expect = std::fs::read_to_string(expect_path)?;
-                let expect = expect.trim_end_matches('\n');
-                if expect == output {
-                    if !output.contains('\n') {
-                        println!("{ydp}: Answer: {output}", output = output.bright_green());
-                    } else {
-                        println!("{ydp}: Answer: ** Multiline **");
-                        for line in output.split('\n') {
-                            println!("{ydp}: {output}", output = line.bright_green());
-                        }
-                    }
-                } else {
-                    if !output.contains('\n') {
-                        println!("{ydp}: Answer: {output}", output = output.bright_red());
-                    } else {
-                        println!("{ydp}: Answer: ** Multiline **");
-                        for line in output.split('\n') {
-                            println!("{ydp}: {output}", output = line.bright_red());
-                        }
-                    }
-                    println!("{ydp}: ERROR: Output did not match expected output.");
-                    if !expect.contains('\n') {
-                        println!("{ydp}: Expected: {expect}");
-                    } else {
-                        println!("{ydp}: Expected: ** Multiline **");
-                        println!("{ydp}: {expect}");
-                    }
-                    // Output::color(prev_color);
-                }
-            } else {
-                if !output.contains('\n') {
-                    println!("{ydp}: Answer: {output}", output = output.bright_yellow());
-                } else {
-                    println!("{ydp}: Answer: ** Multiline **");
-                    for line in output.split('\n') {
-                        println!("{ydp}: {output}", output = line.bright_yellow());
-                    }
-                }
-                println!("{ydp}: No expected output to compare");
-            }
-            Ok(())
-        };
-
-        let res = run(&mut runner);
-        match res {
-            Err(Error::Skipped) => {
-                println!("{ydp}: {}", "Skipped".bright_yellow());
-            }
-            Err(e) => {
-                println!("{ydp}: Error: {}", format!("{e:?}").bright_red());
-            }
-            _ => {}
+        if let Ok(dur) = part2 {
+            part2_total += *dur;
+            total += *dur;
         }
-        // Output::end_test();
-        println!();
     }
-    Ok(())
-}
-
-fn get_args() -> (bool, bool, bool, Option<usize>, Option<usize>) {
-    let matches = Command::new("runner")
-        .about("AoC Runner")
-        .arg(
-            Arg::new("sample-data")
-                .long("sample-data")
-                .visible_alias("sample")
-                .num_args(0)
-                .required(false)
-                .help("Run Sample Data"),
-        )
-        .arg(
-            Arg::new("real-data")
-                .long("real-data")
-                .visible_alias("real")
-                .num_args(0)
-                .required(false)
-                .help("Run Real Data"),
-        )
-        .arg(
-            Arg::new("times")
-                .long("times")
-                .num_args(0)
-                .required(false)
-                .help("Run Real Data"),
-        )
-        .arg(
-            Arg::new("capture")
-                .long("capture")
-                .num_args(0)
-                .required(false)
-                .help("Capture output"),
-        )
-        .arg(
-            Arg::new("no-capture")
-                .long("no-capture")
-                .num_args(0)
-                .required(false)
-                .help("Do not capture output"),
-        )
-        .subcommand(
-            Command::new("today").about("Run latest day available.  Will be today during AoC"),
-        )
-        .subcommand(Command::new("all").about("Run all days"))
-        .subcommand(
-            Command::new("day")
-                .about("Run a given day")
-                .arg_required_else_help(true)
-                .arg(arg!(<YEAR> "Year").value_parser(clap::value_parser!(usize)))
-                .arg(arg!(<DAY> "Day").value_parser(clap::value_parser!(usize))),
-        )
-        .subcommand(
-            Command::new("year")
-                .about("Run all days in a given year")
-                .arg_required_else_help(true)
-                .arg(arg!(<YEAR> "Year").value_parser(clap::value_parser!(usize))),
-        )
-        .get_matches();
-
-    let sample_data = matches
-        .get_one::<bool>("sample-data")
-        .copied()
-        .unwrap_or_default();
-    let real_data = matches
-        .get_one::<bool>("real-data")
-        .copied()
-        .unwrap_or_default();
-    let times = matches
-        .get_one::<bool>("times")
-        .copied()
-        .unwrap_or_default();
-
-    let sample_data = match (sample_data, real_data) {
-        (true, true) => panic!("Cannot use both sample-data and real-data"),
-        (true, false) => true,
-        (false, true) => false,
-        (false, false) => cfg!(debug_assertions),
-    };
-
-    let capture = matches
-        .get_one::<bool>("capture")
-        .copied()
-        .unwrap_or_default();
-    let no_capture = matches
-        .get_one::<bool>("no-capture")
-        .copied()
-        .unwrap_or_default();
-
-    let capture = match (capture, no_capture) {
-        (true, true) => panic!("Cannot use both capture and no-capture"),
-        (true, false) => true,
-        (false, true) => false,
-        (false, false) => !sample_data,
-    };
-
-    let (year, day) = match matches.subcommand() {
-        None | Some(("today", _)) => {
-            use chrono::prelude::*;
-            let today = Local::now();
-            match today.month() {
-                12 => match today.day() {
-                    1..=25 => (Some(today.year() as usize), Some(today.day() as usize)),
-                    _ => (Some(today.year() as usize), Some(25)),
-                },
-                _ => (Some(today.year() as usize - 1), Some(25)),
-            }
-        }
-        Some(("all", _)) => (None, None),
-        Some(("day", submatches)) => {
-            let year = submatches.get_one::<usize>("YEAR").copied();
-            let day = submatches.get_one::<usize>("DAY").copied();
-            (year, day)
-        }
-        Some(("year", submatches)) => {
-            let year = submatches.get_one::<usize>("YEAR").copied();
-            (year, None)
-        }
-        subcommand => unreachable!("{subcommand:?}"),
-    };
-
-    (capture, sample_data, times, year, day)
+    println!("Year: {year}");
+    println!("+-------+------------+------------+--------+--------+");
+    println!("|   Day |     Part 1 |     Part 2 |   P1 % |   P2 % |");
+    println!("+-------+------------+------------+--------+--------+");
+    for (day, part1, part2) in times_cache.iter() {
+        let (prt1, per1) = if let Ok(prt1) = part1 {
+            (
+                format!("{:0.5} s", prt1.as_secs_f64()),
+                format!("{:0.2}%", prt1.as_secs_f64() / total.as_secs_f64() * 100.),
+            )
+        } else {
+            ("".to_string(), "".to_string())
+        };
+        let (prt2, per2) = if let Ok(prt2) = part2 {
+            (
+                format!("{:0.5} s", prt2.as_secs_f64()),
+                format!("{:0.2}%", prt2.as_secs_f64() / total.as_secs_f64() * 100.),
+            )
+        } else {
+            ("".to_string(), "".to_string())
+        };
+        println!("| {day:>5} | {prt1:>10} | {prt2:>10} | {per1:>6} | {per2:>6} |");
+    }
+    let prt1 = format!("{elapsed:0.5} s", elapsed = part1_total.as_secs_f64());
+    let prt2 = format!("{elapsed:0.5} s", elapsed = part2_total.as_secs_f64());
+    let total = format!("{elapsed:0.5} s", elapsed = total.as_secs_f64());
+    println!("+-------+------------+------------+-----------------+");
+    println!("| Total | {prt1:>10} | {prt2:>10} | Both {total:>10} |");
+    println!("+-------+------------+------------+-----------------+");
+    println!();
+    times_cache.clear();
 }
 
 fn main() -> Result<(), Error> {
-    let (capture, sample_data, times, target_year, target_day) = get_args();
+    let (sample_data, times, target_year, target_day) = args::get();
 
     let mut runners = BTreeMap::new();
     aoc_2019::register(&mut runners);
     aoc_2022::register(&mut runners);
     aoc_2023::register(&mut runners);
 
-    // if times {
-    //     Output::start_times_mode();
-    // }
+    if times {
+        helper::output(|output| output.no_output());
+    } else if cfg!(debug_assertions) {
+        helper::output(|output| output.stdout());
+    } else {
+        helper::output(|output| output.capture());
+    }
 
     use chrono::prelude::*;
     let today = Local::now();
 
+    let mut times_cache = Vec::new();
+    let mut prev_year = 0;
+
     for ((year, day), new_runner) in runners.iter() {
+        if times && !times_cache.is_empty() && prev_year != *year {
+            print_times(prev_year, &mut times_cache);
+        }
+        prev_year = *year;
+
         if let Some(target_year) = target_year {
             if target_year != *year {
                 continue;
@@ -256,10 +104,17 @@ fn main() -> Result<(), Error> {
             _ => {}
         }
 
-        run(capture, sample_data, new_runner, *year, *day, 1)?;
-        run(capture, sample_data, new_runner, *year, *day, 2)?;
+        let part1 = run::run(sample_data, new_runner, !times, *year, *day, 1);
+        let part2 = run::run(sample_data, new_runner, !times, *year, *day, 2);
+
+        if times {
+            times_cache.push((*day, part1, part2));
+        }
     }
 
+    if times && !times_cache.is_empty() {
+        print_times(prev_year, &mut times_cache);
+    }
     // if times {
     //     Output::end_times_mode();
     // }
