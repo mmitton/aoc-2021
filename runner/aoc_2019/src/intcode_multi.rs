@@ -54,7 +54,7 @@ where
             let state = self.chips[idx].run();
             match state {
                 State::Stopped => {}
-                State::WaitingForInput(_) => {
+                State::WaitingForInput(..) => {
                     waiting.insert(idx);
                 }
                 State::HasOutput(v) => {

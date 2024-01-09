@@ -48,7 +48,7 @@ impl_word!(i8, i16, i32, i64, i128, isize);
 pub(crate) enum State<T> {
     #[default]
     Running,
-    WaitingForInput(usize),
+    WaitingForInput(T, u8),
     HasOutput(T),
     Stopped,
 }
@@ -58,6 +58,7 @@ pub(crate) struct IntCode<T> {
     pc: usize,
     state: State<T>,
     mem: Vec<T>,
+    relbase: T,
     pub(crate) input: VecDeque<T>,
 }
 
@@ -98,9 +99,9 @@ where
         loop {
             match self.state {
                 State::Stopped => return self.state,
-                State::WaitingForInput(rd) => {
+                State::WaitingForInput(rd, mode) => {
                     if let Some(v) = self.input.pop_front() {
-                        self.mem[rd] = v;
+                        self.write_mem(rd, v, mode);
                     } else {
                         return self.state;
                     }
@@ -122,11 +123,43 @@ where
         val
     }
 
+    fn read_mem(&self, addr: usize) -> T {
+        if let Some(v) = self.mem.get(addr) {
+            *v
+        } else {
+            T::ZERO
+        }
+    }
+
+    fn write_mem(&mut self, addr: T, v: T, mode: u8) {
+        let addr = match mode {
+            0 => addr,
+            1 => panic!("Cannot write to immediate"),
+            2 => self.relbase.wrapping_add(addr),
+            _ => unreachable!(),
+        };
+        if addr < T::ZERO {
+            panic!("Address is less than 0.  {addr}");
+        }
+        let addr = addr.usize();
+        if self.mem.len() <= addr {
+            self.mem.resize(addr + 1, T::ZERO);
+        }
+        self.mem[addr] = v;
+    }
+
     fn get_arg(&mut self, mode: u8) -> T {
         let arg = self.get_from_pc();
         match mode {
-            0 => self.mem[arg.usize()],
+            0 => self.read_mem(arg.usize()),
             1 => arg,
+            2 => {
+                let mem_loc = self.relbase.wrapping_add(arg);
+                if mem_loc < T::ZERO {
+                    panic!("Trying to access memory below 0");
+                }
+                self.read_mem(mem_loc.usize())
+            }
             _ => unreachable!(),
         }
     }
@@ -140,28 +173,25 @@ where
         match opcode {
             1 => {
                 // Add rs1 rs2 rd
-                debug_assert_eq!(mode_p3, 0);
                 let rs1 = self.get_arg(mode_p1);
                 let rs2 = self.get_arg(mode_p2);
-                let rd = self.get_from_pc().usize();
-                self.mem[rd] = rs1.wrapping_add(rs2);
+                let rd = self.get_from_pc();
+                self.write_mem(rd, rs1.wrapping_add(rs2), mode_p3);
             }
             2 => {
                 // Mul rs1 rs2 rd
-                debug_assert_eq!(mode_p3, 0);
                 let rs1 = self.get_arg(mode_p1);
                 let rs2 = self.get_arg(mode_p2);
-                let rd = self.get_from_pc().usize();
-                self.mem[rd] = rs1.wrapping_mul(rs2);
+                let rd = self.get_from_pc();
+                self.write_mem(rd, rs1.wrapping_mul(rs2), mode_p3);
             }
             3 => {
                 // Input rd
-                debug_assert_eq!(mode_p1, 0);
-                let rd = self.get_from_pc().usize();
+                let rd = self.get_from_pc();
                 if let Some(v) = self.input.pop_front() {
-                    self.mem[rd] = v;
+                    self.write_mem(rd, v, mode_p1);
                 } else {
-                    self.state = State::WaitingForInput(rd);
+                    self.state = State::WaitingForInput(rd, mode_p1);
                 }
             }
             4 => {
@@ -189,21 +219,24 @@ where
             }
             7 => {
                 // Less-than rs1 rs2 rd
-                debug_assert_eq!(mode_p3, 0);
                 let rs1 = self.get_arg(mode_p1);
                 let rs2 = self.get_arg(mode_p2);
-                let rd = self.get_from_pc().usize();
+                let rd = self.get_from_pc();
 
-                self.mem[rd] = if rs1 < rs2 { T::ONE } else { T::ZERO };
+                self.write_mem(rd, if rs1 < rs2 { T::ONE } else { T::ZERO }, mode_p3);
             }
             8 => {
                 // Equals rs1 rs2 rd
-                debug_assert_eq!(mode_p3, 0);
                 let rs1 = self.get_arg(mode_p1);
                 let rs2 = self.get_arg(mode_p2);
-                let rd = self.get_from_pc().usize();
+                let rd = self.get_from_pc();
 
-                self.mem[rd] = if rs1 == rs2 { T::ONE } else { T::ZERO };
+                self.write_mem(rd, if rs1 == rs2 { T::ONE } else { T::ZERO }, mode_p3);
+            }
+            9 => {
+                // Adjust relbase rs1
+                let rs1 = self.get_arg(mode_p1);
+                self.relbase = self.relbase.wrapping_add(rs1);
             }
             99 => self.state = State::Stopped,
             _ => unreachable!(),
