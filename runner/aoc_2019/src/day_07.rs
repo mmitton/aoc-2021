@@ -1,7 +1,7 @@
 use crate::intcode::{IntCode, State, Word};
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
-use std::collections::{BTreeSet, VecDeque};
+use std::collections::VecDeque;
 
 #[derive(Default, Clone)]
 pub(crate) struct Amplifiers<T> {
@@ -45,13 +45,13 @@ where
 
     pub(crate) fn run(&mut self) {
         let mut runnable: VecDeque<usize> = self.amps.iter().enumerate().map(|(i, _)| i).collect();
-        let mut waiting: BTreeSet<usize> = BTreeSet::new();
+        let mut waiting: Vec<usize> = Vec::new();
         while let Some(idx) = runnable.pop_front() {
             let state = self.amps[idx].run();
             match state {
                 State::Stopped => {}
                 State::WaitingForInput(..) => {
-                    waiting.insert(idx);
+                    waiting.push(idx);
                 }
                 State::HasOutput(v) => {
                     if self.master_output == idx {
@@ -59,9 +59,10 @@ where
                     }
                     for idx in self.outputs[idx].iter() {
                         self.amps[*idx].input.push_back(v);
-                        if waiting.remove(idx) {
+                        if let Some(pos) = waiting.iter().position(|v| v == idx) {
                             // Add waiting chip back to the running queue
                             runnable.push_back(*idx);
+                            waiting.swap_remove(pos);
                         }
                     }
                     runnable.push_back(idx);
