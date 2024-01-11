@@ -18,16 +18,17 @@ fn run_part(
     };
 
     let output = output.to_string();
+    let output = output.trim_end_matches('\n');
     if let Some(expect_path) = expect_path {
         let expect = std::fs::read_to_string(expect_path)?;
         let expect = expect.trim_end_matches('\n');
         if expect == output {
-            Ok(output)
+            Ok(output.to_string())
         } else {
-            Err(Error::WrongAnswer(output, expect.to_string()))
+            Err(Error::WrongAnswer(output.to_string(), expect.to_string()))
         }
     } else {
-        Err(Error::MissingExpect(output))
+        Err(Error::MissingExpect(output.to_string()))
     }
 }
 
@@ -96,10 +97,12 @@ pub fn run(
                         }
                         println!("{ydp}: ERROR: Output did not match expected output.");
                         if !expect.contains('\n') {
-                            println!("{ydp}: Expected: {expect}");
+                            println!("{ydp}: Expected: {expect}", expect = expect.bright_yellow());
                         } else {
                             println!("{ydp}: Expected: ** Multiline **");
-                            println!("{ydp}: {expect}");
+                            for line in expect.split('\n') {
+                                println!("{ydp}: {output}", output = line.bright_yellow());
+                            }
                         }
                     }
                     Err(Error::MissingExpect(output)) => {

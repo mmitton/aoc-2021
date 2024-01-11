@@ -25,9 +25,8 @@ impl Runner for Day05 {
         loop {
             match self.intcode.run() {
                 State::HasOutput(v) => output = v,
-                State::Running => {}
                 State::Stopped => break,
-                _ => unreachable!(),
+                x => unreachable!("Unexpected state: {x:?}"),
             }
         }
         Ok(output.into())
@@ -39,9 +38,8 @@ impl Runner for Day05 {
         loop {
             match self.intcode.run() {
                 State::HasOutput(v) => output = v,
-                State::Running => {}
                 State::Stopped => break,
-                _ => unreachable!(),
+                x => unreachable!("Unexpected state: {x:?}"),
             }
         }
         Ok(output.into())
