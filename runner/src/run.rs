@@ -78,40 +78,42 @@ pub fn run(
                 match result {
                     Ok(output) => {
                         if !output.contains('\n') {
-                            println!("{ydp}: Answer: {output}", output = output.bright_green());
+                            println!("{ydp}:   Answer: {output}", output = output.bright_green());
                         } else {
-                            println!("{ydp}: Answer: ** Multiline **");
                             for line in output.split('\n') {
-                                println!("{ydp}: {output}", output = line.bright_green());
+                                println!("{ydp}:   Answer: {output}", output = line.bright_green());
                             }
                         }
                     }
                     Err(Error::WrongAnswer(output, expect)) => {
                         if !output.contains('\n') {
-                            println!("{ydp}: Answer: {output}", output = output.bright_red());
+                            println!("{ydp}:   Answer: {output}", output = output.bright_red());
                         } else {
-                            println!("{ydp}: Answer: ** Multiline **");
                             for line in output.split('\n') {
-                                println!("{ydp}: {output}", output = line.bright_red());
+                                println!("{ydp}:   Answer: {output}", output = line.bright_red());
                             }
                         }
                         println!("{ydp}: ERROR: Output did not match expected output.");
                         if !expect.contains('\n') {
                             println!("{ydp}: Expected: {expect}", expect = expect.bright_yellow());
                         } else {
-                            println!("{ydp}: Expected: ** Multiline **");
                             for line in expect.split('\n') {
-                                println!("{ydp}: {output}", output = line.bright_yellow());
+                                println!(
+                                    "{ydp}: Expected: {output}",
+                                    output = line.bright_yellow()
+                                );
                             }
                         }
                     }
                     Err(Error::MissingExpect(output)) => {
                         if !output.contains('\n') {
-                            println!("{ydp}: Answer: {output}", output = output.bright_yellow());
+                            println!("{ydp}:   Answer: {output}", output = output.bright_yellow());
                         } else {
-                            println!("{ydp}: Answer: ** Multiline **");
                             for line in output.split('\n') {
-                                println!("{ydp}: {output}", output = line.bright_yellow());
+                                println!(
+                                    "{ydp}:   Answer: {output}",
+                                    output = line.bright_yellow()
+                                );
                             }
                         }
                         println!("{ydp}: No expected output to compare");
