@@ -1,15 +1,85 @@
-use crate::intcode_multi::IntCodeMulti;
+use crate::intcode::{IntCode, State, Word};
 #[allow(unused_imports)]
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
+use std::collections::{BTreeSet, VecDeque};
+
+#[derive(Default, Clone)]
+pub(crate) struct Amplifiers<T> {
+    amps: Vec<IntCode<T>>,
+    pub(crate) output: Option<T>,
+    pub(crate) master_output: usize,
+    pub(crate) outputs: Vec<Vec<usize>>,
+}
+
+impl<T> std::ops::Deref for Amplifiers<T> {
+    type Target = [IntCode<T>];
+
+    fn deref(&self) -> &Self::Target {
+        &self.amps
+    }
+}
+
+impl<T> std::ops::DerefMut for Amplifiers<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.amps
+    }
+}
+impl<T> Amplifiers<T>
+where
+    T: Word + Default,
+    Error: From<<T as std::str::FromStr>::Err>,
+{
+    pub(crate) fn load(&mut self, lines: Lines, n: usize) -> Result<(), Error> {
+        let mut intcode = IntCode::default();
+        intcode.load(lines)?;
+
+        self.amps = vec![intcode.clone(); n];
+        self.outputs = (0..n)
+            .map(|i| if i == n - 1 { Vec::new() } else { vec![i + 1] })
+            .collect();
+
+        self.master_output = n - 1;
+        self.output = None;
+        Ok(())
+    }
+
+    pub(crate) fn run(&mut self) {
+        let mut runnable: VecDeque<usize> = self.amps.iter().enumerate().map(|(i, _)| i).collect();
+        let mut waiting: BTreeSet<usize> = BTreeSet::new();
+        while let Some(idx) = runnable.pop_front() {
+            let state = self.amps[idx].run();
+            match state {
+                State::Stopped => {}
+                State::WaitingForInput(..) => {
+                    waiting.insert(idx);
+                }
+                State::HasOutput(v) => {
+                    if self.master_output == idx {
+                        self.output = Some(v);
+                    }
+                    for idx in self.outputs[idx].iter() {
+                        self.amps[*idx].input.push_back(v);
+                        if waiting.remove(idx) {
+                            // Add waiting chip back to the running queue
+                            runnable.push_back(*idx);
+                        }
+                    }
+                    runnable.push_back(idx);
+                }
+                State::Running => unreachable!(),
+            }
+        }
+    }
+}
 
 pub struct Day07 {
-    amps: IntCodeMulti<i32>,
+    amps: Amplifiers<i32>,
 }
 
 impl Day07 {
     pub fn new() -> Self {
         Self {
-            amps: IntCodeMulti::default(),
+            amps: Amplifiers::default(),
         }
     }
 
