@@ -60,7 +60,7 @@ fn print_times(
 }
 
 fn main() -> Result<(), Error> {
-    let (sample_data, times, target_year, target_day) = args::get();
+    let (sample_data, no_capture, times, target_year, target_day) = args::get();
 
     let mut runners = BTreeMap::new();
     aoc_2019::register(&mut runners);
@@ -69,7 +69,7 @@ fn main() -> Result<(), Error> {
 
     if times {
         helper::output(|output| output.no_output());
-    } else if cfg!(debug_assertions) {
+    } else if cfg!(debug_assertions) || no_capture {
         helper::output(|output| output.stdout());
     } else {
         helper::output(|output| output.capture());

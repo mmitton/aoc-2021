@@ -1,6 +1,6 @@
 use clap::{arg, Arg, Command};
 
-pub fn get() -> (bool, bool, Option<usize>, Option<usize>) {
+pub fn get() -> (bool, bool, bool, Option<usize>, Option<usize>) {
     let matches = Command::new("runner")
         .about("AoC Runner")
         .arg(
@@ -25,6 +25,13 @@ pub fn get() -> (bool, bool, Option<usize>, Option<usize>) {
                 .num_args(0)
                 .required(false)
                 .help("Run Real Data"),
+        )
+        .arg(
+            Arg::new("no-capture")
+                .long("no-capture")
+                .num_args(0)
+                .required(false)
+                .help("Do not capture output"),
         )
         .subcommand(
             Command::new("today").about("Run latest day available.  Will be today during AoC"),
@@ -55,6 +62,10 @@ pub fn get() -> (bool, bool, Option<usize>, Option<usize>) {
         .unwrap_or_default();
     let times = matches
         .get_one::<bool>("times")
+        .copied()
+        .unwrap_or_default();
+    let no_capture = matches
+        .get_one::<bool>("no-capture")
         .copied()
         .unwrap_or_default();
 
@@ -90,5 +101,5 @@ pub fn get() -> (bool, bool, Option<usize>, Option<usize>) {
         subcommand => unreachable!("{subcommand:?}"),
     };
 
-    (sample_data, times, year, day)
+    (sample_data, no_capture, times, year, day)
 }
