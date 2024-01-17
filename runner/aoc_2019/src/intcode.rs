@@ -117,6 +117,10 @@ where
         }
     }
 
+    pub fn is_stopped(&self) -> bool {
+        matches!(self.state, State::Stopped)
+    }
+
     fn get_from_pc(&mut self) -> T {
         let val = self.mem[self.pc];
         self.pc += 1;
