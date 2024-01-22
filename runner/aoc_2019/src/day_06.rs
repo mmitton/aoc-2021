@@ -22,13 +22,13 @@ impl Day06 {
 impl Runner for Day06 {
     fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         let lines = Lines::from_path(path, LinesOpt::RAW)?;
-        let mut names: HashMap<String, usize> = HashMap::with_capacity(lines.len() + 3);
-        fn map_name(names: &mut HashMap<String, usize>, name: &str) -> usize {
+        let mut names: HashMap<&str, usize> = HashMap::with_capacity(lines.len() + 3);
+        fn map_name<'a>(names: &mut HashMap<&'a str, usize>, name: &'a str) -> usize {
             if let Some(idx) = names.get(name) {
                 *idx
             } else {
                 let idx = names.len();
-                names.insert(name.to_string(), idx);
+                names.insert(name, idx);
                 idx
             }
         }
