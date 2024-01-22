@@ -6,7 +6,7 @@ use std::{
 };
 
 pub(crate) trait Word:
-    Copy + Clone + FromStr + std::fmt::Display + std::fmt::Debug + PartialEq + PartialOrd
+    Copy + Clone + From<u8> + FromStr + std::fmt::Display + std::fmt::Debug + PartialEq + PartialOrd
 {
     const ZERO: Self;
     const ONE: Self;
@@ -41,8 +41,8 @@ macro_rules! impl_word {
     };
 }
 
-impl_word!(u8, u16, u32, u64, u128, usize);
-impl_word!(i8, i16, i32, i64, i128, isize);
+impl_word!(u32, u64, u128, usize);
+impl_word!(i32, i64, i128, isize);
 
 #[derive(Default, Copy, Clone, Debug)]
 pub(crate) enum State<T> {
@@ -115,6 +115,10 @@ where
                 State::Running => self.tick(),
             }
         }
+    }
+
+    pub fn append_ascii(&mut self, s: &str) {
+        self.input.extend(s.as_bytes().iter().map(|v| T::from(*v)));
     }
 
     pub fn is_stopped(&self) -> bool {

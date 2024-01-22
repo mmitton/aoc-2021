@@ -148,12 +148,14 @@ impl Day25 {
     fn send_command<'a>(&mut self, command: impl Into<Command<'a>>) {
         for command in command.into() {
             print!("{command}");
-            self.intcode
-                .input
-                .extend(command.as_bytes().iter().map(|v| *v as isize));
+            self.intcode.append_ascii(command);
+            // self.intcode
+            //     .input
+            //     .extend(command.as_bytes().iter().map(|v| *v as isize));
         }
         println!();
-        self.intcode.input.push_back(b'\n' as isize);
+        self.intcode.append_ascii("\n");
+        // self.intcode.input.push_back(b'\n' as isize);
     }
 
     pub fn explore(&mut self, output: &str) {
