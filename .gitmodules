@@ -1,0 +1,3 @@
+[submodule "input_files"]
+	path = input_files
+	url = git@github.com:mmitton/aoc_inputs.git
