@@ -2,24 +2,39 @@
 use helper::{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner};
 
 pub struct Day08 {
+    width: usize,
+    height: usize,
     layers: Vec<Vec<Vec<u8>>>,
 }
 
 impl Day08 {
     pub fn new() -> Self {
-        Self { layers: Vec::new() }
+        Self {
+            width: 25,
+            height: 6,
+            layers: Vec::new(),
+        }
     }
 }
 
 impl Runner for Day08 {
     fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
         let lines = Lines::from_path(path, LinesOpt::RAW)?;
-        assert_eq!(lines.len(), 1);
-        let chars: Vec<char> = lines[0].chars().collect();
-        for layer in chars.chunks(25 * 6) {
+        let input = match lines.len() {
+            1 => lines[0].as_str(),
+            2 => {
+                let (w, h) = lines[0].split_once('x').unwrap();
+                self.width = w.parse()?;
+                self.height = h.parse()?;
+                lines[1].as_str()
+            }
+            _ => panic!("Input needs to be 1 or 2 lines"),
+        };
+        let chars: Vec<char> = input.chars().collect();
+        for layer in chars.chunks(self.width * self.height) {
             self.layers.push(
                 layer
-                    .chunks(25)
+                    .chunks(self.width)
                     .map(|line| line.iter().map(|c| *c as u8 - b'0').collect())
                     .collect(),
             );
@@ -46,9 +61,9 @@ impl Runner for Day08 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        let mut ans = String::with_capacity(26 * 6);
-        for y in 0..6 {
-            for x in 0..25 {
+        let mut ans = String::with_capacity(self.width * self.height);
+        for y in 0..self.height {
+            for x in 0..self.width {
                 for layer in self.layers.iter() {
                     match layer[y][x] {
                         0 => {
