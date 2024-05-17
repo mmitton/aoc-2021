@@ -4,22 +4,24 @@ use std::{cmp::Ordering, collections::BTreeMap, time::Duration};
 mod args;
 mod run;
 
-fn print_times(
-    run_count: usize,
-    year: usize,
-    times_cache: &mut Vec<(usize, Result<Duration, Error>, Result<Duration, Error>)>,
-) {
+struct TimesCacheEntry {
+    day: usize,
+    part1: Result<Duration, Error>,
+    part2: Result<Duration, Error>,
+}
+
+fn print_times(run_count: usize, year: usize, times_cache: &mut Vec<TimesCacheEntry>) {
     let mut total = Duration::new(0, 0);
     let mut part1_total = Duration::new(0, 0);
     let mut part2_total = Duration::new(0, 0);
-    for (_, part1, part2) in times_cache.iter() {
-        if let Ok(dur) = part1 {
-            part1_total += *dur;
-            total += *dur;
+    for entry in times_cache.iter() {
+        if let Ok(dur) = entry.part1 {
+            part1_total += dur;
+            total += dur;
         }
-        if let Ok(dur) = part2 {
-            part2_total += *dur;
-            total += *dur;
+        if let Ok(dur) = entry.part2 {
+            part2_total += dur;
+            total += dur;
         }
     }
     if run_count > 1 {
@@ -30,7 +32,7 @@ fn print_times(
     println!("+-------+------------+------------+--------+--------+");
     println!("|   Day |     Part 1 |     Part 2 |   P1 % |   P2 % |");
     println!("+-------+------------+------------+--------+--------+");
-    for (day, part1, part2) in times_cache.iter() {
+    for TimesCacheEntry { day, part1, part2 } in times_cache.iter() {
         let (prt1, per1) = if let Ok(prt1) = part1 {
             (
                 format!("{:0.5} s", prt1.as_secs_f64()),
@@ -114,7 +116,11 @@ fn main() -> Result<(), Error> {
         let part2 = run::run(sample_data, new_runner, !times, run_count, *year, *day, 2);
 
         if times {
-            times_cache.push((*day, part1, part2));
+            times_cache.push(TimesCacheEntry {
+                day: *day,
+                part1,
+                part2,
+            });
         }
     }
 

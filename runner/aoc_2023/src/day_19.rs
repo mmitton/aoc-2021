@@ -323,7 +323,7 @@ impl Runner for Day19 {
                         println!("Rejected {part:?}");
                         break;
                     }
-                    RuleResult::SendTo(name) => workflow_name = name.clone(),
+                    RuleResult::SendTo(name) => workflow_name.clone_from(&name),
                 }
             }
         }
