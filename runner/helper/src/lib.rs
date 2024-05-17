@@ -8,7 +8,7 @@ mod run_output;
 pub use algorithms::*;
 pub use error::Error;
 pub use output::{Output, YearDayPart, OUTPUT};
-pub use parser::{find_day_part_files, search_up, Lines, LinesOpt, SearchType};
+pub use parser::{find_day_part_files, search_up, Lines, LinesIter, LinesOpt, SearchType};
 pub use priority_vec::PriorityVec;
 pub use run_output::RunOutput;
 
