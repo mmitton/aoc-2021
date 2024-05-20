@@ -114,16 +114,6 @@ impl Runner for Day14 {
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        let width = self.x.1 - self.x.0 + 1;
-        let height = self.y.1 - self.y.0 + 1;
-        println!(
-            "{:?} {:?} {} {} {}",
-            self.x,
-            self.y,
-            width,
-            height,
-            (height as usize) * (width as usize)
-        );
         Ok(self.solve::<false>().into())
     }
 
