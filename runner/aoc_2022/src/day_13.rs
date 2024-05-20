@@ -59,6 +59,7 @@ impl std::cmp::Ord for Packet {
     }
 }
 
+#[allow(clippy::non_canonical_partial_ord_impl)]
 impl std::cmp::PartialOrd for Packet {
     fn partial_cmp(&self, rhs: &Self) -> Option<std::cmp::Ordering> {
         match (self, rhs) {
