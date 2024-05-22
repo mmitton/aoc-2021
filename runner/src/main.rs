@@ -82,7 +82,7 @@ fn main() -> Result<(), Error> {
 
     let mut times_cache = Vec::new();
     let mut prev_year = 0;
-    let run_count = if times { 5 } else { 1 };
+    let run_count = if times { 10 } else { 1 };
 
     for ((year, day), new_runner) in runners.iter() {
         if times && !times_cache.is_empty() && prev_year != *year {
