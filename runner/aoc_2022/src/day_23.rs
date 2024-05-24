@@ -1,5 +1,8 @@
 #[allow(unused_imports)]
-use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
+use helper::{
+    print, println, BitGridConst, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput,
+    Runner,
+};
 
 const MIN_X: isize = -128;
 const MIN_Y: isize = -128;
@@ -8,90 +11,21 @@ const HEIGHT: usize = 256;
 
 pub struct Day23 {
     elves: Vec<(isize, isize)>,
-    cur: BitGrid<MIN_X, MIN_Y, WIDTH, HEIGHT>,
-    next: BitGrid<MIN_X, MIN_Y, WIDTH, HEIGHT>,
-    next_invalid: BitGrid<MIN_X, MIN_Y, WIDTH, HEIGHT>,
+    cur: BitGridConst<MIN_X, MIN_Y, WIDTH, HEIGHT>,
+    next: BitGridConst<MIN_X, MIN_Y, WIDTH, HEIGHT>,
+    next_invalid: BitGridConst<MIN_X, MIN_Y, WIDTH, HEIGHT>,
     to_stay: Vec<(isize, isize)>,
     to_move: Vec<((isize, isize), (isize, isize), u16)>,
     step: usize,
-}
-
-type BitGridInner = usize;
-struct BitGrid<const MIN_X: isize, const MIN_Y: isize, const WIDTH: usize, const HEIGHT: usize> {
-    grid: Vec<BitGridInner>,
-}
-
-impl<const MIN_X: isize, const MIN_Y: isize, const WIDTH: usize, const HEIGHT: usize> Default
-    for BitGrid<MIN_X, MIN_Y, WIDTH, HEIGHT>
-{
-    fn default() -> Self {
-        assert_eq!(WIDTH % Self::BITS, 0);
-        Self {
-            grid: vec![0; (WIDTH / Self::BITS) * HEIGHT],
-        }
-    }
-}
-
-impl<const MIN_X: isize, const MIN_Y: isize, const WIDTH: usize, const HEIGHT: usize>
-    BitGrid<MIN_X, MIN_Y, WIDTH, HEIGHT>
-{
-    const BITS: usize = BitGridInner::BITS as usize;
-
-    fn index_bit(&self, x: isize, y: isize) -> (usize, BitGridInner) {
-        let nx = (x - MIN_X) as usize;
-        let ny = (y - MIN_Y) as usize;
-        let pos = (ny * WIDTH) + nx;
-        // println!("{x} {y} {nx} {ny} {pos} {} {:08b}", pos / 8, 1 << (pos % 8));
-        (pos / Self::BITS, 1 << (pos % Self::BITS))
-    }
-
-    fn get_surround(&self, x: isize, y: isize) -> u16 {
-        let (index, bit) = self.index_bit(x - 1, y - 1);
-        let mut top = self.grid[index] >> bit.trailing_zeros();
-        let mut middle = self.grid[index + (WIDTH / Self::BITS)] >> bit.trailing_zeros();
-        let mut bottom = self.grid[index + (2 * WIDTH / Self::BITS)] >> bit.trailing_zeros();
-
-        let extra_bits = Self::BITS - bit.trailing_zeros() as usize;
-        if extra_bits < 3 {
-            let extra_top = self.grid[index + 1] << extra_bits;
-            let extra_middle = self.grid[index + 1 + (WIDTH / Self::BITS)] << extra_bits;
-
-            let extra_bottom = self.grid[index + 1 + (2 * WIDTH / Self::BITS)] << extra_bits;
-            top |= extra_top;
-            middle |= extra_middle;
-            bottom |= extra_bottom;
-        }
-
-        (((top & 0b111) << 6) | ((middle & 0b111) << 3) | (bottom & 0b111)) as u16
-    }
-
-    fn set_bit(&mut self, x: isize, y: isize) {
-        let (index, bit) = self.index_bit(x, y);
-        self.grid[index] |= bit;
-    }
-
-    fn _clear_bit(&mut self, x: isize, y: isize) {
-        let (index, bit) = self.index_bit(x, y);
-        self.grid[index] &= !bit;
-    }
-
-    fn bit_is_set(&self, x: isize, y: isize) -> bool {
-        let (index, bit) = self.index_bit(x, y);
-        self.grid[index] & bit != 0
-    }
-
-    fn clear(&mut self) {
-        self.grid.iter_mut().for_each(|v| *v = 0);
-    }
 }
 
 impl Day23 {
     pub fn new() -> Self {
         Self {
             elves: Vec::new(),
-            cur: BitGrid::default(),
-            next: BitGrid::default(),
-            next_invalid: BitGrid::default(),
+            cur: BitGridConst::default(),
+            next: BitGridConst::default(),
+            next_invalid: BitGridConst::default(),
 
             to_stay: Vec::new(),
             to_move: Vec::new(),

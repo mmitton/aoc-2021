@@ -1,4 +1,5 @@
 mod algorithms;
+mod bit_grid;
 mod error;
 mod output;
 mod parser;
@@ -6,6 +7,7 @@ mod priority_vec;
 mod run_output;
 
 pub use algorithms::*;
+pub use bit_grid::*;
 pub use error::Error;
 pub use output::{Output, YearDayPart, OUTPUT};
 pub use parser::{find_day_part_files, search_up, Lines, LinesIter, LinesOpt, SearchType};
