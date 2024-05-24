@@ -17,7 +17,7 @@ fn exec(cmd: &str, args: &[&str]) -> Result<(), Error> {
 fn create_year(year: usize) -> Result<(), Error> {
     // Find runner crate
     let runner_path = search_up("runner", SearchType::Dir)?;
-    std::env::set_current_dir(&runner_path)?;
+    std::env::set_current_dir(runner_path)?;
 
     // Check to see if crate exists
     let crate_path_str = format!("aoc_{year}");
@@ -49,7 +49,7 @@ fn create_year(year: usize) -> Result<(), Error> {
         writeln!(d, "#[allow(unused_imports)]")?;
         writeln!(
             d,
-            "use helper::{{print, println, Error, Lines, LinesOpt, Output, RunOutput, Runner}};"
+            "use helper::{{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner}};"
         )?;
         writeln!(d)?;
         writeln!(d, "pub struct Day{day:02} {{}}")?;

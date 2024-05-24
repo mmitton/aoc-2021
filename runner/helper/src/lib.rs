@@ -12,6 +12,9 @@ pub use parser::{find_day_part_files, search_up, Lines, LinesIter, LinesOpt, Sea
 pub use priority_vec::PriorityVec;
 pub use run_output::RunOutput;
 
+pub type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
+pub type HashSet<K> = rustc_hash::FxHashSet<K>;
+
 pub trait Runner {
     fn parse(&mut self, path: &str, part1: bool) -> Result<(), Error>;
     fn part1(&mut self) -> Result<RunOutput, Error>;
