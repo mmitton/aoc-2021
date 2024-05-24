@@ -29,9 +29,9 @@ fn print_times(run_count: usize, year: usize, times_cache: &mut Vec<TimesCacheEn
     } else {
         println!("Year: {year}");
     }
-    println!("+-------+------------+------------+--------+--------+");
-    println!("|   Day |     Part 1 |     Part 2 |   P1 % |   P2 % |");
-    println!("+-------+------------+------------+--------+--------+");
+    println!("+-------+------------+------------+---------+---------+");
+    println!("|   Day |     Part 1 |     Part 2 |    P1 % |    P2 % |");
+    println!("+-------+------------+------------+---------+---------+");
     for TimesCacheEntry { day, part1, part2 } in times_cache.iter() {
         let (prt1, per1) = if let Ok(prt1) = part1 {
             (
@@ -49,14 +49,14 @@ fn print_times(run_count: usize, year: usize, times_cache: &mut Vec<TimesCacheEn
         } else {
             ("".to_string(), "".to_string())
         };
-        println!("| {day:>5} | {prt1:>10} | {prt2:>10} | {per1:>6} | {per2:>6} |");
+        println!("| {day:>5} | {prt1:>10} | {prt2:>10} | {per1:>7} | {per2:>7} |");
     }
     let prt1 = format!("{elapsed:0.5} s", elapsed = part1_total.as_secs_f64());
     let prt2 = format!("{elapsed:0.5} s", elapsed = part2_total.as_secs_f64());
     let total = format!("{elapsed:0.5} s", elapsed = total.as_secs_f64());
-    println!("+-------+------------+------------+-----------------+");
-    println!("| Total | {prt1:>10} | {prt2:>10} | Both {total:>10} |");
-    println!("+-------+------------+------------+-----------------+");
+    println!("+-------+------------+------------+-------------------+");
+    println!("| Total | {prt1:>10} | {prt2:>10} | Both  {total:>11} |");
+    println!("+-------+------------+------------+-------------------+");
     println!();
     times_cache.clear();
 }
@@ -66,6 +66,7 @@ fn main() -> Result<(), Error> {
 
     let mut runners = BTreeMap::new();
     aoc_2019::register(&mut runners);
+    aoc_2020::register(&mut runners);
     aoc_2022::register(&mut runners);
     aoc_2023::register(&mut runners);
 

@@ -77,7 +77,11 @@ fn create_year(year: usize) -> Result<(), Error> {
         writeln!(d, "    }}")?;
         writeln!(d)?;
         writeln!(d, "    fn part2(&mut self) -> Result<RunOutput, Error> {{")?;
-        writeln!(d, "        Err(Error::Unsolved)")?;
+        if day == 25 {
+            writeln!(d, "        Err(Error::Skipped)")?;
+        } else {
+            writeln!(d, "        Err(Error::Unsolved)")?;
+        }
         writeln!(d, "    }}")?;
         writeln!(d, "}}")?;
     }
