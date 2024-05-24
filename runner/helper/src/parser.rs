@@ -2,7 +2,7 @@ use crate::Error;
 use bitflags::bitflags;
 use std::fs::{canonicalize, read_dir, File};
 use std::io::{BufRead, BufReader, Read};
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
@@ -57,10 +57,16 @@ impl Lines {
 }
 
 impl Deref for Lines {
-    type Target = [String];
+    type Target = Vec<String>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl DerefMut for Lines {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
