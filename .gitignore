@@ -1,4 +1,7 @@
-target
-Cargo.lock
-/cookies.txt
 .DS_Store
+/cookies.txt
+Cargo.lock
+flamegraph.svg
+perf.data
+perf.data.old
+target
