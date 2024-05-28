@@ -15,6 +15,7 @@ pub struct Day23 {
     next: BitGridConst<MIN_X, MIN_Y, WIDTH, HEIGHT>,
     next_invalid: BitGridConst<MIN_X, MIN_Y, WIDTH, HEIGHT>,
     to_stay: Vec<(isize, isize)>,
+    #[allow(clippy::type_complexity)]
     to_move: Vec<((isize, isize), (isize, isize), u16)>,
     step: usize,
 }

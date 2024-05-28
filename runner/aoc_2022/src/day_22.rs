@@ -155,20 +155,23 @@ impl Day22 {
         let row = pos.1 * 1000;
         let col = pos.0 * 4;
         let dir_usize: usize = dir.into();
-        let ans = row + col + dir_usize;
-        ans
+        row + col + dir_usize
     }
 
     fn zip(
         &mut self,
         tails: &mut BTreeMap<(usize, usize), Tail>,
-        mut p1: (usize, usize),
-        mut d1: (isize, isize),
-        mut e1: (usize, usize),
-        mut p2: (usize, usize),
-        mut d2: (isize, isize),
-        mut e2: (usize, usize),
+        c1: ((usize, usize), (isize, isize), (usize, usize)),
+        c2: ((usize, usize), (isize, isize), (usize, usize)),
     ) {
+        let mut p1 = c1.0;
+        let mut d1 = c1.1;
+        let mut e1 = c1.2;
+
+        let mut p2 = c2.0;
+        let mut d2 = c2.1;
+        let mut e2 = c2.2;
+
         let mut t1 = 0;
         let mut t2 = 0;
 
@@ -289,7 +292,7 @@ impl Day22 {
                             let p2 = values[j].p;
                             let d2 = values[j].d;
                             let e2 = values[j].e;
-                            self.zip(tails, p1, d1, e1, p2, d2, e2);
+                            self.zip(tails, (p1, d1, e1), (p2, d2, e2));
                         }
                     }
                 }
@@ -398,7 +401,7 @@ impl Runner for Day22 {
                         let d2 = (0, -1);
                         let e = (x, y);
 
-                        self.zip(&mut tails, p1, d1, e, p2, d2, e);
+                        self.zip(&mut tails, (p1, d1, e), (p2, d2, e));
                     }
                     if matches!(self.map[y + 1][x], Tile::Walkable | Tile::Block)
                         && matches!(self.map[y][x - 1], Tile::Walkable | Tile::Block)
@@ -409,7 +412,7 @@ impl Runner for Day22 {
                         let d2 = (0, -1);
                         let e = (x, y);
 
-                        self.zip(&mut tails, p1, d1, e, p2, d2, e);
+                        self.zip(&mut tails, (p1, d1, e), (p2, d2, e));
                     }
                     if matches!(self.map[y - 1][x], Tile::Walkable | Tile::Block)
                         && matches!(self.map[y][x + 1], Tile::Walkable | Tile::Block)
@@ -420,7 +423,7 @@ impl Runner for Day22 {
                         let d2 = (0, 1);
                         let e = (x, y);
 
-                        self.zip(&mut tails, p1, d1, e, p2, d2, e);
+                        self.zip(&mut tails, (p1, d1, e), (p2, d2, e));
                     }
                     if matches!(self.map[y - 1][x], Tile::Walkable | Tile::Block)
                         && matches!(self.map[y][x - 1], Tile::Walkable | Tile::Block)
@@ -431,7 +434,7 @@ impl Runner for Day22 {
                         let d2 = (0, 1);
                         let e = (x, y);
 
-                        self.zip(&mut tails, p1, d1, e, p2, d2, e);
+                        self.zip(&mut tails, (p1, d1, e), (p2, d2, e));
                     }
                 }
             }
