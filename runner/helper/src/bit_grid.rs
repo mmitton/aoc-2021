@@ -238,6 +238,10 @@ impl<const BX: usize, const BY: usize> BitGrid<BX, BY> {
     pub fn clear(&mut self) {
         self.grid.iter_mut().for_each(|v| *v = 0);
     }
+
+    pub fn count_set(&self) -> usize {
+        self.grid.iter().fold(0, |c, v| c + v.count_ones() as usize)
+    }
 }
 
 mod test {

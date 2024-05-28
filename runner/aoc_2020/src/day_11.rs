@@ -1,25 +1,117 @@
 #[allow(unused_imports)]
-use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
+use helper::{
+    print, println, BitGrid, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner,
+};
 
-pub struct Day11 {}
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum Spot {
+    Floor,
+    Vacant,
+    Occuipied,
+}
+
+pub struct Day11 {
+    tiles: Vec<Vec<[Spot; 2]>>,
+}
 
 impl Day11 {
     pub fn new() -> Self {
-        Self {}
+        Self { tiles: Vec::new() }
+    }
+
+    fn simulate<const MAX_DIST: usize, const SURROUND: usize>(&mut self) -> usize {
+        let height = self.tiles.len();
+        let width = self.tiles[0].len();
+        for round in 0.. {
+            let cur = if round % 2 == 0 { 0 } else { 1 };
+            let next = 1 - cur;
+            let mut changed = false;
+
+            for y in 0..height {
+                for x in 0..width {
+                    if self.tiles[y][x][cur] == Spot::Floor {
+                        continue;
+                    }
+                    let mut neighbors = 0;
+                    for (dx, dy) in [
+                        (-1, -1),
+                        (0, -1),
+                        (1, -1),
+                        (-1, 0),
+                        (1, 0),
+                        (-1, 1),
+                        (0, 1),
+                        (1, 1),
+                    ]
+                    .iter()
+                    {
+                        for d in 1..=MAX_DIST {
+                            let nx = (x as isize + (d as isize * dx)) as usize;
+                            let ny = (y as isize + (d as isize * dy)) as usize;
+                            if nx >= width || ny >= height {
+                                break;
+                            }
+                            match self.tiles[ny][nx][cur] {
+                                Spot::Vacant => break,
+                                Spot::Occuipied => {
+                                    neighbors += 1;
+                                    break;
+                                }
+                                Spot::Floor => {}
+                            }
+                        }
+                    }
+                    self.tiles[y][x][next] = Spot::Vacant;
+                    if self.tiles[y][x][cur] == Spot::Vacant {
+                        if neighbors == 0 {
+                            self.tiles[y][x][next] = Spot::Occuipied;
+                            changed = true;
+                        }
+                    } else if neighbors < SURROUND {
+                        self.tiles[y][x][next] = Spot::Occuipied;
+                    } else {
+                        changed = true;
+                    }
+                }
+            }
+
+            if !changed {
+                return self.tiles.iter().fold(0, |count, row| {
+                    count
+                        + row
+                            .iter()
+                            .filter(|s| matches!(s[cur], Spot::Occuipied))
+                            .count()
+                });
+            }
+        }
+        0
     }
 }
 
 impl Runner for Day11 {
     fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let _lines = Lines::from_path(path, LinesOpt::RAW)?;
+        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+        for line in lines.iter() {
+            self.tiles.push(
+                line.chars()
+                    .map(|c| match c {
+                        '.' => [Spot::Floor, Spot::Floor],
+                        'L' => [Spot::Vacant, Spot::Vacant],
+                        '#' => [Spot::Occuipied, Spot::Vacant],
+                        _ => unreachable!(),
+                    })
+                    .collect(),
+            );
+        }
         Ok(())
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        Ok(self.simulate::<1, 4>().into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        Ok(self.simulate::<1024, 5>().into())
     }
 }
