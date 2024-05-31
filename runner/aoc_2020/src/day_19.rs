@@ -4,7 +4,7 @@ use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, R
 #[derive(Debug, Clone)]
 enum Rule {
     Const(String),
-    Rule(usize),
+    Inner(usize),
     And(Vec<Rule>),
     Or(Vec<Rule>),
 }
@@ -55,7 +55,7 @@ impl Day19 {
 
                 valid
             }
-            Rule::Rule(r) => self.buildout_rule(*r),
+            Rule::Inner(r) => self.buildout_rule(*r),
         }
     }
 
@@ -134,7 +134,7 @@ impl Runner for Day19 {
                     for part in parts[1].split(" | ") {
                         let mut group = Vec::new();
                         for num in part.split(' ') {
-                            group.push(Rule::Rule(num.parse()?));
+                            group.push(Rule::Inner(num.parse()?));
                         }
                         groups.push(Rule::And(group));
                     }
@@ -142,7 +142,7 @@ impl Runner for Day19 {
                 } else {
                     let mut group = Vec::new();
                     for num in parts[1].split(' ') {
-                        group.push(Rule::Rule(num.parse()?));
+                        group.push(Rule::Inner(num.parse()?));
                     }
                     self.rules.insert(rule_num, Rule::And(group));
                 }

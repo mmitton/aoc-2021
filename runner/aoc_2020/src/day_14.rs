@@ -13,10 +13,10 @@ struct AddrMask {
 }
 
 impl AddrMask {
-    fn new(addr: usize, mask: &Vec<char>) -> Self {
+    fn new(addr: usize, mask: &[char]) -> Self {
         let mut addr_mask = Vec::with_capacity(36);
-        for i in 0..36 {
-            match mask[i] {
+        for (i, mask) in mask.iter().enumerate() {
+            match mask {
                 'X' => {
                     addr_mask.push('X');
                 }
@@ -38,15 +38,11 @@ impl AddrMask {
         let mut addrs = Vec::new();
         addrs.push(0);
         for i in 0..36 {
-            for j in 0..addrs.len() {
-                addrs[j] <<= 1;
-            }
+            addrs.iter_mut().for_each(|addr| *addr <<= 1);
             match self.mask[i] {
                 '0' => {}
                 '1' => {
-                    for j in 0..addrs.len() {
-                        addrs[j] |= 1;
-                    }
+                    addrs.iter_mut().for_each(|addr| *addr |= 1);
                 }
                 'X' => {
                     for j in 0..addrs.len() {

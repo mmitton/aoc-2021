@@ -34,21 +34,21 @@ enum Expression {
     Num(usize),
     Add,
     Mul,
-    Expression(Vec<Expression>),
+    Group(Vec<Expression>),
 }
 
 impl Expression {
     fn eval(&self) -> usize {
         match self {
             Self::Num(n) => *n,
-            Self::Expression(e) => {
+            Self::Group(e) => {
                 assert_eq!(e.len(), 3);
                 let a = e[0].eval();
                 let b = e[2].eval();
                 match e[1] {
                     Self::Add => a + b,
                     Self::Mul => a * b,
-                    Self::Num(..) | Self::Expression(..) => unreachable!(),
+                    Self::Num(..) | Self::Group(..) => unreachable!(),
                 }
             }
             Self::Add | Self::Mul => unreachable!(),
@@ -76,7 +76,7 @@ impl From<&[Token]> for Expression {
                     Token::Close => unreachable!(),
                 });
             }
-            Expression::Expression(expression)
+            Expression::Group(expression)
         }
 
         let mut iter = tokens.iter().peekable();
@@ -113,7 +113,7 @@ impl Runner for Day18 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         fn group(expr: &mut Expression) {
             match expr {
-                Expression::Expression(e) => {
+                Expression::Group(e) => {
                     for e in e.iter_mut().step_by(2) {
                         group(e);
                     }
@@ -124,7 +124,7 @@ impl Runner for Day18 {
 
                         assert!(matches!(op, Expression::Add | Expression::Mul));
 
-                        e.insert(0, Expression::Expression(vec![a, op, b]));
+                        e.insert(0, Expression::Group(vec![a, op, b]));
                     }
                 }
                 Expression::Num(_) => {}
@@ -145,7 +145,7 @@ impl Runner for Day18 {
     fn part2(&mut self) -> Result<RunOutput, Error> {
         fn group(expr: &mut Expression) {
             match expr {
-                Expression::Expression(e) => {
+                Expression::Group(e) => {
                     for e in e.iter_mut().step_by(2) {
                         group(e);
                     }
@@ -155,7 +155,7 @@ impl Runner for Day18 {
                             let op = e.remove(idx - 1);
                             let b = e.remove(idx - 1);
 
-                            e.insert(idx - 1, Expression::Expression(vec![a, op, b]));
+                            e.insert(idx - 1, Expression::Group(vec![a, op, b]));
                         }
                     }
                     while e.len() != 3 {
@@ -165,7 +165,7 @@ impl Runner for Day18 {
 
                         assert!(matches!(op, Expression::Add | Expression::Mul));
 
-                        e.insert(0, Expression::Expression(vec![a, op, b]));
+                        e.insert(0, Expression::Group(vec![a, op, b]));
                     }
                 }
                 Expression::Num(_) => {}

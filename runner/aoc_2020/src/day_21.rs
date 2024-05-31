@@ -42,19 +42,19 @@ impl Day21 {
 
                 let mut common = Vec::new();
                 for food in self.foods.iter() {
-                    if food.allergens.contains(&allergen) {
+                    if food.allergens.contains(allergen) {
                         let mut list = Vec::new();
                         for ingredient in food.ingredients.iter() {
                             if !self.ingredient_map.contains_key(ingredient) {
                                 list.push(ingredient.to_string());
                             }
                         }
-                        assert!(list.len() > 0);
+                        assert!(!list.is_empty());
                         common.push(list);
                     }
                 }
 
-                assert!(common.len() > 0);
+                assert!(!common.is_empty());
                 if common.len() == 1 {
                     if common[0].len() == 1 {
                         self.allergen_map
@@ -68,8 +68,8 @@ impl Day21 {
                     for i in 0..common[0].len() {
                         let ingredient = common[0][i].clone();
                         let mut found_in_all = true;
-                        for j in 1..common.len() {
-                            if !common[j].contains(&ingredient) {
+                        for common in common.iter().skip(1) {
+                            if !common.contains(&ingredient) {
                                 found_in_all = false;
                                 break;
                             }
@@ -80,7 +80,7 @@ impl Day21 {
                         }
                     }
 
-                    assert!(in_all.len() > 0);
+                    assert!(!in_all.is_empty());
                     if in_all.len() == 1 {
                         self.allergen_map
                             .insert(allergen.to_string(), in_all[0].clone());

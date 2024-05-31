@@ -22,14 +22,14 @@ impl Tile {
             right[y] = self.grid[y][9];
         }
 
-        edges.push(Some(self.grid[0].clone()));
+        edges.push(Some(self.grid[0]));
         edges.push(Some(right));
-        edges.push(Some(self.grid[9].clone()));
+        edges.push(Some(self.grid[9]));
         edges.push(Some(left));
 
-        for i in 0..4 {
+        for (i, edge) in edges.iter_mut().enumerate().take(4) {
             if self.edge_connections[i].is_some() {
-                edges[i] = None;
+                *edge = None;
             }
         }
 
@@ -46,7 +46,7 @@ impl Tile {
     }
 
     fn rotate(&mut self, count: usize, flip_x: bool, flip_y: bool) {
-        assert!(self.is_rotated == false || (count == 0 && !flip_x && !flip_y));
+        assert!(!self.is_rotated || (count == 0 && !flip_x && !flip_y));
 
         if self.is_rotated {
             return;
@@ -55,9 +55,9 @@ impl Tile {
         self.is_rotated = true;
         for _ in 0..count {
             let mut new_grid = [[' '; 10]; 10];
-            for y in 0..10 {
-                for x in 0..10 {
-                    new_grid[y][x] = self.grid[9 - x][y];
+            for (y, row) in new_grid.iter_mut().enumerate() {
+                for (x, cell) in row.iter_mut().enumerate() {
+                    *cell = self.grid[9 - x][y];
                 }
             }
 
@@ -65,25 +65,11 @@ impl Tile {
         }
 
         if flip_x {
-            let mut new_grid = [[' '; 10]; 10];
-            for y in 0..10 {
-                for x in 0..10 {
-                    new_grid[y][x] = self.grid[y][9 - x];
-                }
-            }
-
-            self.grid = new_grid;
+            self.grid.iter_mut().for_each(|row| row.reverse());
         }
 
         if flip_y {
-            let mut new_grid = [[' '; 10]; 10];
-            for y in 0..self.grid.len() {
-                for x in 0..self.grid[y].len() {
-                    new_grid[y][x] = self.grid[9 - y][x];
-                }
-            }
-
-            self.grid = new_grid;
+            self.grid.reverse();
         }
     }
 }
@@ -114,15 +100,14 @@ impl Day20 {
             for (edge_num1, edge1) in self.tiles.get(&tile1).unwrap().edges().iter().enumerate() {
                 let edge_num2 = (edge_num1 + 2) % 4;
                 if let Some(edge1) = edge1 {
-                    for j in 0..tile_nums.len() {
-                        let tile2 = tile_nums[j];
-                        if tile2 == tile1 {
+                    for (j, tile2) in tile_nums.iter().enumerate() {
+                        if *tile2 == tile1 {
                             continue;
                         }
 
                         let mut rotations = Vec::new();
                         {
-                            let tile2 = self.tiles.get(&tile2).unwrap();
+                            let tile2 = self.tiles.get(tile2).unwrap();
                             if tile2.is_rotated {
                                 rotations.push((0, false, false, tile2.clone()));
                             } else {
@@ -143,11 +128,11 @@ impl Day20 {
                                     let (x, y) = {
                                         let tile1 = self.tiles.get_mut(&tile1).unwrap();
 
-                                        tile1.set_edge(edge_num1, (tile2, edge_num2));
+                                        tile1.set_edge(edge_num1, (*tile2, edge_num2));
                                         (tile1.x, tile1.y)
                                     };
 
-                                    let t2 = self.tiles.get_mut(&tile2).unwrap();
+                                    let t2 = self.tiles.get_mut(tile2).unwrap();
                                     t2.rotate(*rotation, *flip_x, *flip_y);
                                     t2.x = x;
                                     t2.y = y;

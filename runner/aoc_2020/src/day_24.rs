@@ -106,9 +106,7 @@ impl Runner for Day24 {
             std::mem::swap(&mut cur, &mut self.tiles);
             self.tiles.clear();
             for (c, t) in cur.iter() {
-                if t.black && (t.neighbors == 1 || t.neighbors == 2) {
-                    self.flip(*c);
-                } else if !t.black && t.neighbors == 2 {
+                if t.neighbors == 2 || (t.black && t.neighbors == 1) {
                     self.flip(*c);
                 }
             }

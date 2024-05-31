@@ -35,7 +35,7 @@ impl Runner for Day25 {
         let mut loops = 0;
         while self.card.loop_size == 0 || self.door.loop_size == 0 {
             v *= 7;
-            v = v % 20201227;
+            v %= 20201227;
             loops += 1;
 
             if self.card.loop_size == 0 && v == self.card.public {
@@ -49,7 +49,7 @@ impl Runner for Day25 {
         let mut v = 1;
         for _ in 0..self.door.loop_size {
             v *= self.card.public;
-            v = v % 20201227;
+            v %= 20201227;
         }
         Ok(v.into())
     }
