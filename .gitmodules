@@ -2,3 +2,4 @@
 	path = input_files
 	url = git@github.com:mmitton/aoc_inputs.git
 	branch = main
+	update = merge
