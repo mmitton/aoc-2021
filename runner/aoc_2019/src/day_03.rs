@@ -82,8 +82,8 @@ impl Day03 {
 }
 
 impl Runner for Day03 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             let mut wire = Vec::new();
 
             let mut p0 = Point { x: 0, y: 0 };

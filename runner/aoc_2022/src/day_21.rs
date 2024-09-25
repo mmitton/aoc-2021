@@ -81,8 +81,8 @@ impl Day21 {
 }
 
 impl Runner for Day21 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         for line in lines.iter() {
             let (name, op) = line.split_once(": ").unwrap();
 

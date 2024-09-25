@@ -10,8 +10,8 @@ impl Day15 {
 }
 
 impl Runner for Day15 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let _lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let _lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         Ok(())
     }
 

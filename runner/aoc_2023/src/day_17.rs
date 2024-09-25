@@ -108,8 +108,8 @@ impl Day17 {
 }
 
 impl Runner for Day17 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             self.map.push(
                 line.chars()
                     .map(|c| (c as usize - '0' as usize, usize::MAX))

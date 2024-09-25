@@ -15,8 +15,8 @@ impl Day02 {
 }
 
 impl Runner for Day02 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        self.intcode.load(Lines::from_path(path, LinesOpt::RAW)?)
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        self.intcode.load(Lines::from_bufread(file, LinesOpt::RAW)?)
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {

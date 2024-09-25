@@ -69,8 +69,8 @@ impl Day14 {
 }
 
 impl Runner for Day14 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::ALL)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::ALL)?;
 
         for line in lines.iter() {
             if let Some(line) = line.strip_prefix("mask = ") {

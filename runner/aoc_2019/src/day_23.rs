@@ -79,9 +79,9 @@ impl Day23 {
 }
 
 impl Runner for Day23 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
         let mut master: IntCode<_> = IntCode::default();
-        master.load(Lines::from_path(path, LinesOpt::RAW)?)?;
+        master.load(Lines::from_bufread(file, LinesOpt::RAW)?)?;
 
         self.nics.extend((0..50).map(|i| {
             let mut intcode = master.clone();

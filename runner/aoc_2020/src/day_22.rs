@@ -24,8 +24,8 @@ impl Day22 {
 }
 
 impl Runner for Day22 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::REMOVE_EMPTY)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::REMOVE_EMPTY)?;
         let mut player: usize = 0;
 
         for line in lines.iter() {

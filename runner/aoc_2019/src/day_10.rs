@@ -204,8 +204,8 @@ impl LaserPoint {
 }
 
 impl Runner for Day10 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for (y, line) in Lines::from_path(path, LinesOpt::RAW)?.iter().enumerate() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for (y, line) in Lines::from_bufread(file, LinesOpt::RAW)?.iter().enumerate() {
             for (x, c) in line.chars().enumerate() {
                 if c != '.' {
                     let p = Point::new(x as isize, y as isize);

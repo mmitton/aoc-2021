@@ -63,6 +63,7 @@ fn print_times(run_count: usize, year: usize, times_cache: &mut Vec<TimesCacheEn
 
 fn main() -> Result<(), Error> {
     let (sample_data, no_capture, times, target_year, target_day) = args::get();
+    let input_file_cache = helper::InputFileCache::new()?;
 
     let mut runners = BTreeMap::new();
     aoc_2019::register(&mut runners);
@@ -114,8 +115,26 @@ fn main() -> Result<(), Error> {
             _ => {}
         }
 
-        let part1 = run::run(sample_data, new_runner, !times, run_count, *year, *day, 1);
-        let part2 = run::run(sample_data, new_runner, !times, run_count, *year, *day, 2);
+        let part1 = run::run(
+            sample_data,
+            new_runner,
+            !times,
+            run_count,
+            *year,
+            *day,
+            1,
+            &input_file_cache,
+        );
+        let part2 = run::run(
+            sample_data,
+            new_runner,
+            !times,
+            run_count,
+            *year,
+            *day,
+            2,
+            &input_file_cache,
+        );
 
         if times {
             times_cache.push(TimesCacheEntry {

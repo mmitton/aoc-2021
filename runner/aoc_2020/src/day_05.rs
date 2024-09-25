@@ -12,7 +12,7 @@ impl Day05 {
 }
 
 impl Runner for Day05 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
         fn parse(inst: &str, mut low: usize, mut high: usize) -> usize {
             for c in inst.chars() {
                 let half_width = (high - low + 1) / 2;
@@ -26,7 +26,7 @@ impl Runner for Day05 {
             low
         }
 
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         for line in lines.iter() {
             let row = parse(&line[0..7], 0, 127);
             let seat = parse(&line[7..], 0, 7);

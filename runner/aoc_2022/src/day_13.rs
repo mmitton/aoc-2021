@@ -109,8 +109,8 @@ impl Day13 {
 }
 
 impl Runner for Day13 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::REMOVE_EMPTY)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::REMOVE_EMPTY)?;
         self.packets.extend(lines.iter().map(Packet::new));
         Ok(())
     }

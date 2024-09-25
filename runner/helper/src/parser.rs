@@ -1,6 +1,6 @@
 use crate::Error;
 use bitflags::bitflags;
-use std::fs::{canonicalize, read_dir, File};
+use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
@@ -20,16 +20,10 @@ bitflags! {
     }
 }
 
-#[derive(PartialEq, Eq)]
-pub enum SearchType {
-    File,
-    Dir,
-}
-
 impl Lines {
-    pub fn from_reader(r: impl Read, options: LinesOpt) -> Result<Self, Error> {
+    pub fn from_bufread(r: impl BufRead, options: LinesOpt) -> Result<Self, Error> {
         let mut lines = Vec::new();
-        for line in BufReader::new(r).lines() {
+        for line in r.lines() {
             let line = line?;
             let mut l = line.as_str();
             if options.contains(LinesOpt::TRIM) {
@@ -45,6 +39,10 @@ impl Lines {
         }
 
         Ok(Self(lines))
+    }
+
+    pub fn from_reader(r: impl Read, options: LinesOpt) -> Result<Self, Error> {
+        Self::from_bufread(BufReader::new(r), options)
     }
 
     pub fn from_path(path: impl AsRef<Path>, options: LinesOpt) -> Result<Self, Error> {
@@ -82,120 +80,15 @@ impl<'a> Iterator for LinesIter<'a> {
     }
 }
 
-pub fn search_up(file: &str, file_type: SearchType) -> Result<PathBuf, Error> {
-    let mut root = canonicalize(".")?;
-    let mut path;
-    loop {
-        path = root.clone();
-        path.push(file);
-        match file_type {
-            SearchType::Dir => {
-                if path.is_dir() {
-                    return Ok(path);
-                }
-            }
-            SearchType::File => {
-                if path.is_file() {
-                    return Ok(path);
-                }
-            }
-        }
-
-        root = if let Some(root) = root.parent() {
-            root.into()
-        } else {
-            return Err(Error::SearchUpFailed(file.into()));
-        };
-    }
-}
-
-#[allow(clippy::type_complexity)]
-fn get_files(
-    year: usize,
-    day: usize,
-) -> Result<(Vec<String>, Vec<String>, Vec<String>, Vec<String>), Error> {
-    let input_files = search_up("input_files", SearchType::Dir)?;
-
-    let mut sample_1 = Vec::new();
-    let mut sample_2 = Vec::new();
-    let mut real_1 = Vec::new();
-    let mut real_2 = Vec::new();
-    for path in read_dir(&input_files)? {
-        let path = path?;
-        let file_name = path.file_name();
-        let file_name: String = if let Some(file_name) = file_name.to_str() {
-            file_name.into()
-        } else {
-            return Err(Error::InvalidInputFile(file_name));
-        };
-        let mut path = input_files.clone();
-        path.push(&file_name);
-        let path: String = if let Some(path) = path.to_str() {
-            path.into()
-        } else {
-            return Err(Error::InvalidInputFile(path.into_os_string()));
-        };
-
-        if let Some(base) = file_name.as_str().strip_suffix(".txt") {
-            let parts: Vec<&str> = base.split('-').collect();
-            if parts.len() < 3 {
-                continue;
-            }
-            if parts[0] != "input" {
-                continue;
-            }
-            if let Ok(file_year) = parts[1].parse() {
-                if year != file_year {
-                    continue;
-                }
-            }
-            if let Ok(file_day) = parts[2].parse() {
-                if day != file_day {
-                    continue;
-                }
-            }
-
-            let mut rest = &parts[3..];
-            if rest.is_empty() {
-                real_1.push(path);
-                continue;
-            }
-            let sample = if rest[0] == "sample" {
-                rest = &rest[1..];
-                true
-            } else {
-                false
-            };
-
-            let part = if rest.is_empty() {
-                1
-            } else if let Ok(part) = rest[0].parse() {
-                part
-            } else {
-                1
-            };
-
-            match (sample, part) {
-                (false, 1) => real_1.push(path),
-                (false, 2) => real_2.push(path),
-                (true, 1) => sample_1.push(path),
-                (true, 2) => sample_2.push(path),
-                _ => {}
-            }
-        }
-    }
-    Ok((sample_1, sample_2, real_1, real_2))
-}
-
 pub fn find_day_part_files(
     year: usize,
     day: usize,
     part: usize,
     sample_data: bool,
 ) -> Result<Vec<(String, Option<String>)>, Error> {
-    download_input(year, day)?;
+    super::file_scanner::download_input(year, day)?;
 
-    let (sample_1, sample_2, real_1, real_2) = get_files(year, day)?;
+    let (sample_1, sample_2, real_1, real_2) = super::file_scanner::get_files(year, day)?;
 
     let (part1, mut part2) = if sample_data {
         (sample_1, sample_2)
@@ -234,22 +127,6 @@ pub fn find_day_part_files(
         ret.sort();
         Ok(ret)
     }
-}
-
-fn download_input(year: usize, day: usize) -> Result<(), Error> {
-    let mut local = search_up("input_files", SearchType::Dir)?;
-    local.push(format!("input-{year}-{day:02}.txt"));
-    if local.is_file() {
-        return Ok(());
-    }
-    let url = format!("https://adventofcode.com/{year}/day/{day}/input");
-    let cookies_path = search_up("cookies.txt", SearchType::File)?;
-    let cookies = std::fs::read_to_string(cookies_path)?;
-    let response = minreq::get(url).with_header("Cookie", cookies).send()?;
-
-    std::fs::write(local, response.as_str()?)?;
-
-    Ok(())
 }
 
 #[cfg(test)]

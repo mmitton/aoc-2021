@@ -21,8 +21,8 @@ impl Day10 {
 }
 
 impl Runner for Day10 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         let mut x = 1;
         self.x_vals.push(x);
         for line in lines.iter() {

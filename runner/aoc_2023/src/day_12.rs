@@ -193,8 +193,8 @@ impl Day12 {
 }
 
 impl Runner for Day12 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             let (map, nums) = line.split_once(' ').unwrap();
             let map: Vec<State> = map.chars().map(|c| c.into()).collect();
             let nums: Vec<usize> = nums.split(',').map(|n| n.parse().unwrap()).collect();

@@ -60,8 +60,8 @@ impl Day12 {
 }
 
 impl Runner for Day12 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         assert_eq!(lines.len(), 4);
         self.moons.iter_mut().zip(lines.iter()).for_each(|(m, l)| {
             let l = l.strip_suffix('>').unwrap();

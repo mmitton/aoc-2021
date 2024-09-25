@@ -289,8 +289,8 @@ impl Day18 {
 }
 
 impl Runner for Day18 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         for (y, line) in lines.iter().enumerate() {
             let row: Vec<Tile> = line
                 .chars()

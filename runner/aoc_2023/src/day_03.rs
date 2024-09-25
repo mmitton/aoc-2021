@@ -34,8 +34,8 @@ impl Day03 {
 }
 
 impl Runner for Day03 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for (y, line) in Lines::from_path(path, LinesOpt::RAW)?.iter().enumerate() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for (y, line) in Lines::from_bufread(file, LinesOpt::RAW)?.iter().enumerate() {
             for (x, ch) in line.chars().enumerate() {
                 self.map.insert((x as isize, y as isize), ch);
             }

@@ -1,16 +1,16 @@
 use std::time::{Duration, Instant};
 
 use colored::Colorize;
-use helper::{find_day_part_files, Error, NewRunner};
+use helper::{find_day_part_files, Error, InputFileCache, NewRunner};
 
 fn run_part(
     new_runner: &NewRunner,
     part: usize,
-    input_path: &str,
-    expect_path: &Option<String>,
+    input: impl AsRef<[u8]>,
+    expect: Option<impl AsRef<[u8]>>,
 ) -> Result<String, Error> {
     let mut runner = new_runner();
-    runner.parse(input_path, part == 1)?;
+    runner.parse(input.as_ref(), part == 1)?;
     let output = match part {
         1 => runner.part1()?,
         2 => runner.part2()?,
@@ -19,8 +19,8 @@ fn run_part(
 
     let output = output.to_string();
     let output = output.trim_end_matches('\n');
-    if let Some(expect_path) = expect_path {
-        let expect = std::fs::read_to_string(expect_path)?;
+    if let Some(expect) = expect {
+        let expect = std::str::from_utf8(expect.as_ref())?;
         let expect = expect.trim_end_matches('\n');
         if expect == output {
             Ok(output.to_string())
@@ -40,16 +40,23 @@ pub fn run(
     year: usize,
     day: usize,
     part: usize,
+    input_file_cache: &InputFileCache,
 ) -> Result<Duration, Error> {
     let ydp = helper::YearDayPart::new(year, day, part);
 
-    let files = match find_day_part_files(year, day, part, sample_data) {
-        Ok(files) => files,
-        Err(e) => {
-            if output {
-                println!("{ydp}: Error: {}", format!("{e:?}").bright_red());
+    const USE_FILES_CACHE: bool = true;
+    let files = if USE_FILES_CACHE {
+        let f = input_file_cache.files(year, day, part, sample_data)?;
+        f.iter().map(|f| f.files()).collect()
+    } else {
+        match find_day_part_files(year, day, part, sample_data) {
+            Ok(files) => files,
+            Err(e) => {
+                if output {
+                    println!("{ydp}: Error: {}", format!("{e:?}").bright_red());
+                }
+                return Err(e);
             }
-            return Err(e);
         }
     };
 
@@ -63,7 +70,13 @@ pub fn run(
             }
 
             let start = Instant::now();
-            let result = run_part(new_runner, part, input_path, expect_path);
+            let input = std::fs::read(input_path)?;
+            let expect = if let Some(p) = &expect_path {
+                Some(std::fs::read(p)?)
+            } else {
+                None
+            };
+            let result = run_part(new_runner, part, &input, expect.as_ref());
             let elapsed = start.elapsed();
             total_elapsed += elapsed;
             total_runs += 1;

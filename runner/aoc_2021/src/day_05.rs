@@ -58,8 +58,8 @@ impl Day05 {
 }
 
 impl Runner for Day05 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::ALL)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::ALL)?;
         self.lines.extend(lines.iter().map(|l| {
             let (p1, p2) = l.split_once(" -> ").unwrap();
             (p1.parse().unwrap(), p2.parse().unwrap())

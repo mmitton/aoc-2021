@@ -121,8 +121,8 @@ impl Day07 {
 }
 
 impl Runner for Day07 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        self.amps.load(Lines::from_path(path, LinesOpt::RAW)?, 5)
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        self.amps.load(Lines::from_bufread(file, LinesOpt::RAW)?, 5)
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {

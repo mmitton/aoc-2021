@@ -95,8 +95,8 @@ impl Day23 {
 }
 
 impl Runner for Day23 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         assert_eq!(lines.len(), 1);
         self.initial
             .extend(lines[0].chars().map(|c| (c as u8 - b'0') as usize));

@@ -83,10 +83,10 @@ impl Day20 {
 }
 
 impl Runner for Day20 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
         let mut names: Vec<String> = Vec::new();
         let mut connections: Vec<Vec<String>> = Vec::new();
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             let (first, second) = line.split_once(" -> ").unwrap();
             // println!("{first} .. {second}");
             connections.push(second.split(", ").map(|s| s.to_string()).collect());

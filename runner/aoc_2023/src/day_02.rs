@@ -21,8 +21,8 @@ impl Day02 {
 }
 
 impl Runner for Day02 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             let mut game = Vec::new();
             let (_, line) = line.split_once(": ").expect("Could not split line");
             for line in line.split("; ") {

@@ -62,7 +62,7 @@ impl Day14 {
 }
 
 impl Runner for Day14 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
         let mut names: HashMap<&str, usize> = HashMap::new();
         fn map_name<'a>(names: &mut HashMap<&'a str, usize>, name: &'a str) -> usize {
             if let Some(&id) = names.get(name) {
@@ -76,7 +76,7 @@ impl Runner for Day14 {
         map_name(&mut names, "ORE");
         map_name(&mut names, "FUEL");
         let mut rules = Vec::new();
-        let lines = Lines::from_path(path, LinesOpt::REMOVE_EMPTY)?;
+        let lines = Lines::from_bufread(file, LinesOpt::REMOVE_EMPTY)?;
         for line in lines.iter() {
             let (requires, makes) = line.split_once(" => ").unwrap();
             let (makes_amount, makes_name) = makes.split_once(' ').unwrap();

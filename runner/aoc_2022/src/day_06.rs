@@ -26,8 +26,8 @@ fn find_marker<const N: usize>(chars: &[u32]) -> usize {
 }
 
 impl Runner for Day06 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         self.chars
             .extend(lines[0].chars().map(|c| 1u32 << (c as u8 - b'a')));
         Ok(())

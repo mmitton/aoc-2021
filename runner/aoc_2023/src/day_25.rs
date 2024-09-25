@@ -48,9 +48,9 @@ struct ConnectionUse {
 }
 
 impl Runner for Day25 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
         let mut names: HashMap<String, usize> = HashMap::new();
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             let (name, connections) = line.split_once(": ").unwrap();
             if !names.contains_key(name) {
                 names.insert(name.to_string(), names.len());
@@ -64,7 +64,7 @@ impl Runner for Day25 {
             }
         }
         self.connections = vec![Vec::new(); names.len()];
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             let (name, connections) = line.split_once(": ").unwrap();
             let name_idx = *names.get(name).unwrap();
             for connection in connections.split_whitespace() {

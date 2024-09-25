@@ -1,6 +1,7 @@
 mod algorithms;
 mod bit_grid;
 mod error;
+mod file_scanner;
 mod output;
 mod parser;
 mod priority_vec;
@@ -9,8 +10,9 @@ mod run_output;
 pub use algorithms::*;
 pub use bit_grid::*;
 pub use error::Error;
+pub use file_scanner::InputFileCache;
 pub use output::{Output, YearDayPart, OUTPUT};
-pub use parser::{find_day_part_files, search_up, Lines, LinesIter, LinesOpt, SearchType};
+pub use parser::{find_day_part_files, Lines, LinesIter, LinesOpt};
 pub use priority_vec::PriorityVec;
 pub use run_output::RunOutput;
 
@@ -18,7 +20,7 @@ pub type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
 pub type HashSet<K> = rustc_hash::FxHashSet<K>;
 
 pub trait Runner {
-    fn parse(&mut self, path: &str, part1: bool) -> Result<(), Error>;
+    fn parse(&mut self, file: &[u8], part1: bool) -> Result<(), Error>;
     fn part1(&mut self) -> Result<RunOutput, Error>;
     fn part2(&mut self) -> Result<RunOutput, Error>;
 }

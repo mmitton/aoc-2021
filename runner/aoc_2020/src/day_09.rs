@@ -29,8 +29,8 @@ impl Day09 {
 }
 
 impl Runner for Day09 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         self.nums
             .extend(lines.iter().map(|l| l.parse::<usize>().unwrap()));
         Ok(())

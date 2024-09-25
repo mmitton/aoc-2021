@@ -62,8 +62,8 @@ impl Day04 {
 }
 
 impl Runner for Day04 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         assert!(lines.len() == 1);
         let (low, high) = lines[0].split_once('-').unwrap();
         self.range = low.parse()?..=high.parse()?;

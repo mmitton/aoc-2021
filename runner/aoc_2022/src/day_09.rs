@@ -57,8 +57,8 @@ impl Day09 {
 }
 
 impl Runner for Day09 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         self.moves.extend(lines.iter().map(|line| {
             let (dir, cnt) = line.split_once(' ').unwrap();
             let cnt = cnt.parse().unwrap();

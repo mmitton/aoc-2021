@@ -90,10 +90,10 @@ impl Day13 {
 }
 
 impl Runner for Day13 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
         let mut map = Map::new();
         let mut w = 0;
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             if line.is_empty() {
                 if !map.pattern.is_empty() {
                     map.rotate_pattern(w);

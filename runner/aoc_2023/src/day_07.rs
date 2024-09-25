@@ -142,8 +142,8 @@ impl Hand {
 }
 
 impl Runner for Day07 {
-    fn parse(&mut self, path: &str, part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         for line in lines.iter() {
             self.hands.push(Hand::new(line, part1));
         }

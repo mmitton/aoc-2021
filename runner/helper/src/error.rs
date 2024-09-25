@@ -1,8 +1,10 @@
+use super::file_scanner::InputFile;
 use std::ffi::OsString;
 use std::num::{ParseFloatError, ParseIntError};
 
 #[derive(Debug)]
 pub enum Error {
+    DuplicateInputFile(InputFile),
     Fmt(std::fmt::Error),
     IO(std::io::Error),
     InvalidInput(String),
@@ -17,8 +19,15 @@ pub enum Error {
     SearchUpFailed(String),
     Skipped,
     Unsolved,
+    Utf8Error(std::str::Utf8Error),
     WrongAnswer(String, String),
     YearExists(usize),
+}
+
+impl From<std::str::Utf8Error> for Error {
+    fn from(e: std::str::Utf8Error) -> Self {
+        Self::Utf8Error(e)
+    }
 }
 
 impl From<std::io::Error> for Error {

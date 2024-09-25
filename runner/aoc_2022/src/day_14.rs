@@ -63,8 +63,8 @@ impl Day14 {
 }
 
 impl Runner for Day14 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         let mut coords: Vec<Vec<(i16, i16)>> = Vec::new();
         for line in lines.iter() {
             coords.push(

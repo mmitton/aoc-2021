@@ -24,8 +24,8 @@ impl Day01 {
 }
 
 impl Runner for Day01 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for line in Lines::from_path(path, LinesOpt::RAW)?.iter() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             self.masses.push(line.parse()?);
         }
         Ok(())

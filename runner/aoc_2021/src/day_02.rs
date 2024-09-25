@@ -20,8 +20,8 @@ impl Day02 {
 }
 
 impl Runner for Day02 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::ALL)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::ALL)?;
         self.commands.extend(lines.iter().map(|l| {
             let (cmd, num) = l.split_once(' ').unwrap();
             let num: usize = num.parse().unwrap();

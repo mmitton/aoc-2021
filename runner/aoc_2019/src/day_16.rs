@@ -60,8 +60,8 @@ impl Day16 {
 }
 
 impl Runner for Day16 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::RAW)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         assert!(lines.len() == 1);
         self.signal.extend(lines[0].chars().map(|c| c as u8 - b'0'));
         Ok(())

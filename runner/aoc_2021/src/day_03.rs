@@ -67,8 +67,8 @@ impl Day03 {
 }
 
 impl Runner for Day03 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        let lines = Lines::from_path(path, LinesOpt::ALL)?;
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        let lines = Lines::from_bufread(file, LinesOpt::ALL)?;
         self.width = lines[0].len();
         self.numbers
             .extend(lines.iter().map(|l| usize::from_str_radix(l, 2).unwrap()));

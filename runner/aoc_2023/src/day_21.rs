@@ -126,8 +126,8 @@ impl Day21 {
 }
 
 impl Runner for Day21 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for (y, line) in Lines::from_path(path, LinesOpt::RAW)?.iter().enumerate() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for (y, line) in Lines::from_bufread(file, LinesOpt::RAW)?.iter().enumerate() {
             self.max.y = y as Number + 1;
             self.max.x = line.len() as Number;
             for (x, c) in line.chars().enumerate() {

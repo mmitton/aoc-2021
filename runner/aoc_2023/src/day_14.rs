@@ -157,8 +157,8 @@ impl Day14 {
 }
 
 impl Runner for Day14 {
-    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {
-        for (y, line) in Lines::from_path(path, LinesOpt::RAW)?.iter().enumerate() {
+    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+        for (y, line) in Lines::from_bufread(file, LinesOpt::RAW)?.iter().enumerate() {
             let y = y as i8;
             self.dish.max.y = self.dish.max.y.max(y);
             for (x, c) in line.chars().enumerate() {
