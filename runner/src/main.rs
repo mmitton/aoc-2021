@@ -125,16 +125,20 @@ fn main() -> Result<(), Error> {
             1,
             &input_file_cache,
         );
-        let part2 = run::run(
-            sample_data,
-            new_runner,
-            !times,
-            run_count,
-            *year,
-            *day,
-            2,
-            &input_file_cache,
-        );
+        let part2 = if *day != 25 {
+            run::run(
+                sample_data,
+                new_runner,
+                !times,
+                run_count,
+                *year,
+                *day,
+                2,
+                &input_file_cache,
+            )
+        } else {
+            Err(Error::Skipped)
+        };
 
         if times {
             times_cache.push(TimesCacheEntry {
