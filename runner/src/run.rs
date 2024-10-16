@@ -32,6 +32,7 @@ fn run_part(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     sample_data: bool,
     new_runner: &NewRunner,

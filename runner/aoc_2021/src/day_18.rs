@@ -102,7 +102,7 @@ impl FromStr for Number {
 impl Number {
     fn magnitude(&self) -> usize {
         match self {
-            Self::Literal(n) => *n as usize,
+            Self::Literal(n) => *n,
             Self::Pair(a, b) => {
                 let a = 3 * a.magnitude();
                 let b = 2 * b.magnitude();
