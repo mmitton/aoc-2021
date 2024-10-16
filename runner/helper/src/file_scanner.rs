@@ -222,7 +222,7 @@ pub(crate) fn download_input(year: usize, day: usize) -> Result<(), Error> {
     Ok(())
 }
 
-pub(crate) fn search_up(file: &str, file_type: SearchType) -> Result<PathBuf, Error> {
+pub fn search_up(file: &str, file_type: SearchType) -> Result<PathBuf, Error> {
     let mut root = canonicalize(".")?;
     let mut path;
     loop {

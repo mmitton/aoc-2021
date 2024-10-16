@@ -52,22 +52,23 @@ fn create_year(year: usize) -> Result<(), Error> {
             "use helper::{{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner}};"
         )?;
         writeln!(d)?;
+        writeln!(d, "#[derive(Default)]")?;
         writeln!(d, "pub struct Day{day:02} {{}}")?;
         writeln!(d)?;
         writeln!(d, "impl Day{day:02} {{")?;
         writeln!(d, "    pub fn new() -> Self {{")?;
-        writeln!(d, "        Self {{}}")?;
+        writeln!(d, "        Self::default()")?;
         writeln!(d, "    }}")?;
         writeln!(d, "}}")?;
         writeln!(d)?;
         writeln!(d, "impl Runner for Day{day:02} {{")?;
         writeln!(
             d,
-            "    fn parse(&mut self, path: &str, _part1: bool) -> Result<(), Error> {{"
+            "    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {{"
         )?;
         writeln!(
             d,
-            "        let _lines = Lines::from_path(path, LinesOpt::RAW)?;"
+            "        let _lines = Lines::from_bufread(file, LinesOpt::RAW)?;"
         )?;
         writeln!(d, "        Ok(())")?;
         writeln!(d, "    }}")?;
