@@ -66,6 +66,7 @@ fn main() -> Result<(), Error> {
     let input_file_cache = helper::InputFileCache::new()?;
 
     let mut runners = BTreeMap::new();
+    aoc_2015::register(&mut runners);
     aoc_2019::register(&mut runners);
     aoc_2020::register(&mut runners);
     aoc_2021::register(&mut runners);
