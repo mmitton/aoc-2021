@@ -6,6 +6,7 @@ mod output;
 mod parser;
 mod priority_vec;
 mod run_output;
+mod small_vec;
 
 pub use algorithms::*;
 pub use bit_grid::*;
@@ -15,6 +16,7 @@ pub use output::{Output, YearDayPart, OUTPUT};
 pub use parser::{find_day_part_files, Lines, LinesIter, LinesOpt};
 pub use priority_vec::PriorityVec;
 pub use run_output::RunOutput;
+pub use small_vec::SmallVec;
 
 pub type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
 pub type HashSet<K> = rustc_hash::FxHashSet<K>;
