@@ -11,7 +11,7 @@ mod small_vec;
 pub use algorithms::*;
 pub use bit_grid::*;
 pub use error::Error;
-pub use file_scanner::InputFileCache;
+pub use file_scanner::{search_up, InputFileCache, SearchType};
 pub use output::{Output, YearDayPart, OUTPUT};
 pub use parser::{find_day_part_files, Lines, LinesIter, LinesOpt};
 pub use priority_vec::PriorityVec;
