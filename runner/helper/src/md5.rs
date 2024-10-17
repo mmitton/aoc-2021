@@ -22,18 +22,24 @@ const D: u32 = 0x10325476;
 
 pub struct MD5 {}
 
+enum PayloadBytes<'a> {
+    Bytes(&'a [u8]),
+    LenPayload,
+    Done,
+}
+
 struct Payload<'a> {
-    payload: Option<&'a [u8]>,
+    payload: PayloadBytes<'a>,
     bytes: [u8; 64],
     chunks: [u32; 16],
     len: [u8; 8],
 }
 
 impl<'a> Payload<'a> {
-    fn new(payload: &'a [u8]) -> Self {
-        let len = payload.len() as u64 * 8;
+    fn new(bytes: &'a [u8]) -> Self {
+        let len = bytes.len() as u64 * 8;
         Self {
-            payload: Some(payload),
+            payload: PayloadBytes::Bytes(bytes),
             bytes: [0; 64],
             chunks: [0; 16],
             len: len.to_le_bytes(),
@@ -41,37 +47,46 @@ impl<'a> Payload<'a> {
     }
 
     fn fill(&mut self) -> bool {
-        if let Some(bytes) = self.payload.as_mut() {
-            if bytes.len() >= 64 {
-                self.bytes.copy_from_slice(&bytes[0..64]);
-                *bytes = &bytes[64..];
-            } else {
-                self.bytes.as_mut_slice()[..bytes.len()].copy_from_slice(bytes);
-                self.bytes[bytes.len()] = 0x80;
-                let last = bytes.len() + 1;
-                if last <= 56 {
-                    self.bytes.as_mut_slice()[last..56]
-                        .iter_mut()
-                        .for_each(|b| *b = 0);
-                    self.bytes.as_mut_slice()[56..].copy_from_slice(&self.len);
-                    self.payload = None;
+        match &mut self.payload {
+            PayloadBytes::Bytes(bytes) => {
+                if bytes.len() >= 64 {
+                    self.bytes.copy_from_slice(&bytes[0..64]);
+                    *bytes = &bytes[64..];
                 } else {
-                    self.bytes.as_mut_slice()[last..]
-                        .iter_mut()
-                        .for_each(|b| *b = 0);
-                    *bytes = &bytes[bytes.len()..];
+                    self.bytes.as_mut_slice()[..bytes.len()].copy_from_slice(bytes);
+                    self.bytes[bytes.len()] = 0x80;
+                    let last = bytes.len() + 1;
+                    if last <= 56 {
+                        self.bytes.as_mut_slice()[last..56]
+                            .iter_mut()
+                            .for_each(|b| *b = 0);
+                        self.bytes.as_mut_slice()[56..].copy_from_slice(&self.len);
+                        self.payload = PayloadBytes::Done;
+                    } else {
+                        self.bytes.as_mut_slice()[last..]
+                            .iter_mut()
+                            .for_each(|b| *b = 0);
+                        *bytes = &bytes[bytes.len()..];
+                        self.payload = PayloadBytes::LenPayload;
+                    }
                 }
             }
-
-            for i in 0..16 {
-                self.chunks[i] =
-                    u32::from_le_bytes(self.bytes[i * 4..(i + 1) * 4].try_into().unwrap());
+            PayloadBytes::LenPayload => {
+                // Marker was placed in the last payload
+                self.bytes.as_mut_slice()[..56]
+                    .iter_mut()
+                    .for_each(|b| *b = 0);
+                self.bytes.as_mut_slice()[56..].copy_from_slice(&self.len);
+                self.payload = PayloadBytes::Done;
             }
-
-            true
-        } else {
-            false
+            PayloadBytes::Done => return false,
         }
+
+        for i in 0..16 {
+            self.chunks[i] = u32::from_le_bytes(self.bytes[i * 4..(i + 1) * 4].try_into().unwrap());
+        }
+
+        true
     }
 }
 
@@ -139,10 +154,10 @@ impl MD5 {
 
 #[cfg(test)]
 mod test {
-    use crate::md5::MD5;
+    use super::MD5;
 
     #[test]
-    fn md5() {
+    fn md5_known_digests() {
         let tests = [
             ("1", "c4ca4238a0b923820dcc509a6f75849b"),
             (
@@ -164,5 +179,48 @@ mod test {
             });
             assert_eq!(digest_str, *e, "{s:?} did not producted expected MD5");
         }
+    }
+
+    #[test]
+    fn md5_compare() {
+        const TOP: usize = 4 * 1024;
+        let mut buf = Vec::with_capacity(TOP);
+        for i in 0..TOP {
+            println!();
+            println!("{i}");
+            let a = MD5::digest(&buf);
+            let b = md5::compute(&buf);
+            assert_eq!(a, b.0, "{buf:?}");
+            buf.push((i % 0xFF) as u8);
+        }
+    }
+
+    #[test]
+    fn md5_bench_internal() {
+        const ITERS: usize = 50_000;
+        let payload: [u8; 4 * 1024] = std::array::from_fn(|i| i as u8);
+        println!();
+
+        // Benchmark internal MD5
+        let start = std::time::Instant::now();
+        for _ in 0..ITERS {
+            MD5::digest(&payload);
+        }
+        let elapsed = start.elapsed();
+        println!(
+            "Internal MD5 processed {ITERS} in {elapsed:?}.  {} iters per second",
+            ITERS as f64 / elapsed.as_secs_f64()
+        );
+
+        // Benchmark md5 crate
+        let start = std::time::Instant::now();
+        for _ in 0..ITERS {
+            md5::compute(payload);
+        }
+        let elapsed = start.elapsed();
+        println!(
+            "MD5 crate processed {ITERS} in {elapsed:?}.  {} iters per second",
+            ITERS as f64 / elapsed.as_secs_f64()
+        );
     }
 }
