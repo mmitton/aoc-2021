@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 #[derive(Debug)]
 struct Reindeer {
-    name: String,
+    _name: String,
     speed: usize,
     speed_sec: usize,
     cooldown: usize,
@@ -41,7 +41,7 @@ impl FromStr for Reindeer {
 
         let parts: Vec<&str> = s.split(" ").collect();
         Ok(Self {
-            name: parts[0].to_string(),
+            _name: parts[0].to_string(),
             speed: parts[1].parse()?,
             speed_sec: parts[2].parse()?,
             cooldown: parts[3].parse()?,

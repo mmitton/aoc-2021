@@ -2,13 +2,13 @@
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
 
 #[derive(Default, Debug)]
-enum JSON {
+enum Json {
     #[default]
     Empty,
     Number(isize),
     String(String),
-    Array(Vec<JSON>),
-    Hash(HashMap<String, JSON>),
+    Array(Vec<Json>),
+    Hash(HashMap<String, Json>),
 }
 
 struct CharArray {
@@ -47,17 +47,17 @@ impl CharArray {
     }
 }
 
-impl JSON {
+impl Json {
     fn sum(&self, ignore_red: bool) -> isize {
         match self {
-            JSON::Number(num) => *num,
-            JSON::String(..) => 0,
-            JSON::Array(elements) => elements.iter().map(|elem| elem.sum(ignore_red)).sum(),
-            JSON::Hash(elements) => {
+            Json::Number(num) => *num,
+            Json::String(..) => 0,
+            Json::Array(elements) => elements.iter().map(|elem| elem.sum(ignore_red)).sum(),
+            Json::Hash(elements) => {
                 let mut sum = 0;
                 for elem in elements.iter() {
                     if ignore_red {
-                        if let JSON::String(s) = elem.1 {
+                        if let Json::String(s) = elem.1 {
                             if s == "red" {
                                 return 0;
                             }
@@ -67,7 +67,7 @@ impl JSON {
                 }
                 sum
             }
-            JSON::Empty => 0,
+            Json::Empty => 0,
         }
     }
 
@@ -75,7 +75,7 @@ impl JSON {
         match buf.peek() {
             '"' => {
                 // Parse String
-                *self = JSON::String(buf.consume_string()?);
+                *self = Json::String(buf.consume_string()?);
                 Ok(())
             }
             '[' => {
@@ -84,7 +84,7 @@ impl JSON {
                 let mut elements = Vec::new();
                 if buf.peek() != ']' {
                     loop {
-                        let mut element = JSON::Empty;
+                        let mut element = Json::Empty;
                         element.parse(buf)?;
                         elements.push(element);
                         match buf.peek() {
@@ -102,7 +102,7 @@ impl JSON {
                 }
                 // Consume ]
                 buf.consume();
-                *self = JSON::Array(elements);
+                *self = Json::Array(elements);
                 Ok(())
             }
             '{' => {
@@ -116,7 +116,7 @@ impl JSON {
                             return Err(Error::InvalidInput("Bad Hash".into()));
                         }
                         buf.consume();
-                        let mut val = JSON::Empty;
+                        let mut val = Json::Empty;
                         val.parse(buf)?;
 
                         elements.insert(name, val);
@@ -131,7 +131,7 @@ impl JSON {
                 }
                 // Consume {
                 buf.consume();
-                *self = JSON::Hash(elements);
+                *self = Json::Hash(elements);
                 Ok(())
             }
             _ => {
@@ -147,7 +147,7 @@ impl JSON {
                 }
 
                 let num: isize = num.iter().collect::<String>().parse()?;
-                *self = JSON::Number(num);
+                *self = Json::Number(num);
                 Ok(())
             }
         }
@@ -156,7 +156,7 @@ impl JSON {
 
 #[derive(Default)]
 pub struct Day12 {
-    json: JSON,
+    json: Json,
 }
 
 impl Day12 {

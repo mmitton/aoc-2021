@@ -102,14 +102,14 @@ impl Day07 {
                 match &gate.op {
                     Op::Assign(ident) => {
                         if let Some(v) = wire_state.get_value(ident) {
-                            wire_state.insert(gate.name.clone(), v);
+                            wire_state.insert(gate.name, v);
                         } else {
                             gates.push_back(gate);
                         }
                     }
                     Op::Not(ident) => {
                         if let Some(v) = wire_state.get_value(ident) {
-                            wire_state.insert(gate.name.clone(), !v);
+                            wire_state.insert(gate.name, !v);
                         } else {
                             gates.push_back(gate);
                         }
@@ -118,7 +118,7 @@ impl Day07 {
                         if let (Some(lhs), Some(rhs)) =
                             (wire_state.get_value(lhs), wire_state.get_value(rhs))
                         {
-                            wire_state.insert(gate.name.clone(), lhs & rhs);
+                            wire_state.insert(gate.name, lhs & rhs);
                         } else {
                             gates.push_back(gate);
                         }
@@ -127,7 +127,7 @@ impl Day07 {
                         if let (Some(lhs), Some(rhs)) =
                             (wire_state.get_value(lhs), wire_state.get_value(rhs))
                         {
-                            wire_state.insert(gate.name.clone(), lhs | rhs);
+                            wire_state.insert(gate.name, lhs | rhs);
                         } else {
                             gates.push_back(gate);
                         }
@@ -136,7 +136,7 @@ impl Day07 {
                         if let (Some(v), Some(sht)) =
                             (wire_state.get_value(v), wire_state.get_value(sht))
                         {
-                            wire_state.insert(gate.name.clone(), v << sht);
+                            wire_state.insert(gate.name, v << sht);
                         } else {
                             gates.push_back(gate);
                         }
@@ -145,7 +145,7 @@ impl Day07 {
                         if let (Some(v), Some(sht)) =
                             (wire_state.get_value(v), wire_state.get_value(sht))
                         {
-                            wire_state.insert(gate.name.clone(), v >> sht);
+                            wire_state.insert(gate.name, v >> sht);
                         } else {
                             gates.push_back(gate);
                         }
