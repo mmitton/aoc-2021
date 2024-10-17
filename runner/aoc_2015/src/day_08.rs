@@ -2,7 +2,9 @@
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
 
 #[derive(Default)]
-pub struct Day08 {}
+pub struct Day08 {
+    lines: Vec<String>,
+}
 
 impl Day08 {
     pub fn new() -> Self {
@@ -12,15 +14,57 @@ impl Day08 {
 
 impl Runner for Day08 {
     fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
-        let _lines = Lines::from_bufread(file, LinesOpt::RAW)?;
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
+        self.lines.extend(lines.iter().map(|s| s.into()));
         Ok(())
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        fn decode_len(buffer: &mut Vec<char>, s: &str) -> usize {
+            buffer.clear();
+            buffer.extend(s.chars());
+
+            let mut len = 0;
+            let mut i = 1;
+            while i < buffer.len() - 1 {
+                len += 1;
+                if buffer[i] == '\\' {
+                    if buffer[i + 1] == 'x' {
+                        i += 4;
+                    } else {
+                        i += 2;
+                    }
+                } else {
+                    i += 1;
+                }
+            }
+
+            len
+        }
+
+        let mut buffer = Vec::new();
+        Ok(self
+            .lines
+            .iter()
+            .map(|l| l.len() - decode_len(&mut buffer, l))
+            .sum::<usize>()
+            .into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        fn encode_len(buffer: &mut Vec<char>, s: &str) -> usize {
+            buffer.clear();
+            buffer.extend(s.chars());
+
+            buffer.iter().filter(|c| **c == '\\' || **c == '"').count() + buffer.len() + 2
+        }
+
+        let mut buffer = Vec::new();
+        Ok(self
+            .lines
+            .iter()
+            .map(|l| encode_len(&mut buffer, l) - l.len())
+            .sum::<usize>()
+            .into())
     }
 }
