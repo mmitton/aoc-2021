@@ -170,7 +170,6 @@ impl Day21 {
                 }
             }
         }
-        println!("ring_options: {:?}", ring_options);
 
         for weapon in WEAPONS.iter() {
             for armor in armor_options.iter() {
