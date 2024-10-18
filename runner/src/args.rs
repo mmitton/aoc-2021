@@ -1,6 +1,6 @@
 use clap::{arg, Arg, Command};
 
-pub fn get() -> (bool, bool, bool, Option<usize>, Option<usize>) {
+pub fn get() -> (bool, bool, bool, bool, Option<usize>, Option<usize>) {
     let matches = Command::new("runner")
         .about("AoC Runner")
         .arg(
@@ -24,7 +24,14 @@ pub fn get() -> (bool, bool, bool, Option<usize>, Option<usize>) {
                 .long("times")
                 .num_args(0)
                 .required(false)
-                .help("Run Real Data"),
+                .help("Generate Times Table"),
+        )
+        .arg(
+            Arg::new("md")
+                .long("md")
+                .num_args(0)
+                .required(false)
+                .help("Format Times Table as Markdown"),
         )
         .arg(
             Arg::new("no-capture")
@@ -64,6 +71,7 @@ pub fn get() -> (bool, bool, bool, Option<usize>, Option<usize>) {
         .get_one::<bool>("times")
         .copied()
         .unwrap_or_default();
+    let md = matches.get_one::<bool>("md").copied().unwrap_or_default();
     let no_capture = matches
         .get_one::<bool>("no-capture")
         .copied()
@@ -101,5 +109,5 @@ pub fn get() -> (bool, bool, bool, Option<usize>, Option<usize>) {
         subcommand => unreachable!("{subcommand:?}"),
     };
 
-    (sample_data, no_capture, times, year, day)
+    (sample_data, no_capture, times, md, year, day)
 }
