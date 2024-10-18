@@ -40,7 +40,7 @@ impl Day24 {
                         builder
                             .entry(new_weight)
                             .or_default()
-                            .push((packages | mask, qe * *weight));
+                            .push((packages | mask, qe.saturating_mul(*weight)));
                     }
                 }
             }
