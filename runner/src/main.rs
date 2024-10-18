@@ -10,7 +10,7 @@ struct TimesCacheEntry {
     part2: Result<Duration, Error>,
 }
 
-fn print_times(run_count: usize, year: usize, times_cache: &mut Vec<TimesCacheEntry>) {
+fn print_times(md: bool, run_count: usize, year: usize, times_cache: &mut Vec<TimesCacheEntry>) {
     let mut total = Duration::new(0, 0);
     let mut part1_total = Duration::new(0, 0);
     let mut part2_total = Duration::new(0, 0);
@@ -29,9 +29,14 @@ fn print_times(run_count: usize, year: usize, times_cache: &mut Vec<TimesCacheEn
     } else {
         println!("Year: {year}");
     }
-    println!("+-------+------------+------------+---------+---------+");
-    println!("|   Day |     Part 1 |     Part 2 |    P1 % |    P2 % |");
-    println!("+-------+------------+------------+---------+---------+");
+    if md {
+        println!("| Day | Part 1 | Part 2 | P1 % | P2 % |");
+        println!("| ---: | ---: | ---: | ---: | ---: |");
+    } else {
+        println!("+-------+------------+------------+---------+---------+");
+        println!("|   Day |     Part 1 |     Part 2 |    P1 % |    P2 % |");
+        println!("+-------+------------+------------+---------+---------+");
+    }
     for TimesCacheEntry { day, part1, part2 } in times_cache.iter() {
         let (prt1, per1) = if let Ok(prt1) = part1 {
             (
@@ -49,20 +54,28 @@ fn print_times(run_count: usize, year: usize, times_cache: &mut Vec<TimesCacheEn
         } else {
             ("".to_string(), "".to_string())
         };
-        println!("| {day:>5} | {prt1:>10} | {prt2:>10} | {per1:>7} | {per2:>7} |");
+        if md {
+            println!("| {day} | {prt1} | {prt2} | {per1} | {per2} |");
+        } else {
+            println!("| {day:>5} | {prt1:>10} | {prt2:>10} | {per1:>7} | {per2:>7} |");
+        }
     }
     let prt1 = format!("{elapsed:0.5} s", elapsed = part1_total.as_secs_f64());
     let prt2 = format!("{elapsed:0.5} s", elapsed = part2_total.as_secs_f64());
     let total = format!("{elapsed:0.5} s", elapsed = total.as_secs_f64());
-    println!("+-------+------------+------------+-------------------+");
-    println!("| Total | {prt1:>10} | {prt2:>10} | Both  {total:>11} |");
-    println!("+-------+------------+------------+-------------------+");
+    if md {
+        println!("| Total | {prt1} | {prt2} | Both | {total} |");
+    } else {
+        println!("+-------+------------+------------+-------------------+");
+        println!("| Total | {prt1:>10} | {prt2:>10} | Both  {total:>11} |");
+        println!("+-------+------------+------------+-------------------+");
+    }
     println!();
     times_cache.clear();
 }
 
 fn main() -> Result<(), Error> {
-    let (sample_data, no_capture, times, target_year, target_day) = args::get();
+    let (sample_data, no_capture, times, md, target_year, target_day) = args::get();
     let input_file_cache = helper::InputFileCache::new()?;
 
     let mut runners = BTreeMap::new();
@@ -90,7 +103,7 @@ fn main() -> Result<(), Error> {
 
     for ((year, day), new_runner) in runners.iter() {
         if times && !times_cache.is_empty() && prev_year != *year {
-            print_times(run_count, prev_year, &mut times_cache);
+            print_times(md, run_count, prev_year, &mut times_cache);
         }
         prev_year = *year;
 
@@ -151,7 +164,7 @@ fn main() -> Result<(), Error> {
     }
 
     if times && !times_cache.is_empty() {
-        print_times(run_count, prev_year, &mut times_cache);
+        print_times(md, run_count, prev_year, &mut times_cache);
     }
 
     Ok(())
