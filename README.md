@@ -1,7 +1,7 @@
 [Advent of Code](https://adventofcode.com/)
 Michael Conrad
 
-Run on AMD Ryzen 9 7950X3D, single core only.
+Run on AMD Ryzen 9 7950X3D, single threaded.
 
 Year: 2015  Averaged over 10 runs.
 | Day | Part 1 | Part 2 | P1 % | P2 % |
