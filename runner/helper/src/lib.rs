@@ -1,4 +1,5 @@
 mod algorithms;
+mod bit_array;
 mod bit_grid;
 mod error;
 mod file_scanner;
@@ -11,6 +12,7 @@ mod run_output;
 mod small_vec;
 
 pub use algorithms::*;
+pub use bit_array::BitArray;
 pub use bit_grid::*;
 pub use error::Error;
 pub use file_scanner::{search_up, InputFileCache, SearchType};
