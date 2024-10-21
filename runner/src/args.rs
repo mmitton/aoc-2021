@@ -1,6 +1,13 @@
 use clap::{arg, Arg, Command};
 
-pub fn get() -> (bool, bool, bool, bool, Option<usize>, Option<usize>) {
+pub fn get() -> (
+    bool,
+    bool,
+    Option<usize>,
+    bool,
+    Option<usize>,
+    Option<usize>,
+) {
     let matches = Command::new("runner")
         .about("AoC Runner")
         .arg(
@@ -22,7 +29,8 @@ pub fn get() -> (bool, bool, bool, bool, Option<usize>, Option<usize>) {
         .arg(
             Arg::new("times")
                 .long("times")
-                .num_args(0)
+                .num_args(1)
+                .default_missing_value("5")
                 .required(false)
                 .help("Generate Times Table"),
         )
@@ -67,10 +75,15 @@ pub fn get() -> (bool, bool, bool, bool, Option<usize>, Option<usize>) {
         .get_one::<bool>("real-data")
         .copied()
         .unwrap_or_default();
-    let times = matches
-        .get_one::<bool>("times")
-        .copied()
-        .unwrap_or_default();
+    let times = if let Some(times) = matches.get_one::<String>("times") {
+        match times.parse() {
+            Ok(times) => Some(times),
+            Err(_) => panic!("Number of times is not a number: {times:?}"),
+        }
+    } else {
+        None
+    };
+
     let md = matches.get_one::<bool>("md").copied().unwrap_or_default();
     let no_capture = matches
         .get_one::<bool>("no-capture")

@@ -87,7 +87,7 @@ fn main() -> Result<(), Error> {
     aoc_2022::register(&mut runners);
     aoc_2023::register(&mut runners);
 
-    if times {
+    if times.is_some() {
         helper::output(|output| output.no_output());
     } else if cfg!(debug_assertions) || no_capture {
         helper::output(|output| output.stdout());
@@ -100,10 +100,10 @@ fn main() -> Result<(), Error> {
 
     let mut times_cache = Vec::new();
     let mut prev_year = 0;
-    let run_count = if times { 10 } else { 1 };
+    let run_count = times.unwrap_or(1);
 
     for ((year, day), new_runner) in runners.iter() {
-        if times && !times_cache.is_empty() && prev_year != *year {
+        if times.is_some() && !times_cache.is_empty() && prev_year != *year {
             print_times(md, run_count, prev_year, &mut times_cache);
         }
         prev_year = *year;
@@ -133,7 +133,7 @@ fn main() -> Result<(), Error> {
         let part1 = run::run(
             sample_data,
             new_runner,
-            !times,
+            times.is_none(),
             run_count,
             *year,
             *day,
@@ -144,7 +144,7 @@ fn main() -> Result<(), Error> {
             run::run(
                 sample_data,
                 new_runner,
-                !times,
+                times.is_none(),
                 run_count,
                 *year,
                 *day,
@@ -155,7 +155,7 @@ fn main() -> Result<(), Error> {
             Err(Error::Skipped)
         };
 
-        if times {
+        if times.is_some() {
             times_cache.push(TimesCacheEntry {
                 day: *day,
                 part1,
@@ -164,7 +164,7 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    if times && !times_cache.is_empty() {
+    if times.is_some() && !times_cache.is_empty() {
         print_times(md, run_count, prev_year, &mut times_cache);
     }
 
