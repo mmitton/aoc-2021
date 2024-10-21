@@ -38,6 +38,7 @@ impl Runner for Day05 {
                     ((v - 10) + b'a') as char
                 });
                 if password.len() == 8 {
+                    println!("{i} checks");
                     break;
                 }
             }
@@ -54,16 +55,17 @@ impl Runner for Day05 {
             write!(hash, "{i}")?;
             let digest = MD5::digest(hash.as_bytes());
             if digest[0] == 0 && digest[1] == 0 && digest[2] & 0xF0 == 0 {
-                let i = digest[2] & 0xf;
+                let idx = (digest[2] & 0xf) as usize;
                 let v = (digest[3] & 0xf0) >> 4;
-                if i < 8 && password[i as usize].is_none() {
-                    password[i as usize] = Some(if v < 10 {
+                if idx < 8 && password[idx].is_none() {
+                    password[idx] = Some(if v < 10 {
                         (v + b'0') as char
                     } else {
                         ((v - 10) + b'a') as char
                     });
                     found += 1;
                     if found == 8 {
+                        println!("{i} checks");
                         break;
                     }
                 }
