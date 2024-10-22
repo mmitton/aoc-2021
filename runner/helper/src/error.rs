@@ -22,6 +22,7 @@ pub enum Error {
     Utf8Error(std::str::Utf8Error),
     WrongAnswer(String, String),
     YearExists(usize),
+    MD5StringOverrun,
 }
 
 impl From<std::str::Utf8Error> for Error {

@@ -1,8 +1,8 @@
 #[allow(unused_imports)]
 use helper::{
-    print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner, MD5,
+    print, println, Error, HashMap, HashSet, Lines, LinesOpt, MD5String, Output, RunOutput, Runner,
+    MD5,
 };
-use std::fmt::Write;
 
 #[derive(Default)]
 pub struct Day05 {
@@ -12,6 +12,31 @@ pub struct Day05 {
 impl Day05 {
     pub fn new() -> Self {
         Self::default()
+    }
+}
+
+struct NumberString {
+    bytes: Vec<u8>,
+}
+
+impl Default for NumberString {
+    fn default() -> Self {
+        Self { bytes: vec![b'0'] }
+    }
+}
+
+impl NumberString {
+    fn inc(&mut self) {
+        for c in self.bytes.iter_mut().rev() {
+            if *c == b'9' {
+                *c = b'0';
+            } else {
+                *c += 1;
+                return;
+            }
+        }
+        self.bytes[0] = b'1';
+        self.bytes.push(b'0');
     }
 }
 
@@ -25,11 +50,13 @@ impl Runner for Day05 {
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let mut password = String::with_capacity(8);
-        let mut hash = self.salt.clone();
-        for i in 0.. {
-            hash.truncate(self.salt.len());
-            write!(hash, "{i}")?;
-            let digest = MD5::digest(hash.as_bytes());
+        let mut hash: MD5String = self.salt.parse()?;
+        let mut num = NumberString::default();
+        loop {
+            num.inc();
+            hash.truncate_without_zero(self.salt.len());
+            hash.push_bytes(&num.bytes)?;
+            let digest = hash.digest(); // MD5::digest(hash.as_bytes());
             if digest[0] == 0 && digest[1] == 0 && digest[2] & 0xF0 == 0 {
                 let v = digest[2] & 0xf;
                 password.push(if v < 10 {
@@ -38,7 +65,6 @@ impl Runner for Day05 {
                     ((v - 10) + b'a') as char
                 });
                 if password.len() == 8 {
-                    println!("{i} checks");
                     break;
                 }
             }
@@ -49,11 +75,13 @@ impl Runner for Day05 {
     fn part2(&mut self) -> Result<RunOutput, Error> {
         let mut password = [None; 8];
         let mut found = 0;
-        let mut hash = self.salt.clone();
-        for i in 0.. {
-            hash.truncate(self.salt.len());
-            write!(hash, "{i}")?;
-            let digest = MD5::digest(hash.as_bytes());
+        let mut hash: MD5String = self.salt.parse()?;
+        let mut num = NumberString::default();
+        loop {
+            num.inc();
+            hash.truncate_without_zero(self.salt.len());
+            hash.push_bytes(&num.bytes)?;
+            let digest = hash.digest(); // MD5::digest(hash.as_bytes());
             if digest[0] == 0 && digest[1] == 0 && digest[2] & 0xF0 == 0 {
                 let idx = (digest[2] & 0xf) as usize;
                 let v = (digest[3] & 0xf0) >> 4;
@@ -65,7 +93,6 @@ impl Runner for Day05 {
                     });
                     found += 1;
                     if found == 8 {
-                        println!("{i} checks");
                         break;
                     }
                 }

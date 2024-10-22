@@ -16,7 +16,7 @@ pub use bit_array::BitArray;
 pub use bit_grid::*;
 pub use error::Error;
 pub use file_scanner::{search_up, InputFileCache, SearchType};
-pub use md5::MD5;
+pub use md5::{MD5String, MD5};
 pub use output::{Output, YearDayPart, OUTPUT};
 pub use parser::{find_day_part_files, Lines, LinesIter, LinesOpt};
 pub use permutations::Permutations;
