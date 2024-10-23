@@ -38,6 +38,9 @@ fn print_times(md: bool, run_count: usize, year: usize, times_cache: &mut Vec<Ti
         println!("+-------+------------+------------+---------+---------+");
     }
     for TimesCacheEntry { day, part1, part2 } in times_cache.iter() {
+        if part1.is_err() && part2.is_err() {
+            continue;
+        }
         let (prt1, per1) = if let Ok(prt1) = part1 {
             (
                 format!("{:0.5} s", prt1.as_secs_f64()),
