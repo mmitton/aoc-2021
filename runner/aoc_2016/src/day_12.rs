@@ -41,7 +41,7 @@ impl FromStr for Value {
             Ok(Self::Imm(num))
         } else if s.len() == 1 {
             let r = s.chars().nth(0).unwrap();
-            if r < 'a' || r > 'd' {
+            if !('a'..='d').contains(&r) {
                 Err(Error::InvalidInput(s.into()))
             } else {
                 Ok(Self::Reg((r as u8 - b'a') as usize))
