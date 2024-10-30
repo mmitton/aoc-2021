@@ -47,7 +47,7 @@ fn print_times(md: bool, run_count: usize, year: usize, times_cache: &mut Vec<Ti
                 format!("{:0.2}%", prt1.as_secs_f64() / total.as_secs_f64() * 100.),
             )
         } else {
-            ("".to_string(), "".to_string())
+            (String::new(), String::new())
         };
         let (prt2, per2) = if let Ok(prt2) = part2 {
             (
@@ -55,7 +55,7 @@ fn print_times(md: bool, run_count: usize, year: usize, times_cache: &mut Vec<Ti
                 format!("{:0.2}%", prt2.as_secs_f64() / total.as_secs_f64() * 100.),
             )
         } else {
-            ("".to_string(), "".to_string())
+            (String::new(), String::new())
         };
         if md {
             println!("| {day} | {prt1} | {prt2} | {per1} | {per2} |");
@@ -105,7 +105,7 @@ fn main() -> Result<(), Error> {
     let mut prev_year = 0;
     let run_count = times.unwrap_or(1);
 
-    for ((year, day), new_runner) in runners.iter() {
+    for ((year, day), new_runner) in &runners {
         if times.is_some() && !times_cache.is_empty() && prev_year != *year {
             print_times(md, run_count, prev_year, &mut times_cache);
         }
