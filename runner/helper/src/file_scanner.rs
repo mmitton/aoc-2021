@@ -206,7 +206,7 @@ impl InputFileCache {
     }
 }
 
-pub(crate) fn download_input(year: usize, day: usize) -> Result<(), Error> {
+pub fn download_input(year: usize, day: usize) -> Result<(), Error> {
     let mut local = search_up("input_files", SearchType::Dir)?;
     local.push(format!("input-{year}-{day:02}.txt"));
     if local.is_file() {

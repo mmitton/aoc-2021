@@ -79,7 +79,6 @@ fn print_times(md: bool, run_count: usize, year: usize, times_cache: &mut Vec<Ti
 
 fn main() -> Result<(), Error> {
     let (sample_data, no_capture, times, md, target_year, target_day) = args::get();
-    let input_file_cache = helper::InputFileCache::new()?;
 
     let mut runners = BTreeMap::new();
     aoc_2015::register(&mut runners);
@@ -105,6 +104,11 @@ fn main() -> Result<(), Error> {
     let mut prev_year = 0;
     let run_count = times.unwrap_or(1);
 
+    if let (Some(year), Some(day)) = (target_year, target_day) {
+        helper::download_input(year, day)?;
+    }
+
+    let input_file_cache = helper::InputFileCache::new()?;
     for ((year, day), new_runner) in &runners {
         if times.is_some() && !times_cache.is_empty() && prev_year != *year {
             print_times(md, run_count, prev_year, &mut times_cache);
