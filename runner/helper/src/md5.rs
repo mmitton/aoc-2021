@@ -23,6 +23,7 @@ const B: u32 = 0xefcdab89;
 const C: u32 = 0x98badcfe;
 const D: u32 = 0x10325476;
 
+#[derive(Copy, Clone)]
 pub struct MD5String {
     bytes: [u8; 64],
     len: usize,
@@ -43,6 +44,18 @@ impl Default for MD5String {
 
 impl MD5String {
     const MAX_LEN: usize = 55;
+
+    pub fn bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 
     pub fn truncate_without_zero(&mut self, len: usize) {
         use std::cmp::Ordering;
@@ -93,7 +106,7 @@ impl MD5String {
                 if new_len > Self::MAX_LEN {
                     Err(Error::MD5StringOverrun)
                 } else {
-                    self.bytes[new_len] = ch as u8;
+                    self.bytes[self.len] = ch as u8;
                     self.len = new_len;
                     Ok(())
                 }
