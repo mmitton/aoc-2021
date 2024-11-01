@@ -109,7 +109,7 @@ fn main() -> Result<(), Error> {
     }
 
     let input_file_cache = helper::InputFileCache::new()?;
-    for ((year, day), new_runner) in &runners {
+    for ((year, day), new_runner) in runners.iter().rev() {
         if times.is_some() && !times_cache.is_empty() && prev_year != *year {
             print_times(md, run_count, prev_year, &mut times_cache);
         }
