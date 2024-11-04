@@ -2,25 +2,46 @@
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
 
 #[derive(Default)]
-pub struct Day05 {}
+pub struct Day05 {
+    jumps: Vec<isize>,
+}
 
 impl Day05 {
     pub fn new() -> Self {
         Self::default()
     }
+
+    fn steps_to_exit(&mut self, stranger: bool) -> usize {
+        let mut steps = 0;
+        let mut pc = 0;
+        while let Some(offset) = self.jumps.get_mut(pc as usize) {
+            steps += 1;
+            pc += *offset;
+            if !stranger || *offset < 3 {
+                *offset += 1;
+            } else {
+                *offset -= 1;
+            }
+        }
+
+        steps
+    }
 }
 
 impl Runner for Day05 {
     fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
-        let _lines = Lines::from_bufread(file, LinesOpt::RAW)?;
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
+        for line in lines.iter() {
+            self.jumps.push(line.parse()?);
+        }
         Ok(())
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        Ok(self.steps_to_exit(false).into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        Ok(self.steps_to_exit(true).into())
     }
 }
