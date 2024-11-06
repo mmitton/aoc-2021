@@ -20,7 +20,7 @@ impl Hash {
         let mut i = 0;
         while i < digits.len() - 2 {
             if digits[i] == digits[i + 1] && digits[i] == digits[i + 2] {
-                if hash.threes.len() == 0 {
+                if hash.threes.is_empty() {
                     // !hash.threes.contains(&digits[i]) {
                     hash.threes.push(digits[i]);
                 }

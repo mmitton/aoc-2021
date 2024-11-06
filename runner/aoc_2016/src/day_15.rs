@@ -11,8 +11,7 @@ struct Disc {
 
 impl Disc {
     fn position_at(&self, t: isize) -> isize {
-        let pos = (self.t0 + t + self.num) % self.positions;
-        pos
+        (self.t0 + t + self.num) % self.positions
     }
 }
 

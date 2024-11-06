@@ -20,7 +20,7 @@ impl Day18 {
         let mut safe_rooms = rooms.iter().filter(|c| !**c).count();
         let width = rooms.len();
         for _ in 1..self.rows {
-            for x in 0..width {
+            for (x, next_room) in next_rooms.iter_mut().enumerate().take(width) {
                 let left = rooms.get(x.wrapping_sub(1)).unwrap_or(&false);
                 let center = rooms.get(x).unwrap_or(&false);
                 let right = rooms.get(x.wrapping_add(1)).unwrap_or(&false);
@@ -29,10 +29,10 @@ impl Day18 {
                     (true, true, false)
                     | (false, true, true)
                     | (true, false, false)
-                    | (false, false, true) => next_rooms[x] = true,
+                    | (false, false, true) => *next_room = true,
                     _ => {
                         safe_rooms += 1;
-                        next_rooms[x] = false;
+                        *next_room = false;
                     }
                 }
             }

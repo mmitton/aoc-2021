@@ -62,8 +62,8 @@ impl Day22 {
     ) -> usize {
         let mut seen = Vec::new();
         let mut queue = Vec::new();
-        seen.push(empty.clone());
-        queue.push((0, empty.clone()));
+        seen.push(empty);
+        queue.push((0, empty));
 
         let mut i = 0;
         while i < queue.len() {
@@ -116,7 +116,7 @@ impl Day22 {
                     return steps + 1;
                 }
 
-                seen.push(ncoords.clone());
+                seen.push(ncoords);
                 queue.push((steps + 1, ncoords));
             }
 
