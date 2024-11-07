@@ -2,7 +2,9 @@
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
 
 #[derive(Default)]
-pub struct Day17 {}
+pub struct Day17 {
+    steps: usize,
+}
 
 impl Day17 {
     pub fn new() -> Self {
@@ -12,15 +14,41 @@ impl Day17 {
 
 impl Runner for Day17 {
     fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
-        let _lines = Lines::from_bufread(file, LinesOpt::RAW)?;
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
+        assert_eq!(lines.len(), 1);
+        self.steps = lines[0].parse()?;
         Ok(())
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        let mut buffer = Vec::new();
+        let mut pos = 0;
+        buffer.push(0);
+
+        for iter in 1..=2017 {
+            pos = (pos + self.steps) % buffer.len();
+
+            buffer.insert(pos + 1, iter);
+            pos += 1;
+        }
+
+        Ok(buffer[pos + 1].into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        let mut pos = 0;
+
+        let mut answer = 0;
+
+        for iter in 1..=50000000 {
+            pos = (pos + self.steps) % iter;
+            if pos == 0 {
+                answer = iter;
+            }
+
+            pos += 1;
+        }
+
+        Ok(answer.into())
     }
 }
