@@ -27,6 +27,8 @@ mod day_23;
 mod day_24;
 mod day_25;
 
+pub(crate) mod knot_hash;
+
 pub fn register(runners: &mut BTreeMap<(usize, usize), NewRunner>) {
     runners.insert((2017, 1), || Box::new(day_01::Day01::new()));
     runners.insert((2017, 2), || Box::new(day_02::Day02::new()));
