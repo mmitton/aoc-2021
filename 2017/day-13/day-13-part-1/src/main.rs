@@ -69,6 +69,7 @@ fn trip_cost(start: usize, layers: &Vec<Layer>) -> (bool, usize) {
     for layer in layers {
         let pos = layer.get_position(start + layer.num);
         if pos == 0 {
+            println!("{} {}", layer.num, layer.depth);
             cost += layer.num * layer.depth;
             caught = true;
         }
