@@ -1,22 +1,27 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct Polymer(Vec<char>);
 
 impl Polymer {
     fn collapse(&mut self) {
-        let mut i = 0;
-        while i < self.0.len() - 1 {
-            let a = self.0[i];
-            let b = self.0[i + 1];
-            if a.to_ascii_lowercase() == b.to_ascii_lowercase() && a != b {
-                self.0.drain(i..=i + 1);
-                i = i.saturating_sub(1);
-                continue;
+        let mut new_polymer = Vec::with_capacity(self.0.len());
+        let mut last: char = ' ';
+        for c in self.0.iter().copied() {
+            if new_polymer.is_empty() {
+                new_polymer.push(c);
+                last = c;
+            } else if last.to_ascii_lowercase() == c.to_ascii_lowercase() && last != c {
+                new_polymer.truncate(new_polymer.len() - 1);
+                last = new_polymer.last().copied().unwrap_or(' ');
+            } else {
+                new_polymer.push(c);
+                last = c;
             }
-            i += 1;
         }
+
+        std::mem::swap(&mut new_polymer, &mut self.0);
     }
 }
 
@@ -45,6 +50,19 @@ impl Runner for Day05 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        let mut best = usize::MAX;
+        for (lc, uc) in ('a'..='z').zip('A'..='Z') {
+            let mut polymer = Polymer(
+                self.polymer
+                    .0
+                    .iter()
+                    .copied()
+                    .filter(|c| *c != lc && *c != uc)
+                    .collect(),
+            );
+            polymer.collapse();
+            best = best.min(polymer.0.len());
+        }
+        Ok(best.into())
     }
 }
