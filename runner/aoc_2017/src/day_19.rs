@@ -31,7 +31,7 @@ impl Day19 {
         let mut steps = 0;
         'walk_loop: loop {
             steps += 1;
-            let c = self.map[y as usize][x as usize];
+            let c = self.map[y][x];
             if c.is_alphabetic() {
                 letters.push(c);
             }
