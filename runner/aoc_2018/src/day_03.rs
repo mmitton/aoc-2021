@@ -37,36 +37,40 @@ pub struct Day03 {
     claims: Vec<Claim>,
 }
 
-#[derive(Default)]
-struct Map {
-    overlapping: TileSet<u16>,
-    non_overlapped: Vec<usize>,
-}
-
 impl Day03 {
     pub fn new() -> Self {
         Self::default()
     }
 
-    fn map_claims(&self) -> Map {
-        let mut mapped = Map::default();
-        let mut non_overlapped: HashSet<usize> = HashSet::default();
+    fn overlapping(&self) -> TileSet<u16> {
+        let mut overlapping = TileSet::default();
+        for (i, claim_0) in self.claims.iter().enumerate() {
+            for claim_1 in self.claims.iter().skip(i + 1) {
+                if let Some(overlap) = claim_0.tile.overlaps(&claim_1.tile) {
+                    overlapping.add_tile(overlap);
+                }
+            }
+        }
+        overlapping
+    }
+
+    fn non_overlapping_claim(&self) -> usize {
+        let mut non_overlapping: HashSet<usize> = HashSet::default();
         for claim in self.claims.iter() {
-            non_overlapped.insert(claim.num);
+            non_overlapping.insert(claim.num);
         }
 
         for (i, claim_0) in self.claims.iter().enumerate() {
             for claim_1 in self.claims.iter().skip(i + 1) {
-                if let Some(overlap) = claim_0.tile.overlaps(&claim_1.tile) {
-                    mapped.overlapping.add_tile(overlap);
-                    non_overlapped.remove(&claim_0.num);
-                    non_overlapped.remove(&claim_1.num);
+                if claim_0.tile.overlaps(&claim_1.tile).is_some() {
+                    non_overlapping.remove(&claim_0.num);
+                    non_overlapping.remove(&claim_1.num);
                 }
             }
         }
 
-        mapped.non_overlapped.extend(non_overlapped.drain());
-        mapped
+        assert_eq!(non_overlapping.len(), 1);
+        *non_overlapping.iter().next().unwrap()
     }
 }
 
@@ -80,9 +84,8 @@ impl Runner for Day03 {
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        let mapped_claims = self.map_claims();
-        Ok(mapped_claims
-            .overlapping
+        Ok(self
+            .overlapping()
             .iter()
             .map(|t| t.area() as usize)
             .sum::<usize>()
@@ -90,11 +93,6 @@ impl Runner for Day03 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        let mapped_claims = self.map_claims();
-        if mapped_claims.non_overlapped.len() == 1 {
-            Ok(mapped_claims.non_overlapped[0].into())
-        } else {
-            Err(Error::Unsolved)
-        }
+        Ok(self.non_overlapping_claim().into())
     }
 }
