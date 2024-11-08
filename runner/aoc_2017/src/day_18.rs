@@ -33,10 +33,10 @@ impl FromStr for Value {
             Ok(Self::Imm(num))
         } else if s.len() == 1 {
             let r = s.chars().nth(0).unwrap();
-            if r < 'a' || r > 'z' {
+            if !r.is_ascii_lowercase() {
                 Err(Error::InvalidInput(s.to_string()))
             } else {
-                Ok(Self::Reg((r as u8 - 'a' as u8) as usize))
+                Ok(Self::Reg((r as u8 - b'a') as usize))
             }
         } else {
             Err(Error::InvalidInput(s.to_string()))
