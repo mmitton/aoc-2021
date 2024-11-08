@@ -83,7 +83,7 @@ impl Runner for Day03 {
         let mapped_claims = self.map_claims();
         Ok(mapped_claims
             .overlapping
-            .into_iter()
+            .iter()
             .map(|t| t.area() as usize)
             .sum::<usize>()
             .into())

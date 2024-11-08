@@ -9,11 +9,18 @@ pub struct TileSet<T: Integer> {
 
 impl<T: Integer> TileSet<T> {
     pub fn add_tile(&mut self, tile: Tile<T>) {
-        let mut remaining = vec![tile];
+        let mut tiles = vec![(0, tile)];
+        let mut remaining = Vec::new();
 
-        'remaining: while let Some(tile) = remaining.pop() {
-            for t in self.tiles.iter() {
+        'remaining: while let Some((skip, tile)) = tiles.pop() {
+            for (at, t) in self.tiles.iter().enumerate().skip(skip) {
                 if tile.overlap_remaining_into(t, &mut remaining) {
+                    // tile did not overlap on anything before t (at)
+                    // and therefore none of the remaining area will overlap
+                    // with anything prior to t (at)
+                    for t in remaining.drain(..) {
+                        tiles.push((at + 1, t));
+                    }
                     continue 'remaining;
                 }
             }
@@ -25,6 +32,10 @@ impl<T: Integer> TileSet<T> {
 
     pub fn remove_tile(&mut self, _tile: Tile<T>) {
         todo!("remove_tile not done yet");
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<Tile<T>> {
+        self.into_iter()
     }
 }
 
