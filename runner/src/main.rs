@@ -84,6 +84,7 @@ fn main() -> Result<(), Error> {
     aoc_2015::register(&mut runners);
     aoc_2016::register(&mut runners);
     aoc_2017::register(&mut runners);
+    aoc_2018::register(&mut runners);
     aoc_2019::register(&mut runners);
     aoc_2020::register(&mut runners);
     aoc_2021::register(&mut runners);
