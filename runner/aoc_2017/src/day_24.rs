@@ -70,6 +70,16 @@ impl Runner for Day24 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        let mut bridges = self.build_bridges();
+        bridges.sort_by(|a, b| {
+            let a_len = a.components.count_ones();
+            let b_len = b.components.count_ones();
+            if a_len == b_len {
+                a.strength.cmp(&b.strength)
+            } else {
+                a_len.cmp(&b_len)
+            }
+        });
+        Ok(bridges.last().unwrap().strength.into())
     }
 }
