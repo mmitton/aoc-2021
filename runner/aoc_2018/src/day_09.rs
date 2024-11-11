@@ -73,16 +73,17 @@ impl Day09 {
             player = (player + 1) % self.players;
         }
 
-        let mut high_score = 0;
-        let mut high_player = 0;
-        for player in 0..scores.len() {
-            if high_score < scores[player] {
-                high_score = scores[player];
-                high_player = player + 1;
-            }
-        }
-
-        (high_player, high_score)
+        scores
+            .iter()
+            .copied()
+            .enumerate()
+            .fold((0, 0), |high, (player, score)| {
+                if score > high.1 {
+                    (player, score)
+                } else {
+                    high
+                }
+            })
     }
 }
 
