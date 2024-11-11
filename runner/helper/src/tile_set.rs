@@ -143,10 +143,10 @@ impl<T: Integer> Tile<T> {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Point<T: Integer> {
-    x: T,
-    y: T,
+    pub x: T,
+    pub y: T,
 }
 
 impl<T: Integer> Display for Point<T> {
@@ -158,5 +158,9 @@ impl<T: Integer> Display for Point<T> {
 impl<T: Integer> Point<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
+    }
+
+    pub fn manhattan_dist(&self, rhs: &Self) -> T {
+        (self.x - rhs.x).abs() + (self.y - rhs.y).abs()
     }
 }

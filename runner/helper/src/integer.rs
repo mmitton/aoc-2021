@@ -22,10 +22,24 @@ pub trait Integer:
 {
     const ZERO: Self;
     const ONE: Self;
+
+    fn abs(self) -> Self {
+        self
+    }
 }
 
 macro_rules! impl_integer {
-    ($ty:ty) => {
+    (SIGNED => $ty:ty) => {
+        impl Integer for $ty {
+            const ZERO: Self = 0;
+            const ONE: Self = 1;
+
+            fn abs(self) -> Self {
+                self.abs()
+            }
+        }
+    };
+    (UNSIGNED => $ty:ty) => {
         impl Integer for $ty {
             const ZERO: Self = 0;
             const ONE: Self = 1;
@@ -33,15 +47,15 @@ macro_rules! impl_integer {
     };
 }
 
-impl_integer!(u8);
-impl_integer!(u16);
-impl_integer!(u32);
-impl_integer!(u64);
-impl_integer!(u128);
-impl_integer!(usize);
-impl_integer!(i8);
-impl_integer!(i16);
-impl_integer!(i32);
-impl_integer!(i64);
-impl_integer!(i128);
-impl_integer!(isize);
+impl_integer!(UNSIGNED => u8);
+impl_integer!(UNSIGNED => u16);
+impl_integer!(UNSIGNED => u32);
+impl_integer!(UNSIGNED => u64);
+impl_integer!(UNSIGNED => u128);
+impl_integer!(UNSIGNED => usize);
+impl_integer!(SIGNED => i8);
+impl_integer!(SIGNED => i16);
+impl_integer!(SIGNED => i32);
+impl_integer!(SIGNED => i64);
+impl_integer!(SIGNED => i128);
+impl_integer!(SIGNED => isize);
