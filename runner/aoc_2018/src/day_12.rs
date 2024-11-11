@@ -12,7 +12,7 @@ impl Day12 {
         Self::default()
     }
 
-    fn next_gen(&self, states: &mut Vec<Vec<isize>>, cur: usize) {
+    fn next_gen(&self, states: &mut [Vec<isize>], cur: usize) {
         let next = 1 - cur;
 
         macro_rules! get {
@@ -45,7 +45,7 @@ impl Day12 {
         }
     }
 
-    fn last(sums: &Vec<isize>, window: usize) -> Option<isize> {
+    fn last(sums: &[isize], window: usize) -> Option<isize> {
         let delta = sums[sums.len() - 1] - sums[sums.len() - 2];
         for i in (1..window).rev() {
             if sums[sums.len() - i] - sums[sums.len() - i - 1] != delta {
