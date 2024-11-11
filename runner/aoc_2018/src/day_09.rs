@@ -26,20 +26,6 @@ impl Day09 {
         let mut head = 0;
         let mut player = 0;
 
-        macro_rules! move_cur {
-            ($offset:expr) => {
-                if $offset < 0 {
-                    for _ in $offset..0 {
-                        cur = linked_list[cur].p;
-                    }
-                } else {
-                    for _ in 0..$offset {
-                        cur = linked_list[cur].n;
-                    }
-                }
-            };
-        }
-
         for i in 1..=self.last_marble_points {
             if i % 23 != 0 {
                 cur = linked_list[cur].n;
