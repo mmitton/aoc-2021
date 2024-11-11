@@ -42,7 +42,7 @@ impl Day09 {
 
         for i in 1..=self.last_marble_points {
             if i % 23 != 0 {
-                move_cur!(1);
+                cur = linked_list[cur].n;
                 let next = linked_list[cur].n;
                 let prev = cur;
 
@@ -57,7 +57,9 @@ impl Day09 {
                 linked_list[prev].n = cur;
                 linked_list[next].p = cur;
             } else {
-                move_cur!(-7);
+                for _ in -7..0 {
+                    cur = linked_list[cur].p;
+                }
                 scores[player] += i + linked_list[cur].v;
 
                 let next = linked_list[cur].n;
