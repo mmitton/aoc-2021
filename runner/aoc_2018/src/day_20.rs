@@ -28,7 +28,7 @@ impl Map {
     }
 
     fn process(&mut self, inst: &Instruction, heads: &mut Vec<(isize, isize)>) {
-        if heads.len() == 0 {
+        if heads.is_empty() {
             heads.push((0, 0));
         }
 
@@ -228,7 +228,7 @@ impl Instruction {
         loop {
             match chars[idx] {
                 '^' => {
-                    if instructions.len() != 0 {
+                    if !instructions.is_empty() {
                         return Err(Error::InvalidInput(format!(
                             "Invalid Start {:?}",
                             chars.iter().collect::<String>(),
@@ -243,7 +243,7 @@ impl Instruction {
                 }
                 '(' => {
                     // Process branches
-                    if path.len() > 0 {
+                    if !path.is_empty() {
                         instructions.push(Instruction::Path(path));
                         path = Vec::new();
                     }
@@ -285,10 +285,10 @@ impl Instruction {
             }
         }
 
-        if path.len() == 0 && instructions.len() == 0 {
+        if path.is_empty() && instructions.is_empty() {
             Ok((Instruction::Empty, idx))
         } else {
-            if path.len() > 0 {
+            if !path.is_empty() {
                 instructions.push(Instruction::Path(path));
             }
 
