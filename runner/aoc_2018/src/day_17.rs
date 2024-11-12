@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
+// use std::collections::BTreeSet;
 use std::str::FromStr;
 
 struct Vein {
@@ -64,6 +65,7 @@ struct Map {
     y0: usize,
     y1: usize,
     tiles: Vec<Vec<char>>,
+    falling: HashSet<(usize, usize)>,
 }
 
 impl Default for Map {
@@ -76,6 +78,7 @@ impl Default for Map {
             y0: usize::MAX,
             y1: usize::MIN,
             tiles: Vec::new(),
+            falling: HashSet::default(),
         }
     }
 }
@@ -85,9 +88,16 @@ impl Map {
         self.tiles[y][x]
     }
 
-    fn set(&mut self, x: usize, y: usize, c: char) -> bool {
+    fn set(&mut self, x: usize, y: usize, c: char, falling: &mut Vec<(usize, usize)>) -> bool {
         let old = self.tiles[y][x];
         self.tiles[y][x] = c;
+        if c == '|' && old != '|' {
+            self.falling.insert((y, x));
+            falling.push((y, x));
+        }
+        if c != '|' && old == '|' {
+            self.falling.remove(&(y, x));
+        }
         old != c
     }
 
@@ -112,6 +122,7 @@ impl Map {
             self.tiles.push(vec!['.'; self.x1 + 1]);
         }
 
+        self.falling.insert((self.spring.1 + 1, self.spring.0));
         self.tiles[self.spring.1][self.spring.0] = '+';
         self.tiles[self.spring.1 + 1][self.spring.0] = '|';
 
@@ -124,12 +135,14 @@ impl Map {
         }
     }
 
-    fn water_tiles(&self) -> usize {
+    fn water_tiles(&self, part1: bool) -> usize {
         let mut tiles = 0;
         for y in self.y0..=self.y1 {
             for x in self.x0..=self.x1 {
-                if self.get(x, y) == '~' {
-                    tiles += 1;
+                match self.get(x, y) {
+                    '~' => tiles += 1,
+                    '|' if part1 => tiles += 1,
+                    _ => {}
                 }
             }
         }
@@ -139,66 +152,68 @@ impl Map {
     fn fall(&mut self) -> bool {
         let mut done = true;
         let mut neighbors = Vec::new();
-        for y in 0..self.y1 {
-            for x in self.x0..=self.x1 {
-                let c = self.get(x, y);
-                if c == '|' {
-                    match self.get(x, y + 1) {
-                        '.' => {
-                            // Fall
-                            self.set(x, y + 1, '|');
+        let mut falling: Vec<(usize, usize)> = self.falling.iter().copied().collect();
+        let mut i = 0;
+        while i < falling.len() {
+            let (y, x) = falling[i];
+            i += 1;
+            if y == self.y1 {
+                continue;
+            }
+            match self.get(x, y + 1) {
+                '.' => {
+                    // Fall
+                    self.set(x, y + 1, '|', &mut falling);
+                    done = false;
+                }
+                '#' | '~' => {
+                    // Fill to the sides
+                    neighbors.clear();
+                    let mut spills = false;
+
+                    let mut nx = x - 1;
+                    loop {
+                        if self.get(nx, y) == '#' {
+                            break;
+                        }
+                        neighbors.push((nx, y));
+                        match self.get(nx, y + 1) {
+                            '|' | '.' => {
+                                spills = true;
+                                break;
+                            }
+                            _ => {}
+                        }
+                        nx -= 1;
+                    }
+
+                    nx = x + 1;
+                    loop {
+                        if self.get(nx, y) == '#' {
+                            break;
+                        }
+                        neighbors.push((nx, y));
+                        match self.get(nx, y + 1) {
+                            '|' | '.' => {
+                                spills = true;
+                                break;
+                            }
+                            _ => {}
+                        }
+                        nx += 1;
+                    }
+
+                    let c = if spills { '|' } else { '~' };
+                    for cell in &neighbors {
+                        if self.set(cell.0, cell.1, c, &mut falling) {
                             done = false;
                         }
-                        '#' | '~' => {
-                            // Fill to the sides
-                            neighbors.clear();
-                            let mut spills = false;
-
-                            let mut nx = x - 1;
-                            loop {
-                                if self.get(nx, y) == '#' {
-                                    break;
-                                }
-                                neighbors.push((nx, y));
-                                match self.get(nx, y + 1) {
-                                    '|' | '.' => {
-                                        spills = true;
-                                        break;
-                                    }
-                                    _ => {}
-                                }
-                                nx -= 1;
-                            }
-
-                            nx = x + 1;
-                            loop {
-                                if self.get(nx, y) == '#' {
-                                    break;
-                                }
-                                neighbors.push((nx, y));
-                                match self.get(nx, y + 1) {
-                                    '|' | '.' => {
-                                        spills = true;
-                                        break;
-                                    }
-                                    _ => {}
-                                }
-                                nx += 1;
-                            }
-
-                            let c = if spills { '|' } else { '~' };
-                            for cell in &neighbors {
-                                if self.set(cell.0, cell.1, c) {
-                                    done = false;
-                                }
-                            }
-                            if self.set(x, y, c) {
-                                done = false;
-                            }
-                        }
-                        _ => {}
+                    }
+                    if self.set(x, y, c, &mut falling) {
+                        done = false;
                     }
                 }
+                _ => {}
             }
         }
 
@@ -228,11 +243,13 @@ impl Runner for Day17 {
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
         self.map.build_tiles();
-        Err(Error::Unsolved)
+        while !self.map.fall() {}
+        Ok(self.map.water_tiles(true).into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
         self.map.build_tiles();
-        Ok(self.map.water_tiles().into())
+        while !self.map.fall() {}
+        Ok(self.map.water_tiles(false).into())
     }
 }
