@@ -143,7 +143,7 @@ impl<T: Integer> Tile<T> {
     }
 }
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Point<T: Integer> {
     pub x: T,
     pub y: T,

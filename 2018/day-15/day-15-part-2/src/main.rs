@@ -287,6 +287,9 @@ fn main() -> Result<(), Error> {
             // map.print(&units);
             for round in 1..usize::MAX {
                 let done = map.process_round(&mut units);
+                if units.iter().filter(|u| u.elf && u.health <= 0).count() != 0 {
+                    continue 'attack_power;
+                }
 
                 // if cfg!(debug_assertions) {
                 //     println!("After {} rounds", round);
