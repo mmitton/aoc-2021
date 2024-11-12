@@ -2,28 +2,45 @@
 use helper::{
     print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, Point, RunOutput, Runner,
 };
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
+
+fn add_seen(seen: &mut Vec<Vec<usize>>, coord: Point<u16>, time: usize) -> bool {
+    if seen.len() <= coord.y as usize {
+        seen.resize(coord.y as usize + 1, Vec::new());
+    }
+    if seen[coord.y as usize].len() <= coord.x as usize {
+        seen[coord.y as usize].resize(coord.x as usize + 1, usize::MAX);
+    }
+
+    let seen_time = seen[coord.y as usize][coord.x as usize];
+    if seen_time == usize::MAX {
+        seen[coord.y as usize][coord.x as usize] = time;
+        true
+    } else {
+        seen_time > time
+    }
+}
 
 fn erosion_level(
     geologic_index: &mut Vec<Vec<usize>>,
-    coord: Point<usize>,
-    target: Point<usize>,
+    coord: Point<u16>,
+    target: Point<u16>,
     depth: usize,
 ) -> usize {
-    while geologic_index.len() <= coord.y {
-        geologic_index.push(Vec::new());
+    if geologic_index.len() <= coord.y as usize {
+        geologic_index.resize(coord.y as usize + 1, Vec::new());
     }
-    while geologic_index[coord.y].len() <= coord.x {
-        geologic_index[coord.y].push(usize::MAX);
+    if geologic_index[coord.y as usize].len() <= coord.x as usize {
+        geologic_index[coord.y as usize].resize(coord.x as usize + 1, usize::MAX);
     }
 
-    if geologic_index[coord.y][coord.x] == usize::MAX {
+    if geologic_index[coord.y as usize][coord.x as usize] == usize::MAX {
         if coord == Point::new(0, 0) || coord == target {
-            geologic_index[coord.y][coord.x] = 0;
+            geologic_index[coord.y as usize][coord.x as usize] = 0;
         } else if coord.y == 0 {
-            geologic_index[coord.y][coord.x] = coord.x * 16807;
+            geologic_index[coord.y as usize][coord.x as usize] = coord.x as usize * 16807;
         } else if coord.x == 0 {
-            geologic_index[coord.y][coord.x] = coord.y * 48271;
+            geologic_index[coord.y as usize][coord.x as usize] = coord.y as usize * 48271;
         } else {
             let a = erosion_level(
                 geologic_index,
@@ -37,10 +54,10 @@ fn erosion_level(
                 target,
                 depth,
             );
-            geologic_index[coord.y][coord.x] = a * b;
+            geologic_index[coord.y as usize][coord.x as usize] = a * b;
         }
     }
-    (geologic_index[coord.y][coord.x] + depth) % 20183
+    (geologic_index[coord.y as usize][coord.x as usize] + depth) % 20183
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
@@ -60,7 +77,7 @@ enum Terrain {
 #[derive(Default)]
 pub struct Day22 {
     depth: usize,
-    target: Point<usize>,
+    target: Point<u16>,
 }
 
 impl Day22 {
@@ -89,17 +106,30 @@ impl Runner for Day22 {
     }
 
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Unsolved)
+        let mut geologic_index = Vec::new();
+        let mut answer = 0;
+        for y in 0..=self.target.y {
+            for x in 0..=self.target.x {
+                let erosion_level = erosion_level(
+                    &mut geologic_index,
+                    Point::new(x, y),
+                    self.target,
+                    self.depth,
+                );
+                answer += erosion_level % 3;
+            }
+        }
+
+        Ok(answer.into())
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        let width = self.target.x + 6;
-        let height = self.target.y + 6;
-
         let mut geologic_index = Vec::new();
+        let mut seen_none: Vec<Vec<usize>> = Vec::new();
+        let mut seen_torch: Vec<Vec<usize>> = Vec::new();
+        let mut seen_gear: Vec<Vec<usize>> = Vec::new();
 
-        let mut queue: BTreeSet<(usize, Tool, Point<usize>)> = BTreeSet::new();
-        let mut seen: HashMap<Point<usize>, usize> = HashMap::default();
+        let mut queue: BTreeMap<usize, HashSet<(Tool, Point<u16>)>> = BTreeMap::new();
 
         let mut tools = HashMap::default();
         tools.insert((Terrain::Rocky, Terrain::Rocky, Tool::Gear), Tool::Gear);
@@ -125,78 +155,81 @@ impl Runner for Day22 {
 
         assert!(tools.len() == 6 * 3);
 
-        queue.insert((0, Tool::Torch, Point::new(0, 0)));
-        seen.insert(Point::new(0, 0), 0);
+        queue
+            .entry(0)
+            .or_default()
+            .insert((Tool::Torch, Point::new(0, 0)));
 
-        while queue.len() > 0 {
-            let (time, tool, coord) = queue.pop_first().unwrap();
-            // println!("{} {:?} {:?}", time, tool, coord);
+        while let Some((time, time_queue)) = queue.pop_first() {
+            for (tool, coord) in time_queue {
+                if coord == self.target {
+                    if tool != Tool::Torch {
+                        queue
+                            .entry(time + 7)
+                            .or_default()
+                            .insert((Tool::Torch, coord));
+                        continue;
+                    }
+                    return Ok(time.into());
+                }
 
-            if coord == self.target {
-                if tool != Tool::Torch {
-                    queue.insert((time + 7, Tool::Torch, coord));
+                let seen = match tool {
+                    Tool::None => &mut seen_none,
+                    Tool::Gear => &mut seen_gear,
+                    Tool::Torch => &mut seen_torch,
+                };
+                if !add_seen(seen, coord, time) {
                     continue;
                 }
-                println!("Can get to the target in {} minutes", time);
-                return Ok(time.into());
-            }
 
-            if let Some(seen_time) = seen.get(&coord) {
-                if *seen_time + 10 < time {
-                    continue;
+                let cur_terrain: Terrain =
+                    match erosion_level(&mut geologic_index, coord, self.target, self.depth) % 3 {
+                        0 => Terrain::Rocky,
+                        1 => Terrain::Wet,
+                        2 => Terrain::Narrow,
+                        _ => unreachable!(),
+                    };
+
+                for dir in 0..4 {
+                    let new_coord = match dir {
+                        0 => {
+                            if coord.y == 0 {
+                                continue;
+                            }
+                            Point::new(coord.x, coord.y - 1)
+                        }
+                        1 => {
+                            if coord.x == 0 {
+                                continue;
+                            }
+                            Point::new(coord.x - 1, coord.y)
+                        }
+                        2 => Point::new(coord.x, coord.y + 1),
+                        3 => Point::new(coord.x + 1, coord.y),
+                        _ => unreachable!(),
+                    };
+
+                    let new_terrain: Terrain = match erosion_level(
+                        &mut geologic_index,
+                        new_coord,
+                        self.target,
+                        self.depth,
+                    ) % 3
+                    {
+                        0 => Terrain::Rocky,
+                        1 => Terrain::Wet,
+                        2 => Terrain::Narrow,
+                        _ => unreachable!(),
+                    };
+
+                    let new_tool = tools.get(&(cur_terrain, new_terrain, tool)).unwrap();
+                    let new_tool = *new_tool;
+                    let new_time = if new_tool == tool { time + 1 } else { time + 8 };
+                    queue
+                        .entry(new_time)
+                        .or_default()
+                        .insert((new_tool, new_coord));
                 }
-            } else {
-                seen.insert(coord, time);
-            }
-
-            let cur_terrain: Terrain =
-                match erosion_level(&mut geologic_index, coord, self.target, self.depth) % 3 {
-                    0 => Terrain::Rocky,
-                    1 => Terrain::Wet,
-                    2 => Terrain::Narrow,
-                    _ => unreachable!(),
-                };
-
-            for dir in 0..4 {
-                let new_coord = match dir {
-                    0 => {
-                        if coord.y == 0 {
-                            continue;
-                        }
-                        Point::new(coord.x, coord.y - 1)
-                    }
-                    1 => {
-                        if coord.x == 0 {
-                            continue;
-                        }
-                        Point::new(coord.x - 1, coord.y)
-                    }
-                    2 => Point::new(coord.x, coord.y + 1),
-                    3 => Point::new(coord.x + 1, coord.y),
-                    _ => unreachable!(),
-                };
-
-                let new_terrain: Terrain = match erosion_level(
-                    &mut geologic_index,
-                    new_coord,
-                    self.target,
-                    self.depth,
-                ) % 3
-                {
-                    0 => Terrain::Rocky,
-                    1 => Terrain::Wet,
-                    2 => Terrain::Narrow,
-                    _ => unreachable!(),
-                };
-
-                let new_tool = tools.get(&(cur_terrain, new_terrain, tool)).unwrap();
-                let new_tool = *new_tool;
-                let new_time = if new_tool == tool { time + 1 } else { time + 8 };
-                // println!(
-                //     "{:?} {:?} {:?} {} => {:?} {:?} {:?} {}",
-                //     coord, cur_terrain, tool, time, new_coord, new_terrain, new_tool, new_time
-                // );
-                queue.insert((new_time, new_tool, new_coord));
             }
         }
         Err(Error::Unsolved)
