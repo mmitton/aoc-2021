@@ -38,7 +38,7 @@ fn print_times(md: bool, run_count: usize, times_cache: &BTreeMap<usize, Vec<Tim
             let prt2 = format!("{elapsed:0.5} s", elapsed = part2_total.as_secs_f64());
             let total = format!("{elapsed:0.5} s", elapsed = total.as_secs_f64());
             if md {
-                println!("| {year} | {prt1} | {prt2} | Both | {total} |");
+                println!("| {year} | {prt1} | {prt2} | {total} |");
             } else {
                 println!("| {year} | {prt1:>10} | {prt2:>10} | {total:>11} |");
             }
