@@ -3,7 +3,7 @@ use std::str::FromStr;
 #[allow(unused_imports)]
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
 
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 struct Point {
     x: isize,
     y: isize,
@@ -15,11 +15,11 @@ impl Point {
         Self { x, y, z }
     }
 
-    fn scale(&self, shift: u32) -> Self {
+    fn scale(&self, numerator: isize, divisor: isize) -> Self {
         Self {
-            x: self.x >> shift,
-            y: self.y >> shift,
-            z: self.z >> shift,
+            x: self.x * numerator / divisor,
+            y: self.y * numerator / divisor,
+            z: self.z * numerator / divisor,
         }
     }
 
@@ -68,10 +68,10 @@ impl NanoBot {
         ]
     }
 
-    fn scale(&self, shift: u32) -> Self {
-        let center = self.center.scale(shift);
+    fn scale(&self, n: isize, d: isize) -> Self {
+        let center = self.center.scale(n, d);
         let mut radius = 0;
-        for limit in self.limits().map(|p| p.scale(shift)) {
+        for limit in self.limits().map(|p| p.scale(n, d)) {
             radius = radius.max(center.manhatten_dist(&limit));
         }
         Self { center, radius }
@@ -123,18 +123,30 @@ impl Runner for Day23 {
         let mut scaled_nanobots = Vec::with_capacity(self.nanobots.len());
         let mut seen: HashSet<Point> = HashSet::default();
 
+        const N: isize = 1;
+        const D: isize = 2;
+        const STEPS: isize = 32;
+
         search_spaces.push(Point::new(0, 0, 0));
-        for shift in (0..isize::BITS).rev() {
+        for step in (0..STEPS).rev() {
             scaled_nanobots.clear();
-            scaled_nanobots.extend(self.nanobots.iter().map(|nanobot| nanobot.scale(shift)));
+            if step == 0 {
+                scaled_nanobots.extend(self.nanobots.iter().copied());
+            } else {
+                scaled_nanobots.extend(
+                    self.nanobots
+                        .iter()
+                        .map(|nanobot| nanobot.scale(N, D.pow(step as u32))),
+                );
+            }
 
             let mut max_seen = 0;
             next_search_spaces.clear();
             seen.clear();
             for point in search_spaces.iter() {
-                for z in (point.z * 2) - 1..=(point.z * 2) + 1 {
-                    for y in (point.y * 2) - 1..=(point.y * 2) + 1 {
-                        for x in (point.x * 2) - 1..=(point.x * 2) + 1 {
+                for z in ((point.z * D) / N) - 1..=((point.z * D) / N) + 1 {
+                    for y in ((point.y * D) / N) - 1..=((point.y * D) / N) + 1 {
+                        for x in ((point.x * D) / N) - 1..=((point.x * D) / N) + 1 {
                             let point = Point::new(x, y, z);
                             if seen.insert(point) {
                                 let mut seen = 0;
