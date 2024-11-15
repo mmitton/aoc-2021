@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.31"
-helper = { version = "0.1.0", path = "../runner/helper" }
+helper.workspace = true

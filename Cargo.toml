@@ -16,5 +16,8 @@ exclude = [
 ]
 resolver = "2"
 
+[workspace.dependencies]
+helper = { git = "https://github.com/mmitton/helper.git" }
+
 [profile.release]
 debug = true
