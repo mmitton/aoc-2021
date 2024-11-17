@@ -126,7 +126,7 @@ impl Day21 {
 }
 
 impl Runner for Day21 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         for (y, line) in Lines::from_bufread(file, LinesOpt::RAW)?.iter().enumerate() {
             self.max.y = y as Number + 1;
             self.max.x = line.len() as Number;
@@ -142,6 +142,16 @@ impl Runner for Day21 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day21 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let steps = if self.points.len() == 81 { 6 } else { 64 };
         Ok(self.take_steps(&[steps])[0].into())

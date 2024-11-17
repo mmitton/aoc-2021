@@ -99,7 +99,7 @@ impl Day06 {
 }
 
 impl Runner for Day06 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         let lines: Vec<&str> = lines.iter().collect();
         assert_eq!(lines.len(), 2);
@@ -108,6 +108,16 @@ impl Runner for Day06 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day06 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let races = Self::get_races(&self.times, &self.distances);
         let mut ans = 1;

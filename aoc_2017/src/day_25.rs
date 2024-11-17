@@ -28,7 +28,7 @@ impl Day25 {
 }
 
 impl Runner for Day25 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
 
         self.current_state = lines[0].chars().nth(15).unwrap();
@@ -56,6 +56,15 @@ impl Runner for Day25 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day25 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let mut pos = 0isize;
         let mut tape: HashSet<isize> = HashSet::default();
@@ -73,9 +82,5 @@ impl Runner for Day25 {
             self.current_state = state.steps[cur_num].next_state;
         }
         Ok(tape.len().into())
-    }
-
-    fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Skipped)
     }
 }

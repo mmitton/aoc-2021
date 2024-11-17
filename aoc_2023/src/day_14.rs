@@ -157,7 +157,7 @@ impl Day14 {
 }
 
 impl Runner for Day14 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         for (y, line) in Lines::from_bufread(file, LinesOpt::RAW)?.iter().enumerate() {
             let y = y as i8;
             self.dish.max.y = self.dish.max.y.max(y);
@@ -175,6 +175,16 @@ impl Runner for Day14 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day14 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         self.dish._dump();
         self.dish.tilt(Dir::North);

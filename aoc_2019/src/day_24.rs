@@ -69,7 +69,7 @@ impl Day24 {
 }
 
 impl Runner for Day24 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         for (y, line) in lines.iter().enumerate() {
             for (x, c) in line.chars().enumerate() {
@@ -83,6 +83,16 @@ impl Runner for Day24 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day24 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         for y in 0..5 {
             let mut row = Vec::new();

@@ -62,7 +62,7 @@ impl Day14 {
 }
 
 impl Runner for Day14 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let mut names: HashMap<&str, usize> = HashMap::new();
         fn map_name<'a>(names: &mut HashMap<&'a str, usize>, name: &'a str) -> usize {
             if let Some(&id) = names.get(name) {
@@ -108,6 +108,16 @@ impl Runner for Day14 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day14 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let inventory = self.make(1);
         Ok(inventory[0].into())

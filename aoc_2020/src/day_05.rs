@@ -12,7 +12,7 @@ impl Day05 {
 }
 
 impl Runner for Day05 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         fn parse(inst: &str, mut low: usize, mut high: usize) -> usize {
             for c in inst.chars() {
                 let half_width = (high - low + 1) / 2;
@@ -36,6 +36,16 @@ impl Runner for Day05 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day05 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         for (row, seats) in self.seats.iter().enumerate().rev() {
             if *seats != 0 {

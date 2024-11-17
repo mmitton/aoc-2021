@@ -95,7 +95,7 @@ impl Day23 {
 }
 
 impl Runner for Day23 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         assert_eq!(lines.len(), 1);
         self.initial
@@ -103,6 +103,16 @@ impl Runner for Day23 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day23 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         self.play_game(100, 9);
         // println!("{:?}", self.cups);

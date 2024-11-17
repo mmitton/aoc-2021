@@ -13,7 +13,7 @@ impl Day01 {
 }
 
 impl Runner for Day01 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         for line in lines.iter() {
             let line = if let Some(line) = line.strip_prefix('+') {
@@ -26,6 +26,16 @@ impl Runner for Day01 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day01 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         Ok(self.changes.iter().sum::<isize>().into())
     }

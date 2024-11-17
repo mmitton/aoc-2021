@@ -21,7 +21,7 @@ impl Day10 {
 }
 
 impl Runner for Day10 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         let mut x = 1;
         self.x_vals.push(x);
@@ -38,6 +38,16 @@ impl Runner for Day10 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day10 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         Ok(self
             .x_vals

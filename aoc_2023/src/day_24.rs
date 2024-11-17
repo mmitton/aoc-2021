@@ -145,13 +145,23 @@ impl Day24 {
 }
 
 impl Runner for Day24 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             self.hailstones.push(line.parse()?);
         }
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day24 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let testarea = if self.hailstones.len() == 5 {
             7.0..=27.0

@@ -57,7 +57,7 @@ impl Day09 {
 }
 
 impl Runner for Day09 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         self.moves.extend(lines.iter().map(|line| {
             let (dir, cnt) = line.split_once(' ').unwrap();
@@ -75,6 +75,16 @@ impl Runner for Day09 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day09 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         Ok(self.move_rope::<2>().into())
     }

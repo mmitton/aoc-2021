@@ -78,7 +78,7 @@ impl Day25 {
 }
 
 impl Runner for Day25 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::TRIM)?;
         for line in lines.iter() {
             let mut row = Vec::new();
@@ -96,6 +96,15 @@ impl Runner for Day25 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day25 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         for i in 1.. {
             if !self.map.tick() {
@@ -103,9 +112,5 @@ impl Runner for Day25 {
             }
         }
         Err(Error::Unsolved)
-    }
-
-    fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Skipped)
     }
 }

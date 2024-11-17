@@ -67,7 +67,7 @@ impl Day03 {
 }
 
 impl Runner for Day03 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::ALL)?;
         self.width = lines[0].len();
         self.numbers
@@ -75,6 +75,16 @@ impl Runner for Day03 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day03 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let (gamma, epsilon) = self.gamma_epsilon();
         Ok((gamma * epsilon).into())

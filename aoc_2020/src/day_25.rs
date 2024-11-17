@@ -22,7 +22,7 @@ impl Day25 {
 }
 
 impl Runner for Day25 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         assert_eq!(lines.len(), 2);
         self.card.public = lines[0].parse()?;
@@ -30,6 +30,15 @@ impl Runner for Day25 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day25 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let mut v = 1;
         let mut loops = 0;
@@ -52,9 +61,5 @@ impl Runner for Day25 {
             v %= 20201227;
         }
         Ok(v.into())
-    }
-
-    fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Skipped)
     }
 }

@@ -91,7 +91,7 @@ impl Day01 {
 }
 
 impl Runner for Day01 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::ALL)?;
         assert_eq!(lines.len(), 1);
         for line in lines[0].split(", ") {
@@ -101,6 +101,16 @@ impl Runner for Day01 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day01 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let mut at = Point(0isize, 0isize);
         let mut dir = Dir::North;

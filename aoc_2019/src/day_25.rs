@@ -339,10 +339,19 @@ impl Day25 {
 }
 
 impl Runner for Day25 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         self.intcode.load(Lines::from_bufread(file, LinesOpt::RAW)?)
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day25 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let mut output = String::new();
         loop {
@@ -368,9 +377,5 @@ impl Runner for Day25 {
                 x => unreachable!("Unexpected state: {x:?}"),
             }
         }
-    }
-
-    fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Skipped)
     }
 }

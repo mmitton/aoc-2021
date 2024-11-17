@@ -85,18 +85,23 @@ impl Day25 {
 }
 
 impl Runner for Day25 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         self.nums.extend(lines.iter().map(|l| l.parse().unwrap()));
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day25 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let total: isize = self.nums.iter().map(|s| s.0).sum();
         Ok(Snafu::new(total).to_string().into())
-    }
-
-    fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Skipped)
     }
 }

@@ -180,7 +180,7 @@ impl Day21 {
 }
 
 impl Runner for Day21 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         for line in lines.iter() {
             self.rules.push(line.parse()?);
@@ -188,6 +188,16 @@ impl Runner for Day21 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day21 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let iters = if self.rules.len() == 2 { 2 } else { 5 };
         Ok(self.enhance(iters).into())

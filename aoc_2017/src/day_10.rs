@@ -15,9 +15,9 @@ impl Day10 {
 }
 
 impl Runner for Day10 {
-    fn parse(&mut self, file: &[u8], part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
-        if part1 {
+        if part == 1 {
             assert_eq!(lines.len(), 1);
             for n in lines[0].split(',') {
                 self.knot_hash.lengths.push(n.parse()?);
@@ -33,6 +33,16 @@ impl Runner for Day10 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            2 => self.part2(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day10 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         self.knot_hash.reorder(1);
         Ok(self

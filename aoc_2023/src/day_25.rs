@@ -48,7 +48,7 @@ struct ConnectionUse {
 }
 
 impl Runner for Day25 {
-    fn parse(&mut self, file: &[u8], _part1: bool) -> Result<(), Error> {
+    fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let mut names: HashMap<String, usize> = HashMap::new();
         for line in Lines::from_bufread(file, LinesOpt::RAW)?.iter() {
             let (name, connections) = line.split_once(": ").unwrap();
@@ -76,6 +76,15 @@ impl Runner for Day25 {
         Ok(())
     }
 
+    fn run_part(&mut self, part: u8) -> Result<RunOutput, Error> {
+        match part {
+            1 => self.part1(),
+            _ => Err(Error::Skipped),
+        }
+    }
+}
+
+impl Day25 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let step_by = if self.names.len() == 13 {
             1
@@ -111,9 +120,5 @@ impl Runner for Day25 {
         let b = self.names.len() - a;
 
         Ok((a * b).into())
-    }
-
-    fn part2(&mut self) -> Result<RunOutput, Error> {
-        Err(Error::Skipped)
     }
 }
