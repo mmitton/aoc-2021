@@ -1,7 +1,10 @@
 use helper::Error;
 
+const README_HEADER: &str = "[Advent of Code](https://adventofcode.com/)
+Michael Conrad";
+
 fn main() -> Result<(), Error> {
-    helper::runner::main(true, |runners| {
+    helper::runner::main::<_, 2>(true, README_HEADER, |runners| {
         aoc_2015::register(runners);
         aoc_2016::register(runners);
         aoc_2017::register(runners);
