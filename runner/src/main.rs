@@ -1,7 +1,12 @@
 use helper::Error;
 
 const README_HEADER: &str = "[Advent of Code](https://adventofcode.com/)
-Michael Conrad";
+Michael Conrad
+
+[Helper library](https://github.com/mmitton/helper) which holds generic algorithms and runner
+infrastructure shared between AOC and Everybody Codes
+
+";
 
 fn main() -> Result<(), Error> {
     helper::runner::main::<_, 2>(true, README_HEADER, |runners| {
@@ -14,5 +19,6 @@ fn main() -> Result<(), Error> {
         aoc_2021::register(runners);
         aoc_2022::register(runners);
         aoc_2023::register(runners);
+        aoc_2024::register(runners);
     })
 }

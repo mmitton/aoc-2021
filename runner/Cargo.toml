@@ -2,22 +2,21 @@
 name = "runner"
 version = "0.1.0"
 edition = "2021"
+default-run = "runner"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aoc_2015 = { version = "0.1.0", path = "../aoc_2015" }
-aoc_2016 = { version = "0.1.0", path = "../aoc_2016" }
-aoc_2017 = { version = "0.1.0", path = "../aoc_2017" }
-aoc_2018 = { version = "0.1.0", path = "../aoc_2018" }
-aoc_2019 = { version = "0.1.0", path = "../aoc_2019" }
-aoc_2020 = { version = "0.1.0", path = "../aoc_2020" }
-aoc_2021 = { version = "0.1.0", path = "../aoc_2021" }
-aoc_2022 = { version = "0.1.0", path = "../aoc_2022" }
-aoc_2023 = { version = "0.1.0", path = "../aoc_2023" }
-chrono = "0.4.31"
-clap = "4.4.8"
-colored = "2.0.4"
+aoc_2024.workspace = true
+aoc_2023.workspace = true
+aoc_2022.workspace = true
+aoc_2021.workspace = true
+aoc_2020.workspace = true
+aoc_2019.workspace = true
+aoc_2018.workspace = true
+aoc_2017.workspace = true
+aoc_2016.workspace = true
+aoc_2015.workspace = true
 helper.workspace = true
 
 [lints.clippy]
