@@ -1,14 +1,14 @@
 #[allow(unused_imports)]
 use helper::{
-    print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, Point, RunOutput, Runner,
+    print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, Point2D, RunOutput, Runner,
 };
 use std::cmp::Ordering;
 
 #[derive(Default)]
 pub struct Day06 {
-    points: Vec<Point<isize>>,
-    min: Point<isize>,
-    max: Point<isize>,
+    points: Vec<Point2D<isize>>,
+    min: Point2D<isize>,
+    max: Point2D<isize>,
 }
 
 impl Day06 {
@@ -16,7 +16,7 @@ impl Day06 {
         Self::default()
     }
 
-    fn find_closest(&self, p: &Point<isize>) -> Option<usize> {
+    fn find_closest(&self, p: &Point2D<isize>) -> Option<usize> {
         let (i, _, n) = self.points.iter().enumerate().fold(
             (usize::MAX, isize::MAX, 0),
             |(c, d, n), (i, p1)| {
@@ -43,14 +43,14 @@ impl Day06 {
 
         for x in self.min.x..=self.max.x {
             for y in [self.min.y - dy, self.max.x + dy] {
-                if let Some(closest) = self.find_closest(&Point::new(x, y)) {
+                if let Some(closest) = self.find_closest(&Point2D::new(x, y)) {
                     infinite.insert(closest);
                 }
             }
         }
         for y in self.min.y..=self.max.y {
             for x in [self.min.x - dx, self.max.x + dx] {
-                if let Some(closest) = self.find_closest(&Point::new(x, y)) {
+                if let Some(closest) = self.find_closest(&Point2D::new(x, y)) {
                     infinite.insert(closest);
                 }
             }
@@ -67,7 +67,7 @@ impl Runner for Day06 {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         for line in lines.iter() {
             if let Some((x, y)) = line.split_once(", ") {
-                self.points.push(Point::new(x.parse()?, y.parse()?));
+                self.points.push(Point2D::new(x.parse()?, y.parse()?));
             }
         }
 
@@ -100,7 +100,7 @@ impl Day06 {
         let mut regions = vec![0; self.points.len()];
         for y in self.min.y..=self.max.y {
             for x in self.min.x..=self.max.x {
-                if let Some(closest) = self.find_closest(&Point::new(x, y)) {
+                if let Some(closest) = self.find_closest(&Point2D::new(x, y)) {
                     if !infinite.contains(&closest) {
                         regions[closest] += 1;
                     }
@@ -115,7 +115,7 @@ impl Day06 {
         let mut regions = 0;
         for y in self.min.y..=self.max.y {
             for x in self.min.x..=self.max.x {
-                let p0 = Point::new(x, y);
+                let p0 = Point2D::new(x, y);
                 let sum_dist = self
                     .points
                     .iter()

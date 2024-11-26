@@ -1,18 +1,18 @@
 #[allow(unused_imports)]
-use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
+use helper::{
+    print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, Point2D, RunOutput, Runner,
+};
 use std::str::FromStr;
-
-type RawPoint = helper::Point<isize>;
 
 #[derive(Debug)]
 struct Point {
-    p: RawPoint,
-    v: RawPoint,
+    p: Point2D<isize>,
+    v: Point2D<isize>,
 }
 
 impl Point {
-    fn at(&self, t: isize) -> RawPoint {
-        RawPoint::new(self.p.x + self.v.x * t, self.p.y + self.v.y * t)
+    fn at(&self, t: isize) -> Point2D<isize> {
+        Point2D::new(self.p.x + self.v.x * t, self.p.y + self.v.y * t)
     }
 }
 
@@ -24,9 +24,9 @@ impl FromStr for Point {
             let s = s.trim();
             if let Some((p, rest)) = s.split_once("> velocity=<") {
                 if let Some(v) = rest.strip_suffix('>') {
-                    fn point(s: &str) -> Result<RawPoint, Error> {
+                    fn point(s: &str) -> Result<Point2D<isize>, Error> {
                         if let Some((x, y)) = s.split_once(',') {
-                            Ok(RawPoint::new(x.trim().parse()?, y.trim().parse()?))
+                            Ok(Point2D::new(x.trim().parse()?, y.trim().parse()?))
                         } else {
                             Err(Error::InvalidInput(s.into()))
                         }
@@ -53,9 +53,9 @@ impl Day10 {
         Self::default()
     }
 
-    fn get_area(&self, t: isize) -> (RawPoint, RawPoint, isize) {
-        let mut min = RawPoint::new(isize::MAX, isize::MAX);
-        let mut max = RawPoint::new(isize::MIN, isize::MIN);
+    fn get_area(&self, t: isize) -> (Point2D<isize>, Point2D<isize>, isize) {
+        let mut min = Point2D::new(isize::MAX, isize::MAX);
+        let mut max = Point2D::new(isize::MIN, isize::MIN);
 
         for p in self.points.iter().map(|p| p.at(t)) {
             min.x = min.x.min(p.x);
@@ -70,8 +70,8 @@ impl Day10 {
     fn get_message(&self, t: isize) -> String {
         use std::collections::BTreeSet;
 
-        let mut min = RawPoint::new(isize::MAX, isize::MAX);
-        let mut max = RawPoint::new(isize::MIN, isize::MIN);
+        let mut min: Point2D<isize> = Point2D::new(isize::MAX, isize::MAX);
+        let mut max: Point2D<isize> = Point2D::new(isize::MIN, isize::MIN);
         let mut new_points = BTreeSet::new();
 
         for p in self.points.iter().map(|p| p.at(t)) {

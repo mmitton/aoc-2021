@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use helper::{
-    print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, Point, RunOutput, Runner,
+    print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, Point2D, RunOutput, Runner,
 };
 
 #[derive(Clone, Default)]
@@ -18,16 +18,16 @@ enum Tile {
 }
 
 impl Map {
-    fn get(&self, p: Point<u8>) -> Tile {
+    fn get(&self, p: Point2D<u8>) -> Tile {
         self.grid[p.y as usize][p.x as usize]
     }
 
-    fn find_path(&mut self, from: Point<u8>, to: Point<u8>) -> Option<(u8, Point<u8>)> {
+    fn find_path(&mut self, from: Point2D<u8>, to: Point2D<u8>) -> Option<(u8, Point2D<u8>)> {
         self.empty_key += 1;
         let deltas = [(0, -1), (-1, 0), (1, 0), (0, 1)];
         let mut queue = Vec::new();
         for delta in &deltas {
-            let next = Point::new(
+            let next = Point2D::new(
                 (from.x as i8 + delta.0) as u8,
                 (from.y as i8 + delta.1) as u8,
             );
@@ -46,7 +46,7 @@ impl Map {
         while i < queue.len() {
             for delta in &deltas {
                 let lp = queue[i].2;
-                let next = Point::new((lp.x as i8 + delta.0) as u8, (lp.y as i8 + delta.1) as u8);
+                let next = Point2D::new((lp.x as i8 + delta.0) as u8, (lp.y as i8 + delta.1) as u8);
 
                 if !matches!(self.get(next), Tile::Empty(e) if e != self.empty_key) {
                     continue;
@@ -99,7 +99,7 @@ impl Map {
             let mut can_attack = Vec::new();
             for enemy_unit in &enemy_units {
                 for delta in deltas {
-                    let p = Point::new(
+                    let p = Point2D::new(
                         (units[*enemy_unit].x as i8 + delta.0) as u8,
                         (units[*enemy_unit].y as i8 + delta.1) as u8,
                     );
@@ -120,7 +120,7 @@ impl Map {
                 let mut best_move = None;
                 for position in positions.iter() {
                     if let Some(path) =
-                        self.find_path(Point::new(units[i].x, units[i].y), *position)
+                        self.find_path(Point2D::new(units[i].x, units[i].y), *position)
                     {
                         if path.0 < best_dist {
                             best_dist = path.0;

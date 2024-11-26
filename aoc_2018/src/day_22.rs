@@ -1,10 +1,10 @@
 #[allow(unused_imports)]
 use helper::{
-    print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, Point, RunOutput, Runner,
+    print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, Point2D, RunOutput, Runner,
 };
 use std::collections::BTreeMap;
 
-fn add_seen(seen: &mut Vec<Vec<usize>>, coord: Point<u16>, time: usize) -> bool {
+fn add_seen(seen: &mut Vec<Vec<usize>>, coord: Point2D<u16>, time: usize) -> bool {
     if seen.len() <= coord.y as usize {
         seen.resize(coord.y as usize + 1, Vec::new());
     }
@@ -23,8 +23,8 @@ fn add_seen(seen: &mut Vec<Vec<usize>>, coord: Point<u16>, time: usize) -> bool 
 
 fn erosion_level(
     geologic_index: &mut Vec<Vec<usize>>,
-    coord: Point<u16>,
-    target: Point<u16>,
+    coord: Point2D<u16>,
+    target: Point2D<u16>,
     depth: usize,
 ) -> usize {
     if geologic_index.len() <= coord.y as usize {
@@ -35,7 +35,7 @@ fn erosion_level(
     }
 
     if geologic_index[coord.y as usize][coord.x as usize] == usize::MAX {
-        if coord == Point::new(0, 0) || coord == target {
+        if coord == Point2D::new(0, 0) || coord == target {
             geologic_index[coord.y as usize][coord.x as usize] = 0;
         } else if coord.y == 0 {
             geologic_index[coord.y as usize][coord.x as usize] = coord.x as usize * 16807;
@@ -44,13 +44,13 @@ fn erosion_level(
         } else {
             let a = erosion_level(
                 geologic_index,
-                Point::new(coord.x - 1, coord.y),
+                Point2D::new(coord.x - 1, coord.y),
                 target,
                 depth,
             );
             let b = erosion_level(
                 geologic_index,
-                Point::new(coord.x, coord.y - 1),
+                Point2D::new(coord.x, coord.y - 1),
                 target,
                 depth,
             );
@@ -77,7 +77,7 @@ enum Terrain {
 #[derive(Default)]
 pub struct Day22 {
     depth: usize,
-    target: Point<u16>,
+    target: Point2D<u16>,
 }
 
 impl Day22 {
@@ -122,7 +122,7 @@ impl Day22 {
             for x in 0..=self.target.x {
                 let erosion_level = erosion_level(
                     &mut geologic_index,
-                    Point::new(x, y),
+                    Point2D::new(x, y),
                     self.target,
                     self.depth,
                 );
@@ -139,7 +139,7 @@ impl Day22 {
         let mut seen_torch: Vec<Vec<usize>> = Vec::new();
         let mut seen_gear: Vec<Vec<usize>> = Vec::new();
 
-        let mut queue: BTreeMap<usize, HashSet<(Tool, Point<u16>)>> = BTreeMap::new();
+        let mut queue: BTreeMap<usize, HashSet<(Tool, Point2D<u16>)>> = BTreeMap::new();
 
         let mut tools = HashMap::default();
         tools.insert((Terrain::Rocky, Terrain::Rocky, Tool::Gear), Tool::Gear);
@@ -168,7 +168,7 @@ impl Day22 {
         queue
             .entry(0)
             .or_default()
-            .insert((Tool::Torch, Point::new(0, 0)));
+            .insert((Tool::Torch, Point2D::new(0, 0)));
 
         while let Some((time, time_queue)) = queue.pop_first() {
             for (tool, coord) in time_queue {
@@ -206,16 +206,16 @@ impl Day22 {
                             if coord.y == 0 {
                                 continue;
                             }
-                            Point::new(coord.x, coord.y - 1)
+                            Point2D::new(coord.x, coord.y - 1)
                         }
                         1 => {
                             if coord.x == 0 {
                                 continue;
                             }
-                            Point::new(coord.x - 1, coord.y)
+                            Point2D::new(coord.x - 1, coord.y)
                         }
-                        2 => Point::new(coord.x, coord.y + 1),
-                        3 => Point::new(coord.x + 1, coord.y),
+                        2 => Point2D::new(coord.x, coord.y + 1),
+                        3 => Point2D::new(coord.x + 1, coord.y),
                         _ => unreachable!(),
                     };
 

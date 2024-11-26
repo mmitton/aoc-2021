@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
-use helper::{Point, Tile, TileSet};
+use helper::{Point2D, Tile, TileSet};
 use std::str::FromStr;
 
 struct Claim {
@@ -24,7 +24,7 @@ impl FromStr for Claim {
             let h: u16 = h.parse()?;
             Ok(Self {
                 num,
-                tile: Tile::new(Point::new(x, y), Point::new(x + w - 1, y + h - 1)),
+                tile: Tile::new(Point2D::new(x, y), Point2D::new(x + w - 1, y + h - 1)),
             })
         } else {
             Err(Error::InvalidInput(s.into()))
