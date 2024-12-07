@@ -53,7 +53,7 @@ struct Lab {
 }
 
 impl Lab {
-    fn map_path(&mut self) -> Option<usize> {
+    fn map_path(&mut self) -> bool {
         let mut next_pos = self.guard.next_pos();
         while let Some(s) = self
             .map
@@ -67,19 +67,21 @@ impl Lab {
                 }
                 State::Obstruction => {
                     if !self.corners.insert((self.guard.pos, next_pos)) {
-                        return None;
+                        return true;
                     }
                     self.guard.turn();
                 }
             }
             next_pos = self.guard.next_pos();
         }
-        Some(
-            self.map
-                .iter()
-                .map(|row| row.iter().filter(|s| matches!(s, State::Visited)).count())
-                .sum::<usize>(),
-        )
+        false
+    }
+
+    fn visited(&self) -> usize {
+        self.map
+            .iter()
+            .map(|row| row.iter().filter(|s| matches!(s, State::Visited)).count())
+            .sum::<usize>()
     }
 }
 
@@ -94,7 +96,8 @@ impl Day06 {
     }
 
     fn part1(&mut self) -> Result<helper::RunOutput, Error> {
-        Ok(self.lab.map_path().unwrap().into())
+        self.lab.map_path();
+        Ok(self.lab.visited().into())
     }
 
     fn part2(&mut self) -> Result<helper::RunOutput, Error> {
@@ -109,7 +112,7 @@ impl Day06 {
                 if matches!(initial_lab.map[y][x], State::Visited) {
                     let mut lab = self.lab.clone();
                     lab.map[y][x] = State::Obstruction;
-                    if lab.map_path().is_none() {
+                    if lab.map_path() {
                         ans += 1;
                     }
                 }
