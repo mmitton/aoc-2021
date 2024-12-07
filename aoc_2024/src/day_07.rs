@@ -26,70 +26,32 @@ impl FromStr for Equation {
     }
 }
 
-#[derive(Copy, Clone)]
-#[repr(transparent)]
-struct Operator(u8);
-
-impl Operator {
-    fn next(&mut self, has_combine: bool) -> bool {
-        self.0 = (self.0 + 1) % if has_combine { 3 } else { 2 };
-        self.0 == 0
-    }
-
-    fn perform(&self, lhs: usize, rhs: usize) -> usize {
-        match self.0 {
-            0 => lhs + rhs,
-            1 => lhs * rhs,
-            2 => lhs * 10usize.pow(rhs.ilog10() + 1) + rhs,
-            _ => 0,
-        }
-    }
-}
-
-struct Operators {
-    operators: Vec<Operator>,
-    has_combine: bool,
-}
-
-impl Operators {
-    fn new(operands: usize, has_combine: bool) -> Self {
-        Self {
-            operators: vec![Operator(0); operands - 1],
-            has_combine,
-        }
-    }
-
-    fn next(&mut self) -> bool {
-        for operator in self.operators.iter_mut() {
-            if !operator.next(self.has_combine) {
-                return true;
-            }
-        }
-        false
-    }
-
-    fn solve(&self, operands: &[usize]) -> usize {
-        let mut total = operands[0];
-        for (operand, operator) in operands[1..].iter().zip(self.operators.iter()) {
-            total = operator.perform(total, *operand);
-        }
-
-        total
-    }
-}
-
 impl Equation {
-    fn solve(&self, has_combine: bool) -> bool {
-        let mut operators = Operators::new(self.operands.len(), has_combine);
-        loop {
-            if operators.solve(&self.operands) == self.test_value {
-                return true;
-            }
-            if !operators.next() {
-                break;
+    fn reverse_solve(&self, has_combine: bool) -> bool {
+        fn reverse_solve(target: usize, operands: &[usize], has_combine: bool) -> bool {
+            if operands.len() == 1 {
+                operands[0] == target
+            } else {
+                let last_idx = operands.len() - 1;
+                let last = operands[last_idx];
+                let operands = &operands[0..last_idx];
+                if target > last && reverse_solve(target - last, operands, has_combine) {
+                    return true;
+                }
+                if target % last == 0 && reverse_solve(target / last, operands, has_combine) {
+                    return true;
+                }
+                if has_combine {
+                    let mag = 10usize.pow(1 + last.ilog10());
+                    if target % mag == last && reverse_solve(target / mag, operands, has_combine) {
+                        return true;
+                    }
+                }
+                false
             }
         }
-        false
+
+        reverse_solve(self.test_value, &self.operands, has_combine)
     }
 }
 
@@ -108,7 +70,7 @@ impl Day07 {
             .equations
             .iter()
             .filter_map(|e| {
-                if e.solve(false) {
+                if e.reverse_solve(false) {
                     Some(e.test_value)
                 } else {
                     None
@@ -123,7 +85,7 @@ impl Day07 {
             .equations
             .iter()
             .filter_map(|e| {
-                if e.solve(true) {
+                if e.reverse_solve(true) {
                     Some(e.test_value)
                 } else {
                     None
