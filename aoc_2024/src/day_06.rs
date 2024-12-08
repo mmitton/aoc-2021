@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Point2D};
 
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, Debug, Hash, PartialEq, Eq)]
 enum Dir {
     #[default]
     Up,
@@ -10,7 +10,7 @@ enum Dir {
     Left,
 }
 
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, Debug, Hash, PartialEq, Eq)]
 struct Guard {
     pos: Point2D<u8>,
     dir: Dir,
@@ -21,6 +21,7 @@ pub struct Day06 {
     guard: Guard,
     rows: Vec<Vec<u8>>,
     cols: Vec<Vec<u8>>,
+    seen: HashSet<Guard>,
 }
 
 impl Day06 {
@@ -28,13 +29,16 @@ impl Day06 {
         Self::default()
     }
 
-    fn walk_path<F>(&self, mut walked: F) -> bool
+    fn walk_path<F>(&mut self, mut walked: F) -> bool
     where
         F: FnMut(Point2D<u8>, Point2D<u8>),
     {
         let mut guard = self.guard;
-        let mut seen = HashSet::default();
+        self.seen.clear();
         loop {
+            if !self.seen.insert(guard) {
+                return true;
+            }
             let (next_pos, dir, done) = match guard.dir {
                 Dir::Up => self.cols[guard.pos.x as usize]
                     .iter()
@@ -87,9 +91,6 @@ impl Day06 {
                         true,
                     )),
             };
-            if !seen.insert((guard.pos, next_pos)) {
-                return true;
-            }
             walked(guard.pos, next_pos);
             guard.pos = next_pos;
             guard.dir = dir;
@@ -99,7 +100,7 @@ impl Day06 {
         }
     }
 
-    fn initial_walked(&self) -> HashSet<Point2D<u8>> {
+    fn initial_walked(&mut self) -> HashSet<Point2D<u8>> {
         let mut walked = HashSet::default();
         assert!(!self.walk_path(|from, to| {
             if from.x != to.x && from.y == to.y {
@@ -175,6 +176,7 @@ impl helper::Runner for Day06 {
                 }
             }
         }
+        self.seen.reserve(512);
         Ok(())
     }
 
