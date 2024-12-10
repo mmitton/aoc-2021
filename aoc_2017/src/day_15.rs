@@ -2,24 +2,29 @@
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
 
 #[derive(Default)]
-struct Generator<const MULT: usize> {
+struct Generator<const MULT: usize, const MASK: usize> {
     num: usize,
-    mask: usize,
 }
 
-impl<const MULT: usize> Generator<MULT> {
-    fn new(num: usize, mask: usize) -> Self {
-        Self { num, mask }
+impl<const MULT: usize, const MASK: usize> Generator<MULT, MASK> {
+    fn new(num: usize) -> Self {
+        Self { num }
     }
 }
 
-impl<const MULT: usize> Iterator for Generator<MULT> {
+impl<const MULT: usize, const MASK: usize> Iterator for Generator<MULT, MASK> {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            self.num = (self.num * MULT) % 2147483647;
-            if self.num & self.mask == 0 {
+            let prod = self.num * MULT;
+            let num = (prod & 0x7fffffff) + (prod >> 31);
+            if num >> 31 != 0 {
+                self.num = num - 0x7fffffff;
+            } else {
+                self.num = num;
+            }
+            if self.num & MASK == 0 {
                 break;
             }
         }
@@ -60,8 +65,8 @@ impl Runner for Day15 {
 
 impl Day15 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        let gen_a = Generator::<16807>::new(self.gen_a, 0);
-        let gen_b = Generator::<48271>::new(self.gen_b, 0);
+        let gen_a = Generator::<16807, 0>::new(self.gen_a);
+        let gen_b = Generator::<48271, 0>::new(self.gen_b);
         Ok(gen_a
             .zip(gen_b)
             .take(40_000_000)
@@ -76,8 +81,8 @@ impl Day15 {
     }
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
-        let gen_a = Generator::<16807>::new(self.gen_a, 4 - 1);
-        let gen_b = Generator::<48271>::new(self.gen_b, 8 - 1);
+        let gen_a = Generator::<16807, 3>::new(self.gen_a);
+        let gen_b = Generator::<48271, 7>::new(self.gen_b);
         Ok(gen_a
             .zip(gen_b)
             .take(5_000_000)

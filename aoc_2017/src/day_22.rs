@@ -52,40 +52,30 @@ impl Carrier {
 
     fn burst_2(&mut self, map: &mut Map) -> bool {
         let mut set_infected = false;
-        let state = map.nodes.get(&(self.x, self.y));
-        match state {
-            None => {
-                if self.dir == 0 {
-                    self.dir = 3;
-                } else {
-                    self.dir -= 1;
-                }
-                map.nodes.insert((self.x, self.y), State::Weakened);
+        use std::collections::hash_map::Entry;
+        match map.nodes.entry((self.x, self.y)) {
+            Entry::Vacant(entry) => {
+                self.dir = (self.dir + 3) & 0b11;
+                entry.insert(State::Weakened);
             }
-            Some(State::Weakened) => {
-                map.nodes.insert((self.x, self.y), State::Infected);
-                set_infected = true;
-            }
-            Some(State::Infected) => {
-                if self.dir == 3 {
-                    self.dir = 0;
-                } else {
-                    self.dir += 1;
+            Entry::Occupied(mut entry) => {
+                let state = entry.get_mut();
+                match state {
+                    State::Weakened => {
+                        *state = State::Infected;
+                        set_infected = true;
+                    }
+                    State::Infected => {
+                        *state = State::Flagged;
+                        self.dir = (self.dir + 1) & 0b11;
+                    }
+                    State::Flagged => {
+                        entry.remove();
+                        self.dir = (self.dir + 2) & 0b11;
+                    }
                 }
-                map.nodes.insert((self.x, self.y), State::Flagged);
-            }
-            Some(State::Flagged) => {
-                match self.dir {
-                    0 => self.dir = 2,
-                    1 => self.dir = 3,
-                    2 => self.dir = 0,
-                    3 => self.dir = 1,
-                    _ => unreachable!(),
-                }
-                map.nodes.remove(&(self.x, self.y));
             }
         }
-
         match self.dir {
             0 => self.y -= 1,
             1 => self.x += 1,
