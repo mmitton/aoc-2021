@@ -63,6 +63,5 @@ impl Day15 {
 
     fn part2(&mut self) -> Result<RunOutput, Error> {
         Ok(self.play(30_000_000).into())
-        // Ok(0.into())
     }
 }

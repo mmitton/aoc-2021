@@ -8,11 +8,12 @@ struct Tile {
     is_rotated: bool,
     x: isize,
     y: isize,
+    edges: Vec<Option<[char; 10]>>,
 }
 
 impl Tile {
-    fn edges(&self) -> Vec<Option<[char; 10]>> {
-        let mut edges = Vec::new();
+    fn calculate_edges(&mut self) {
+        self.edges.clear();
 
         let mut left = [' '; 10];
         let mut right = [' '; 10];
@@ -22,18 +23,16 @@ impl Tile {
             right[y] = self.grid[y][9];
         }
 
-        edges.push(Some(self.grid[0]));
-        edges.push(Some(right));
-        edges.push(Some(self.grid[9]));
-        edges.push(Some(left));
+        self.edges.push(Some(self.grid[0]));
+        self.edges.push(Some(right));
+        self.edges.push(Some(self.grid[9]));
+        self.edges.push(Some(left));
 
-        for (i, edge) in edges.iter_mut().enumerate().take(4) {
+        for (i, edge) in self.edges.iter_mut().enumerate().take(4) {
             if self.edge_connections[i].is_some() {
                 *edge = None;
             }
         }
-
-        edges
     }
 
     fn set_edge(&mut self, edge: usize, connect_to: (usize, usize)) {
@@ -71,6 +70,8 @@ impl Tile {
         if flip_y {
             self.grid.reverse();
         }
+
+        self.calculate_edges();
     }
 }
 
@@ -88,6 +89,21 @@ impl Day20 {
     fn place_tiles(&mut self) -> Vec<usize> {
         let tile_nums: Vec<usize> = self.tiles.keys().copied().collect();
 
+        self.tiles.values_mut().for_each(Tile::calculate_edges);
+
+        let mut all_rotations = HashMap::default();
+        for num in tile_nums.iter() {
+            let mut tile_rotations = Vec::new();
+            for r in 0..4 {
+                for flip in 0..3 {
+                    let mut tile = self.tiles.get(num).unwrap().clone();
+                    tile.rotate(r, flip == 1, flip == 2);
+                    tile_rotations.push(tile);
+                }
+            }
+            all_rotations.insert(num, tile_rotations);
+        }
+
         let mut min_x = 0isize;
         let mut max_x = 0isize;
         let mut min_y = 0isize;
@@ -97,7 +113,8 @@ impl Day20 {
         let mut i = 0;
         while i < queue.len() {
             let tile1 = tile_nums[queue[i]];
-            for (edge_num1, edge1) in self.tiles.get(&tile1).unwrap().edges().iter().enumerate() {
+            let tile1_edges = self.tiles.get(&tile1).unwrap().edges.clone();
+            for (edge_num1, edge1) in tile1_edges.iter().copied().enumerate() {
                 let edge_num2 = (edge_num1 + 2) % 4;
                 if let Some(edge1) = edge1 {
                     for (j, tile2) in tile_nums.iter().enumerate() {
@@ -105,25 +122,11 @@ impl Day20 {
                             continue;
                         }
 
-                        let mut rotations = Vec::new();
-                        {
-                            let tile2 = self.tiles.get(tile2).unwrap();
-                            if tile2.is_rotated {
-                                rotations.push((0, false, false, tile2.clone()));
-                            } else {
-                                for r in 0..4 {
-                                    for flip in 0..3 {
-                                        let mut tile2 = tile2.clone();
-                                        tile2.rotate(r, flip == 1, flip == 2);
-                                        rotations.push((r, flip == 1, flip == 2, tile2.clone()));
-                                    }
-                                }
-                            }
-                        }
+                        let rotations = all_rotations.get(tile2).unwrap();
 
-                        'rotation_loop: for (rotation, flip_x, flip_y, tile) in &rotations {
-                            let edges = tile.edges();
-                            if let Some(edge2) = &edges[edge_num2] {
+                        'rotation_loop: for tile in rotations {
+                            let edges = &tile.edges;
+                            if let Some(edge2) = edges[edge_num2] {
                                 if edge2 == edge1 {
                                     let (x, y) = {
                                         let tile1 = self.tiles.get_mut(&tile1).unwrap();
@@ -132,8 +135,7 @@ impl Day20 {
                                         (tile1.x, tile1.y)
                                     };
 
-                                    let t2 = self.tiles.get_mut(tile2).unwrap();
-                                    t2.rotate(*rotation, *flip_x, *flip_y);
+                                    let mut t2 = tile.clone();
                                     t2.x = x;
                                     t2.y = y;
                                     match edge_num1 {
@@ -158,6 +160,8 @@ impl Day20 {
                                     }
 
                                     t2.set_edge(edge_num2, (tile1, edge_num1));
+                                    self.tiles.insert(*tile2, t2.clone());
+                                    all_rotations.insert(tile2, vec![t2]);
 
                                     if !queue.contains(&j) {
                                         queue.push(j);
@@ -212,6 +216,7 @@ impl Runner for Day20 {
                 is_rotated: false,
                 x: 0,
                 y: 0,
+                edges: Default::default(),
             };
             let tile_num: usize = lines[0][5..lines[0].len() - 1].parse()?;
 

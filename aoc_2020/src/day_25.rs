@@ -1,23 +1,14 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Output, RunOutput, Runner};
 
-#[derive(Debug, Default)]
-struct Key {
-    public: usize,
-    loop_size: usize,
-}
-
 pub struct Day25 {
-    card: Key,
-    door: Key,
+    card: usize,
+    door: usize,
 }
 
 impl Day25 {
     pub fn new() -> Self {
-        Self {
-            card: Key::default(),
-            door: Key::default(),
-        }
+        Self { card: 0, door: 0 }
     }
 }
 
@@ -25,8 +16,8 @@ impl Runner for Day25 {
     fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
         let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
         assert_eq!(lines.len(), 2);
-        self.card.public = lines[0].parse()?;
-        self.door.public = lines[1].parse()?;
+        self.card = lines[0].parse()?;
+        self.door = lines[1].parse()?;
         Ok(())
     }
 
@@ -40,26 +31,20 @@ impl Runner for Day25 {
 
 impl Day25 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
-        let mut v = 1;
-        let mut loops = 0;
-        while self.card.loop_size == 0 || self.door.loop_size == 0 {
-            v *= 7;
-            v %= 20201227;
-            loops += 1;
+        let mut door_public = 1;
+        let mut card_private = 1;
+        for _ in 1.. {
+            door_public *= 7;
+            door_public %= 20201227;
 
-            if self.card.loop_size == 0 && v == self.card.public {
-                self.card.loop_size = loops;
-            }
-            if self.door.loop_size == 0 && v == self.door.public {
-                self.door.loop_size = loops;
+            card_private *= self.card;
+            card_private %= 20201227;
+
+            if door_public == self.door {
+                break;
             }
         }
 
-        let mut v = 1;
-        for _ in 0..self.door.loop_size {
-            v *= self.card.public;
-            v %= 20201227;
-        }
-        Ok(v.into())
+        Ok(card_private.into())
     }
 }
