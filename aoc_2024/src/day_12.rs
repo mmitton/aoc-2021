@@ -1,6 +1,5 @@
-use helper::Point2D;
 #[allow(unused_imports)]
-use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt};
+use helper::{print, println, Error, HashMap, HashSet, IterPairs, Lines, LinesOpt, Point2D};
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -86,23 +85,11 @@ impl Day12 {
 
                     macro_rules! add_sides {
                         ($side_str: expr, $side:expr, $along:ident, $other:ident) => {{
-                            let mut min = usize::MAX;
-                            let mut max = usize::MIN;
-                            for p in $side.iter() {
-                                min = min.min(p.$along);
-                                max = max.max(p.$along);
-                            }
-                            for along in min..=max {
-                                let mut points: Vec<&Point2D<usize>> =
-                                    $side.iter().filter(|p| p.$along == along).collect();
-                                if !points.is_empty() {
-                                    points.sort();
+                            sides += 1;
+                            $side.sort_by_key(|p| (p.$along, p.$other));
+                            for (a, b) in $side.iter().pairs() {
+                                if a.$along != b.$along || a.$other + 1 != b.$other {
                                     sides += 1;
-                                    for win in points.windows(2) {
-                                        if win[0].$other + 1 != win[1].$other {
-                                            sides += 1;
-                                        }
-                                    }
                                 }
                             }
                         }};
