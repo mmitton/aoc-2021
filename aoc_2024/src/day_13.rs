@@ -3,52 +3,24 @@ use helper::{print, println, Dijkstra, Error, HashMap, HashSet, Lines, LinesOpt,
 
 #[derive(Debug)]
 struct Game {
-    a: Point2D<usize>,
-    b: Point2D<usize>,
-    prize: Point2D<usize>,
+    a: Point2D<isize>,
+    b: Point2D<isize>,
+    prize: Point2D<isize>,
 }
 
 impl Game {
-    fn simple_cheapest(&self, min_a: usize, max_a: usize) -> Option<usize> {
-        let mut cheapest = None;
-
-        for a in min_a..=max_a {
-            let ax = self.a.x * a;
-            let ay = self.a.y * a;
-
-            if ax > self.prize.x || ay > self.prize.y {
-                break;
-            }
-
-            let b = ((self.prize.x - ax) / self.b.x).min((self.prize.y - ay) / self.b.y);
-            let x = ax + self.b.x * b;
-            let y = ay + self.b.y * b;
-            if x == self.prize.x && y == self.prize.y {
-                cheapest = Some(cheapest.unwrap_or(usize::MAX).min(a * 3 + b));
-            }
-        }
-        cheapest
-    }
-
-    fn big_cheapest(&self) -> Option<usize> {
-        let x1 = self.a.x as isize;
-        let x2 = self.b.x as isize;
-        let x3 = self.prize.x as isize;
-
-        let y1 = self.a.y as isize;
-        let y2 = self.b.y as isize;
-        let y3 = self.prize.y as isize;
-
-        let b_num = x3 * y1 - x1 * y3;
-        let b_div = y1 * x2 - x1 * y2;
+    fn solve(&self) -> Option<isize> {
+        let b_num = self.prize.x * self.a.y - self.a.x * self.prize.y;
+        let b_div = self.a.y * self.b.x - self.a.x * self.b.y;
 
         if b_num % b_div == 0 {
-            let b = (b_num / b_div) as usize;
+            let b = b_num / b_div;
             let a = (self.prize.x - b * self.b.x) / self.a.x;
-            self.simple_cheapest(a, a)
-        } else {
-            None
+            if self.a.scale(a) + self.b.scale(b) == self.prize {
+                return Some(a * 3 + b);
+            }
         }
+        None
     }
 }
 
@@ -66,8 +38,8 @@ impl Day13 {
         Ok(self
             .games
             .iter()
-            .flat_map(|g| g.simple_cheapest(0, 100))
-            .sum::<usize>()
+            .flat_map(Game::solve)
+            .sum::<isize>()
             .into())
     }
 
@@ -79,8 +51,8 @@ impl Day13 {
         Ok(self
             .games
             .iter()
-            .flat_map(|g| g.big_cheapest())
-            .sum::<usize>()
+            .flat_map(Game::solve)
+            .sum::<isize>()
             .into())
     }
 }
@@ -94,8 +66,8 @@ impl helper::Runner for Day13 {
                     let line = $line.replace(&[',', '+', '='], " ");
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     let offset = if parts.len() == 6 { 1 } else { 0 };
-                    let x: usize = parts[2 + offset].parse()?;
-                    let y: usize = parts[4 + offset].parse()?;
+                    let x: isize = parts[2 + offset].parse()?;
+                    let y: isize = parts[4 + offset].parse()?;
                     Point2D::new(x, y)
                 }};
             }
