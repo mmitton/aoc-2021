@@ -29,34 +29,24 @@ impl Cpu {
         }
     }
 
-    fn step(&mut self) -> bool {
-        if let (Some(op), Some(operand)) = (self.memory.get(self.pc), self.memory.get(self.pc + 1))
-        {
-            self.pc += 2;
-            match op {
-                0 => self.registers[Self::A] /= 2usize.pow(self.combo(*operand) as u32),
-                1 => self.registers[Self::B] ^= *operand as usize,
-                2 => self.registers[Self::B] = self.combo(*operand) % 8,
-                3 => {
-                    if self.registers[Self::A] != 0 {
-                        self.pc = *operand as usize;
-                    }
+    fn step(&mut self) {
+        let op = self.memory[self.pc];
+        let operand = self.memory[self.pc + 1];
+        self.pc += 2;
+        match op {
+            0 => self.registers[Self::A] >>= self.combo(operand),
+            1 => self.registers[Self::B] ^= operand as usize,
+            2 => self.registers[Self::B] = self.combo(operand) % 8,
+            3 => {
+                if self.registers[Self::A] != 0 {
+                    self.pc = operand as usize;
                 }
-                4 => self.registers[Self::B] ^= self.registers[Self::C],
-                5 => self.outputs.push((self.combo(*operand) % 8) as u8),
-                6 => {
-                    self.registers[Self::B] =
-                        self.registers[Self::A] / 2usize.pow(self.combo(*operand) as u32)
-                }
-                7 => {
-                    self.registers[Self::C] =
-                        self.registers[Self::A] / 2usize.pow(self.combo(*operand) as u32)
-                }
-                _ => panic!(),
             }
-            true
-        } else {
-            false
+            4 => self.registers[Self::B] ^= self.registers[Self::C],
+            5 => self.outputs.push((self.combo(operand) % 8) as u8),
+            6 => self.registers[Self::B] = self.registers[Self::A] >> self.combo(operand),
+            7 => self.registers[Self::C] = self.registers[Self::A] >> self.combo(operand),
+            _ => panic!(),
         }
     }
 
@@ -99,7 +89,13 @@ impl Cpu {
     }
 
     fn run(&mut self) {
-        while self.step() {}
+        self.registers[Cpu::B] = 0;
+        self.registers[Cpu::C] = 0;
+        self.outputs.clear();
+        self.pc = 0;
+        while self.pc < self.memory.len() {
+            self.step();
+        }
     }
 }
 
@@ -116,12 +112,8 @@ impl Day17 {
 
     fn part2(&mut self) -> Result<helper::RunOutput, Error> {
         let mut inputs = Vec::new();
-        for a in 1..1024 {
+        for a in 0..1024 {
             self.cpu.registers[Cpu::A] = a;
-            self.cpu.registers[Cpu::B] = 0;
-            self.cpu.registers[Cpu::C] = 0;
-            self.cpu.outputs.clear();
-            self.cpu.pc = 0;
             self.cpu.run();
             if self.cpu.outputs[0] == self.cpu.memory[0] {
                 inputs.push(a);
@@ -132,14 +124,11 @@ impl Day17 {
         while pos < self.cpu.memory.len() {
             let mut next = Vec::new();
 
-            for a in inputs {
-                for bit in 0..8 {
-                    let a = (bit << (7 + 3 * pos)) | a;
+            for last_a in inputs {
+                for upper_a in 0..8 {
+                    let upper = upper_a << (7 + 3 * pos);
+                    let a = upper | last_a;
                     self.cpu.registers[Cpu::A] = a;
-                    self.cpu.registers[Cpu::B] = 0;
-                    self.cpu.registers[Cpu::C] = 0;
-                    self.cpu.outputs.clear();
-                    self.cpu.pc = 0;
                     self.cpu.run();
 
                     if self.cpu.outputs.len() > pos && self.cpu.outputs[pos] == self.cpu.memory[pos]
@@ -152,7 +141,8 @@ impl Day17 {
 
             inputs = next;
         }
-        Ok(inputs.iter().min().copied().unwrap().into())
+        let best = inputs.iter().min().copied().unwrap();
+        Ok(best.into())
     }
 }
 
