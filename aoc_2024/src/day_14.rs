@@ -43,6 +43,7 @@ impl FromStr for Robot {
 #[derive(Default)]
 pub struct Day14 {
     robots: Vec<Robot>,
+    tiles: Point2D<isize>,
 }
 
 impl Day14 {
@@ -50,13 +51,12 @@ impl Day14 {
         Self::default()
     }
 
-    fn part1(&mut self) -> Result<helper::RunOutput, Error> {
-        let tiles = Point2D::new(101, 103);
+    fn safety_factor(&self, t: isize) -> usize {
         let mut quads = [0usize; 4];
-        let cx = tiles.x / 2;
-        let cy = tiles.y / 2;
+        let cx = self.tiles.x / 2;
+        let cy = self.tiles.y / 2;
         for robot in self.robots.iter() {
-            let pos = robot.pos(100, tiles);
+            let pos = robot.pos(t, self.tiles);
 
             if pos.x == cx || pos.y == cy {
                 continue;
@@ -68,44 +68,16 @@ impl Day14 {
             quads[q] += 1;
         }
 
-        Ok(quads.iter().product::<usize>().into())
+        quads.iter().product()
+    }
+
+    fn part1(&mut self) -> Result<helper::RunOutput, Error> {
+        Ok(self.safety_factor(100).into())
     }
 
     fn part2(&mut self) -> Result<helper::RunOutput, Error> {
-        let tiles = Point2D::new(101, 103);
-        let mut p = HashSet::default();
         for t in 0..20_000 {
-            p.clear();
-            for r in self.robots.iter() {
-                p.insert(r.pos(t, tiles));
-            }
-
-            fn maybe_tree(points: &HashSet<Point2D<isize>>) -> bool {
-                let mut neighbors = 0;
-                for p in points.iter() {
-                    for p in p.cardinal_neighbors() {
-                        if points.contains(&p) {
-                            neighbors += 1;
-                        }
-                    }
-                }
-
-                let cluster = neighbors as f32 / points.len() as f32;
-                cluster > 1.
-            }
-
-            if maybe_tree(&p) {
-                for y in 0..tiles.y {
-                    for x in 0..tiles.x {
-                        let c = if p.contains(&Point2D::new(x, y)) {
-                            'x'
-                        } else {
-                            ' '
-                        };
-                        print!("{c}");
-                    }
-                    println!();
-                }
+            if self.safety_factor(t) < 100000000 {
                 return Ok(t.into());
             }
         }
@@ -119,6 +91,13 @@ impl helper::Runner for Day14 {
         for line in lines.iter() {
             self.robots.push(line.parse()?);
         }
+
+        println!("{}", self.robots.len());
+        self.tiles = if self.robots.len() == 12 {
+            Point2D::new(11, 7)
+        } else {
+            Point2D::new(101, 103)
+        };
         Ok(())
     }
 
