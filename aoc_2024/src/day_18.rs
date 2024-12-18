@@ -45,23 +45,28 @@ impl Day18 {
             Point2D::<usize>::new(70, 70)
         };
 
+        // Do a binary search for the first drop that causes no path to be found
         let mut map = HashSet::default();
-
         let mut width = self.points.len() / 2;
         let mut at = width;
-        let mut max_bad = usize::MAX;
+        let mut no_path_at = usize::MAX;
         loop {
-            if at == max_bad {
+            if at == no_path_at {
                 return Ok(format!("{}", self.points[at]).into());
             }
 
-            map.clear();
-            for p in self.points.iter().take(at + 1) {
-                map.insert(*p);
+            if at + 1 > map.len() {
+                for p in self.points.iter().take(at + 1).skip(map.len()) {
+                    map.insert(*p);
+                }
+            } else {
+                for p in self.points.iter().take(map.len()).skip(at + 1) {
+                    map.remove(p);
+                }
             }
 
-            width = if width == 1 { 1 } else { width / 2 };
-            match Dijkstra::find_first_paths(Point2D::<usize>::new(0, 0), |at| {
+            width = (width + 1) / 2;
+            match Dijkstra::find_first(Point2D::<usize>::new(0, 0), |at| {
                 at.cardinal_neighbors().into_iter().filter_map(|n| {
                     if !map.contains(&n) && n.x <= exit.x && n.y <= exit.y {
                         Some((1, n, n == exit))
@@ -74,7 +79,7 @@ impl Day18 {
                     at += width;
                 }
                 None => {
-                    max_bad = at;
+                    no_path_at = at;
                     at -= width;
                 }
             }
