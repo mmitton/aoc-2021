@@ -51,8 +51,9 @@ impl Day14 {
         Self::default()
     }
 
+    #[inline(always)]
     fn safety_factor(&self, t: isize) -> usize {
-        let mut quads = [0usize; 4];
+        let mut quads = [0; 4];
         let cx = self.tiles.x / 2;
         let cy = self.tiles.y / 2;
         for robot in self.robots.iter() {
@@ -61,11 +62,18 @@ impl Day14 {
             if pos.x == cx || pos.y == cy {
                 continue;
             }
-            let qx = if pos.x > cx { 1 } else { 0 };
-            let qy = if pos.y > cy { 2 } else { 0 };
-            let q = qx + qy;
 
-            quads[q] += 1;
+            let mut quad;
+            if pos.x < cx {
+                quad = 0;
+            } else {
+                quad = 1;
+            }
+            if pos.y > cy {
+                quad += 2;
+            }
+
+            quads[quad] += 1;
         }
 
         quads.iter().product()
@@ -92,7 +100,6 @@ impl helper::Runner for Day14 {
             self.robots.push(line.parse()?);
         }
 
-        println!("{}", self.robots.len());
         self.tiles = if self.robots.len() == 12 {
             Point2D::new(11, 7)
         } else {
