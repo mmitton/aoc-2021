@@ -1,8 +1,11 @@
+use helper::Dijkstra;
 #[allow(unused_imports)]
-use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt};
+use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt, Point2D};
 
 #[derive(Default)]
-pub struct Day18 {}
+pub struct Day18 {
+    points: Vec<Point2D<usize>>,
+}
 
 impl Day18 {
     pub fn new() -> Self {
@@ -10,17 +13,84 @@ impl Day18 {
     }
 
     fn part1(&mut self) -> Result<helper::RunOutput, Error> {
-        Err(Error::Unsolved)
+        let mut map = HashSet::default();
+        let (t, exit) = if self.points.len() == 25 {
+            (12, Point2D::<usize>::new(6, 6))
+        } else {
+            (1024, Point2D::<usize>::new(70, 70))
+        };
+
+        for p in self.points.iter().take(t) {
+            map.insert(*p);
+        }
+
+        Ok(Dijkstra::find_first(Point2D::<usize>::new(0, 0), |at| {
+            at.cardinal_neighbors().into_iter().filter_map(|n| {
+                if !map.contains(&n) && n.x <= exit.x && n.y <= exit.y {
+                    Some((1, n, n == exit))
+                } else {
+                    None
+                }
+            })
+        })
+        .unwrap()
+        .0
+        .into())
     }
 
     fn part2(&mut self) -> Result<helper::RunOutput, Error> {
-        Err(Error::Unsolved)
+        let exit = if self.points.len() == 25 {
+            Point2D::<usize>::new(6, 6)
+        } else {
+            Point2D::<usize>::new(70, 70)
+        };
+
+        let mut map = HashSet::default();
+
+        let mut width = self.points.len() / 2;
+        let mut at = width;
+        let mut max_bad = usize::MAX;
+        loop {
+            if at == max_bad {
+                return Ok(format!("{}", self.points[at]).into());
+            }
+
+            map.clear();
+            for p in self.points.iter().take(at + 1) {
+                map.insert(*p);
+            }
+
+            width = if width == 1 { 1 } else { width / 2 };
+            match Dijkstra::find_first_paths(Point2D::<usize>::new(0, 0), |at| {
+                at.cardinal_neighbors().into_iter().filter_map(|n| {
+                    if !map.contains(&n) && n.x <= exit.x && n.y <= exit.y {
+                        Some((1, n, n == exit))
+                    } else {
+                        None
+                    }
+                })
+            }) {
+                Some(_) => {
+                    at += width;
+                }
+                None => {
+                    max_bad = at;
+                    at -= width;
+                }
+            }
+        }
     }
 }
 
 impl helper::Runner for Day18 {
     fn parse(&mut self, file: &[u8], _part: u8) -> Result<(), Error> {
-        let _lines = Lines::from_bufread(file, LinesOpt::RAW)?;
+        let lines = Lines::from_bufread(file, LinesOpt::RAW)?;
+        for line in lines.iter() {
+            let Some((x, y)) = line.split_once(',') else {
+                return Err(Error::InvalidInput(line.into()));
+            };
+            self.points.push(Point2D::new(x.parse()?, y.parse()?));
+        }
         Ok(())
     }
 
