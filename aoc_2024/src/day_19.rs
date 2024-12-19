@@ -1,6 +1,5 @@
 #[allow(unused_imports)]
 use helper::{print, println, Error, HashMap, HashSet, Lines, LinesOpt};
-use std::collections::BinaryHeap;
 
 #[derive(Default)]
 pub struct Day19 {
@@ -13,73 +12,74 @@ impl Day19 {
         Self::default()
     }
 
-    fn can_make(&self, desired: &str) -> bool {
-        let mut work = vec![desired];
+    fn towels_possible(&self) -> usize {
+        let mut count = 0;
+        let mut work = Vec::new();
         let mut seen = HashSet::default();
+        'search: for desired in self.desired.iter() {
+            work.push(desired.as_str());
+            seen.clear();
 
-        while let Some(desired) = work.pop() {
-            for available in self.available.iter() {
-                if let Some(desired) = desired.strip_prefix(available) {
-                    if desired.is_empty() {
-                        return true;
-                    }
-                    if seen.insert(desired) {
-                        work.push(desired);
-                    }
-                }
-            }
-        }
-        false
-    }
-
-    fn ways_to_make(&self, desired: &str) -> usize {
-        let mut work = BinaryHeap::new();
-        work.push((desired.len(), desired));
-        let mut seen = HashMap::default();
-        let mut ways_to_make = 0;
-        seen.insert(desired, 1);
-
-        while let Some((_, desired)) = work.pop() {
-            let cnt = *seen.get(desired).unwrap();
-            for available in self.available.iter() {
-                if let Some(desired) = desired.strip_prefix(available) {
-                    if desired.is_empty() {
-                        ways_to_make += cnt;
-                    } else {
-                        use std::collections::hash_map::Entry;
-                        match seen.entry(desired) {
-                            Entry::Vacant(entry) => {
-                                entry.insert(cnt);
-                                work.push((desired.len(), desired));
-                            }
-                            Entry::Occupied(mut entry) => {
-                                *entry.get_mut() += cnt;
-                            }
+            while let Some(desired) = work.pop() {
+                for available in self.available.iter() {
+                    if let Some(desired) = desired.strip_prefix(available) {
+                        if desired.is_empty() {
+                            count += 1;
+                            work.clear();
+                            continue 'search;
+                        }
+                        if seen.insert(desired) {
+                            work.push(desired);
                         }
                     }
                 }
             }
         }
+        count
+    }
 
-        ways_to_make
+    fn make_towels(&mut self) -> Vec<Option<usize>> {
+        fn recurse<'a>(
+            desired: &'a str,
+            available: &[String],
+            cache: &mut HashMap<&'a str, usize>,
+        ) -> usize {
+            if desired.is_empty() {
+                return 1;
+            }
+            if let Some(value) = cache.get(desired) {
+                return *value;
+            }
+
+            let count = available
+                .iter()
+                .filter_map(|avail| {
+                    desired
+                        .strip_prefix(avail)
+                        .map(|desired| recurse(desired, available, cache))
+                })
+                .sum();
+            cache.insert(desired, count);
+            count
+        }
+
+        let mut cache = HashMap::default();
+        (0..self.desired.len())
+            .map(
+                |idx| match recurse(&self.desired[idx], &self.available, &mut cache) {
+                    0 => None,
+                    x => Some(x),
+                },
+            )
+            .collect()
     }
 
     fn part1(&mut self) -> Result<helper::RunOutput, Error> {
-        Ok(self
-            .desired
-            .iter()
-            .filter(|desired| self.can_make(desired))
-            .count()
-            .into())
+        Ok(self.towels_possible().into())
     }
 
     fn part2(&mut self) -> Result<helper::RunOutput, Error> {
-        Ok(self
-            .desired
-            .iter()
-            .map(|desired| self.ways_to_make(desired))
-            .sum::<usize>()
-            .into())
+        Ok(self.make_towels().iter().flatten().sum::<usize>().into())
     }
 }
 
