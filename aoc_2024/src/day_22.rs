@@ -41,26 +41,28 @@ impl Day22 {
     }
 
     fn part2(&mut self) -> Result<helper::RunOutput, Error> {
-        let mut diff_combos: HashMap<[i8; 4], isize> = HashMap::default();
+        let mut bananas: HashMap<u32, isize> = HashMap::default();
+        bananas.reserve(65536);
         let mut seen = HashSet::default();
+        seen.reserve(2048);
         for monkey in self.monkeys.iter_mut() {
-            let mut last = (monkey.0 % 10) as i8;
+            let mut last = (monkey.0 % 10) as u8;
 
-            let mut deltas = [0i8; 4];
+            let mut deltas = 0u32;
             seen.clear();
             for i in 0..2000 {
-                let cur = (monkey.next_number() % 10) as i8;
-                deltas.copy_within(1..4, 0);
-                deltas[3] = cur - last;
+                let cur = (monkey.next_number() % 10) as u8;
+                deltas <<= 8;
+                deltas |= cur.wrapping_sub(last) as u32;
 
-                if i >= 4 && seen.insert(deltas) {
-                    *diff_combos.entry(deltas).or_default() += cur as isize;
+                if cur != 0 && i >= 4 && seen.insert(deltas) {
+                    *bananas.entry(deltas).or_default() += cur as isize;
                 }
                 last = cur;
             }
         }
 
-        Ok(diff_combos.values().max().copied().unwrap().into())
+        Ok(bananas.values().max().copied().unwrap().into())
     }
 }
 
