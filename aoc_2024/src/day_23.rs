@@ -52,19 +52,17 @@ impl Day23 {
                         }
                         let mut g = g.clone();
                         g.push(b.as_str());
+                        if g.len() > best.len() {
+                            best.clear();
+                            best.extend(g.iter().copied());
+                        }
                         Some(g)
                     })
                     .collect();
                 groups.append(&mut new_groups);
             }
-            for group in groups.iter() {
-                if group.len() > best.len() {
-                    best = group.clone();
-                }
-            }
         }
         best.sort();
-        println!("{best:?}");
         Ok(best.join(",").into())
     }
 }
