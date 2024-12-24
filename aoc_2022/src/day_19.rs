@@ -51,7 +51,7 @@ impl Day19 {
                     .map(|idx| match costs[idx] {
                         cost if cost <= inventory[idx] => 0,
                         _ if bots[idx] == 0 => minutes + 1,
-                        _ => (costs[idx] - inventory[idx] + bots[idx] - 1) / bots[idx],
+                        _ => (costs[idx] - inventory[idx]).div_ceil(bots[idx]),
                     })
                     .max()
                     .unwrap();

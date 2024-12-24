@@ -44,7 +44,7 @@ impl Day13 {
     fn part1(&mut self) -> Result<RunOutput, Error> {
         let mut best = (usize::MAX, usize::MAX);
         for (_, b) in self.busses.iter() {
-            let pickup = ((self.start_time + (b - 1)) / b) * b;
+            let pickup = self.start_time.div_ceil(*b) * b;
             if pickup - self.start_time < best.0 {
                 best.0 = pickup - self.start_time;
                 best.1 = *b;
